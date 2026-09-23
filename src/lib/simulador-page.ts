@@ -9,7 +9,8 @@ import { renderGantt } from '@lib/visualizers/gantt'
 import type { ConfigPlanificacion } from '@lib/simuladores/planificacion/tipos'
 import { crearDesafioGantt } from '@lib/desafios/gantt'
 import type { Desafio } from '@lib/desafios/tipos'
-import { estaResuelto, marcarResuelto } from '@lib/progreso'
+import { estaResuelto } from '@lib/progreso'
+import { controlarResolucion } from '@lib/desafios/boton-resolucion'
 
 type Registro = {
   pasos: (config: never) => Step<unknown>[]
@@ -37,39 +38,37 @@ function initDesafio(host: HTMLElement, clave: string, crear: (root: HTMLElement
   const grid = $<HTMLElement>('[data-desafio-grid]', host)
   const resolucion = $<HTMLElement>('[data-sim-resolucion]', host)
   const feedback = $<HTMLElement>('[data-desafio-feedback]', host)
-  const rendirse = $<HTMLButtonElement>('[data-desafio-accion="rendirse"]', host)
-  if (!bloque || !grid || !resolucion) return
-
-  const desbloquear = () => {
-    resolucion.hidden = false
-    rendirse?.remove()
-  }
-  if (estaResuelto(clave)) {
-    desbloquear()
-    if (feedback) feedback.textContent = 'Ya lo resolviste antes. La resolución está abajo.'
-  }
+  const boton = $<HTMLButtonElement>('[data-desafio-accion="resolucion"]', host)
+  if (!bloque || !grid || !resolucion || !boton) return
 
   const desafio = crear(grid)
+  const decir = (texto: string, color = 'var(--muted)') => {
+    if (!feedback) return
+    feedback.textContent = texto
+    feedback.style.color = color
+  }
+  if (estaResuelto(clave)) decir('Ya lo resolviste antes. Podés volver a intentarlo.')
+
+  const control = controlarResolucion({
+    boton,
+    clave,
+    mostrar: () => (resolucion.hidden = false),
+    ocultar: () => {
+      resolucion.hidden = true
+      desafio.limpiar()
+      decir('')
+    },
+  })
+
   bloque.addEventListener('click', (e) => {
     const accion = (e.target as Element).closest<HTMLElement>('[data-desafio-accion]')?.dataset
       .desafioAccion
     if (accion === 'verificar') {
       const { ok, mensaje } = desafio.verificar()
-      if (feedback) {
-        feedback.textContent = mensaje
-        feedback.style.color = ok ? 'var(--ok)' : 'var(--bad)'
-      }
-      if (ok) {
-        marcarResuelto(clave)
-        desbloquear()
-      }
+      decir(mensaje, ok ? 'var(--ok)' : 'var(--bad)')
+      if (ok) control.acerto()
     } else if (accion === 'limpiar') {
       desafio.limpiar()
-    } else if (accion === 'rendirse' && rendirse) {
-      // doble clic intencional en vez de confirm(): no bloquea la página
-      if (rendirse.dataset.confirmar) return desbloquear()
-      rendirse.dataset.confirmar = 'si'
-      rendirse.textContent = '¿Seguro? Ver la resolución'
     }
   })
 }

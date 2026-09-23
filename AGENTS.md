@@ -25,5 +25,6 @@ Skill del repo: `.claude/skills/project-brain/` (cómo leer/mantener el brain). 
   `src/styles/global.css`. Nunca hex fijo en componentes: rompe el modo claro/oscuro.
 - Contenido (teoría y enunciados) en markdown bajo `src/content/`; el schema está en `src/content.config.ts`.
 - Simuladores = funciones puras en `src/lib/simuladores/<tipo>/` con tests. Nada de DOM ahí.
+- Visuales del sitio = SVG propio (bloques `grafo` y `diagrama` en markdown). **Mermaid solo en `docs/brain/`.**
 - Nunca commitear PDFs de la cátedra ni libros (`*.pdf` está en `.gitignore`).
 - Idioma de UI, contenido y código de dominio: español.

@@ -65,18 +65,8 @@ Hay **un PCB por proceso**. Está siempre en memoria y el SO lo usa para adminis
 
 ### Modelo de 5 estados
 
-```mermaid
-stateDiagram-v2
-  [*] --> New
-  New --> Ready: admitido (largo plazo)
-  Ready --> Running: dispatch (corto plazo)
-  Running --> Ready: fin de quantum / desalojo
-  Running --> Blocked: syscall bloqueante (espera un evento)
-  Blocked --> Ready: ocurre el evento (interrupción)
-  Running --> Exit: termina o error
-  Ready --> Exit: lo matan
-  Blocked --> Exit: lo matan
-  Exit --> [*]
+```diagrama estados-proceso
+
 ```
 
 | Estado      | Significado                                                                                                                                 |

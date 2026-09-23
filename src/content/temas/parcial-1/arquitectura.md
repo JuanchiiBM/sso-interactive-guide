@@ -65,11 +65,8 @@ Después el PC avanza a la siguiente instrucción, salvo que haya un salto (`JMP
 
 El ciclo real le agrega una cuarta etapa, la **etapa de interrupción**, que ocurre **después de terminar** cada instrucción. Fetch, decode y execute no se cortan a la mitad.
 
-```mermaid
-flowchart LR
-  F[Fetch] --> D[Decode] --> E[Execute] --> I{¿Interrupción pendiente?}
-  I -- No --> F
-  I -- Sí --> H[Guardar PC/PSW y saltar al manejador] --> F
+```diagrama ciclo-instruccion
+
 ```
 
 En esa etapa, la CPU:

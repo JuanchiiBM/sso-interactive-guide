@@ -30,7 +30,7 @@ const SIMULADORES = {
 ```
 
 **Ejemplos en el repo:** `simuladores/planificacion/pasos.ts` + `visualizers/gantt.ts`.
-**Cuándo NO usarlo:** contenido estático (tablas, diagramas fijos): markdown o mermaid alcanzan.
+**Cuándo NO usarlo:** contenido estático (tablas, diagramas fijos): markdown o un bloque SVG estático (ver [[Bloques SVG grafo y diagrama]]).
 **Gotchas:** el `state` de cada step puede compartir referencias (el Gantt pasa el mismo `resultado`
 y un índice `hasta`); el visualizador no tiene que mutarlo nunca.
 **Conectado con:** [[Arquitectura]], [[Cómo agregar un simulador]]

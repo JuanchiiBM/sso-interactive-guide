@@ -6,7 +6,8 @@ import { SITE, universidadLabel } from '@lib/site'
 const catalogo = await getCatalogo(1)
 const totalEjercicios = catalogo.reduce((n, c) => n + c.ejercicios.length, 0)
 const conSimulador = catalogo.reduce(
-  (n, c) => n + c.ejercicios.filter((e) => e.data.simulaciones.length > 0).length,
+  (n, c) =>
+    n + c.ejercicios.filter((e) => e.data.simulaciones.length + e.data.preguntas.length > 0).length,
   0,
 )
 ---
@@ -47,7 +48,7 @@ const conSimulador = catalogo.reduce(
         <dd class="font-mono text-xl text-fg">{totalEjercicios}</dd>
       </div>
       <div>
-        <dt class="text-muted">Con simulador</dt>
+        <dt class="text-muted">Interactivos</dt>
         <dd class="font-mono text-xl text-fg">{conSimulador}</dd>
       </div>
     </dl>

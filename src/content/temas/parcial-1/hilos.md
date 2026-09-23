@@ -62,22 +62,8 @@ Los maneja una **biblioteca en espacio de usuario** que el proceso incluye. El S
 | El proceso puede usar **su propio algoritmo de planificación**.                                 | Si un ULT hace una **syscall bloqueante**, se bloquea **todo el proceso** con todos sus ULT (salvo que haya jacketing).  |
 | Es **portable**: depende de la biblioteca, no del SO.                                           |                                                                                                                          |
 
-```mermaid
-flowchart TB
-  subgraph Usuario["Espacio de usuario"]
-    subgraph PU["Proceso con ULT"]
-      B[Biblioteca de hilos] --> U1[ULT 1]
-      B --> U2[ULT 2]
-    end
-    subgraph PK["Proceso con KLT"]
-      K1[KLT 1]
-      K2[KLT 2]
-    end
-  end
-  SO[Planificador del SO]
-  SO -- ve un único hilo --> PU
-  SO -- ve y planifica cada hilo --> K1
-  SO -- ve y planifica cada hilo --> K2
+```diagrama hilos-ult-klt
+
 ```
 
 ### Syscalls bloqueantes, wrappers y jacketing

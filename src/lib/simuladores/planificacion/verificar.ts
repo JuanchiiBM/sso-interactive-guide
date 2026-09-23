@@ -1,24 +1,50 @@
 import type { ResultadoPlanificacion } from './tipos'
 
-export type LineaCPU = (string | null)[]
+/** Lo que el alumno marca en cada celda (proceso, t). */
+export type Marca = 'cpu' | 'io' | null
+/** marcas[proceso][t] */
+export type GrillaGantt = Record<string, Marca[]>
+
+export interface ErrorCelda {
+  proceso: string
+  t: number
+  esperado: Marca
+  marcado: Marca
+}
 
 export interface Veredicto {
   ok: boolean
   correctos: number
   total: number
-  /** Primer instante donde la respuesta difiere; null si no hay errores. */
-  primerError: number | null
+  /** Primer error en orden temporal; null si no hay errores. */
+  primerError: ErrorCelda | null
 }
 
-export const lineaEsperada = (r: ResultadoPlanificacion): LineaCPU => r.ticks.map((t) => t.cpu)
+/** Solo cuenta como E/S el uso efectivo del dispositivo (no la espera en su cola). */
+export function grillaEsperada(r: ResultadoPlanificacion, procesos: string[]): GrillaGantt {
+  return Object.fromEntries(
+    procesos.map((id) => [
+      id,
+      r.ticks.map((tick): Marca => {
+        if (tick.cpu === id) return 'cpu'
+        return tick.io.includes(id) ? 'io' : null
+      }),
+    ]),
+  )
+}
 
-/** Compara la ocupación de CPU instante por instante. */
-export function verificarLineaCPU(esperada: LineaCPU, respuesta: LineaCPU): Veredicto {
+export function verificarGantt(esperada: GrillaGantt, respuesta: GrillaGantt): Veredicto {
+  const procesos = Object.keys(esperada)
+  const ticks = esperada[procesos[0]]?.length ?? 0
   let correctos = 0
-  let primerError: number | null = null
-  esperada.forEach((cpu, t) => {
-    if ((respuesta[t] ?? null) === cpu) correctos++
-    else primerError ??= t
-  })
-  return { ok: primerError == null, correctos, total: esperada.length, primerError }
+  let primerError: ErrorCelda | null = null
+  for (let t = 0; t < ticks; t++) {
+    for (const proceso of procesos) {
+      const esperado = esperada[proceso][t]
+      const marcado = respuesta[proceso]?.[t] ?? null
+      if (esperado === marcado) correctos++
+      else primerError ??= { proceso, t, esperado, marcado }
+    }
+  }
+  return { ok: primerError == null, correctos, total: ticks * procesos.length, primerError }
 }

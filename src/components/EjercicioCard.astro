@@ -8,7 +8,9 @@ interface Props {
 }
 
 const { ejercicio } = Astro.props
-const { titulo, fuente, dificultad, tipo, simulaciones } = ejercicio.data
+const { titulo, fuente, dificultad, tipo, simulaciones, preguntas } = ejercicio.data
+const interactivo =
+  simulaciones.length > 0 ? 'Gantt interactivo' : preguntas.length > 0 ? 'Multiple choice' : null
 const dif = dificultadUI[dificultad]
 ---
 
@@ -18,7 +20,7 @@ const dif = dificultadUI[dificultad]
   data-ejercicio-card
   data-tema={ejercicio.data.tema.id}
   data-dificultad={dificultad}
-  data-simulador={simulaciones.length > 0 ? 'si' : 'no'}
+  data-simulador={interactivo ? 'si' : 'no'}
 >
   <span class="font-mono text-[11px] text-muted">Ej. {fuente.numero}</span>
   <span class="mt-1 font-heading text-fg group-hover:text-accent">{titulo}</span>
@@ -28,8 +30,8 @@ const dif = dificultadUI[dificultad]
       {dif.label}
     </span>
     <span class="text-muted">· {tipoUI[tipo]}</span>
-    {simulaciones.length > 0 && (
-      <span class="ml-auto rounded-full bg-accent-soft px-2 py-0.5 text-accent">Paso a paso</span>
+    {interactivo && (
+      <span class="ml-auto rounded-full bg-accent-soft px-2 py-0.5 text-accent">{interactivo}</span>
     )}
   </span>
 </a>

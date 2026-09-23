@@ -22,7 +22,11 @@ flowchart LR
 - [[Decisión — Astro SSG sin backend ni React]] — por qué no hay framework de UI ni servidor.
 - [[Patrón — Steps y Playback]] — el contrato entre simulador, motor y visualizador.
 - [[Decisión — Tokens semánticos para modo claro y oscuro]] — cómo se tematiza.
+- [[Decisión — SVG propio en el sitio, mermaid solo en el brain]] — visuales del sitio.
 - [[Content Collections Temas y Ejercicios]] — rutas, ids y queries (`lib/catalogo.ts`).
 
 **Bootstrap de cliente:** `src/scripts/client.ts` se importa una vez desde `Layout.astro` y arranca
-tema, sidebar mobile, mermaid (lazy) y todos los `[data-simulador]` de la página.
+tema, sidebar mobile, simuladores (`[data-simulador]`) y multiple choice (`[data-mc]`).
+
+**Visuales estáticos** (grafos, diagramas) se generan como SVG **en build**: ver
+[[Decisión — SVG propio en el sitio, mermaid solo en el brain]].

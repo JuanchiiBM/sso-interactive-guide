@@ -22,7 +22,21 @@ simulaciones: [] # ver [[Simulador de Planificación]]
 ```
 
 El **cuerpo** es el enunciado tal cual la guía (tablas, código, incisos). Sin resolución en el cuerpo:
-la resolución sale de `simulaciones` (o, a futuro, de una sección propia — **formato a definir**).
+la resolución sale de `simulaciones` (Gantt) o de `preguntas` (multiple choice):
+
+```yaml
+preguntas:
+  - enunciado: "a) ¿Qué problema se presenta?"
+    opciones:
+      - texto: Deadlock
+        explicacion: Una línea; se muestra como pista si la eligen mal.
+      - texto: Livelock
+        explicacion: ...
+    correcta: 0            # índice base 0
+    justificacion: |
+      Markdown completo (listas, `código`, ```grafo). Se ve recién al acertar.
+```
+Ver [[Patrón — Desafío antes de la Resolución]].
 
 **Código de varios procesos lado a lado:** envolver en `<div class="codigo-columnas">` con líneas en
 blanco alrededor de cada bloque (si no, el markdown de adentro no se procesa):
@@ -40,7 +54,7 @@ while(TRUE){ ... }
 ````
 
 **Notas aclaratorias** propias (no de la guía): `> **Nota:** …`.
-**Grafos dados como dato:** ` ```mermaid ` (ej. Deadlock Ej. 1). Si el grafo es la respuesta,
+**Grafos dados como dato:** bloque ` ```grafo ` (ver [[Bloques SVG grafo y diagrama]]; ej. Deadlock Ej. 1). Si el grafo es la respuesta,
 no se dibuja en el enunciado.
 
 **Gotchas:** la carga inicial se generó con un script desde la extracción de los PDFs; los 38

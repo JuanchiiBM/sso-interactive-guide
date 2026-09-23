@@ -11,6 +11,7 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 
 - [[Formato de un Ejercicio]] — frontmatter, convenciones de markdown y columnas de código.
 - [[Formato de un Tema de Teoría]] — estructura de cada tema del resumen.
+- [[Bloques SVG grafo y diagrama]] — ```grafo y ```diagrama en markdown.
 - [[Fuentes y Derechos del Material]] — de dónde sale cada cosa y qué no se sube.
 - [[Content Collections Temas y Ejercicios]] — cómo se cargan y rutean.
 

@@ -1,6 +1,7 @@
 ---
 import Layout from '@layouts/Layout.astro'
 import SimuladorStage from '@components/SimuladorStage.astro'
+import MultipleChoice from '@components/MultipleChoice.astro'
 import { getEntry, render } from 'astro:content'
 import { getEjercicios, ejercicioHref, temaHref } from '@lib/catalogo'
 import { algoritmoUI, dificultadUI, tipoUI } from '@lib/presentacion'
@@ -18,16 +19,24 @@ export async function getStaticPaths() {
 }
 
 const { ejercicio, anterior, siguiente } = Astro.props
-const { titulo, fuente, dificultad, tipo, tags, simulaciones } = ejercicio.data
+const { titulo, fuente, dificultad, tipo, tags, simulaciones, preguntas } = ejercicio.data
 const tema = await getEntry(ejercicio.data.tema)
 const { Content } = await render(ejercicio)
 const dif = dificultadUI[dificultad]
+const ayuda = [
+  simulaciones.length > 0 &&
+    'Armá el Gantt: en cada instante marcá quién usa la CPU (click) y quién usa el dispositivo de E/S (click derecho). Dejá vacío lo que está en listos o esperando.',
+  preguntas.length > 0 &&
+    'Elegí una opción por pregunta y verificá. Si fallás, te decimos por qué esa opción no es.',
+  simulaciones.length + preguntas.length > 0 &&
+    'La resolución se desbloquea cuando acertás. Si ya la resolviste, "Ver resolución" la muestra directo; si no, "Me rindo" pide confirmar.',
+].filter((t): t is string => Boolean(t))
 const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
   sim.etiqueta ?? `Gantt · ${algoritmoUI[sim.algoritmo] ?? sim.algoritmo}`
 ---
 
 <Layout title={`Ej. ${fuente.numero} · ${titulo}`} activeId={ejercicio.id}>
-  <article class="max-w-4xl">
+  <article class="mx-auto max-w-6xl">
     <nav class="text-xs text-muted" aria-label="Ubicación">
       <a href="/ejercicios/" class="hover:text-fg">
         Ejercicios
@@ -59,11 +68,43 @@ const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
     </section>
 
     <section class="mt-12" aria-labelledby="resolucion">
-      <h2 id="resolucion" class="font-heading text-xl text-fg mb-4">
-        Resolución
-      </h2>
-      {simulaciones.length > 0 ? (
+      <div class="mb-4 flex items-center gap-2">
+        <h2 id="resolucion" class="font-heading text-xl text-fg">
+          Resolución
+        </h2>
+        {ayuda.length > 0 && (
+          <>
+            <button
+              type="button"
+              popovertarget="ayuda-resolucion"
+              class="info-boton inline-flex size-7 items-center justify-center rounded-full text-muted hover:text-fg hover:bg-hover"
+              aria-label="Cómo se resuelve"
+            >
+              <svg
+                class="size-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path stroke-linecap="round" d="M12 11v5M12 8h.01" />
+              </svg>
+            </button>
+            <div id="ayuda-resolucion" popover class="info-popover">
+              {ayuda.map((texto) => (
+                <p>{texto}</p>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      {simulaciones.length + preguntas.length > 0 ? (
         <div class="flex flex-col gap-4">
+          {preguntas.map((p, i) => (
+            <MultipleChoice pregunta={p} clave={String(i)} />
+          ))}
           {simulaciones.map((sim) => (
             <SimuladorStage simulacion={sim} titulo={etiquetaSim(sim)} />
           ))}

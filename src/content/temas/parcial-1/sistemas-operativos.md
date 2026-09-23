@@ -99,15 +99,6 @@ Es el paso de modo usuario a kernel o al revés. Reglas clave:
 
 ### Recorrido de una syscall
 
-```mermaid
-sequenceDiagram
-  participant P as Proceso (modo usuario)
-  participant K as Kernel (modo kernel)
-  P->>K: invoca la syscall (trap), se guarda el contexto
-  K->>K: busca la rutina en la tabla de syscalls y la ejecuta
-  K-->>P: deja el resultado y vuelve a modo usuario
-```
-
 1. El proceso invoca la syscall. Se guarda su contexto y se pasa a modo kernel.
 2. El kernel busca en la **tabla de syscalls** la rutina que corresponde y la ejecuta.
 3. Si la operación es bloqueante, el proceso pasa a _Blocked_ y el planificador elige otro.

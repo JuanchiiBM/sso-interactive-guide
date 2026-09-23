@@ -1,0 +1,149 @@
+/* SVG generados en build: grafo de asignación (lib/grafos) y diagramas fijos (lib/diagramas). */
+.grafo-asignacion,
+.diagrama {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.grafo-asignacion svg,
+.diagrama svg {
+  display: block;
+  /* tamaño natural por atributos width/height (Sätteri descarta style inline); solo achica */
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+.grafo-asignacion text,
+.diagrama text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--fg);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* ── Grafo de asignación ── */
+.grafo-proceso circle {
+  fill: color-mix(in srgb, var(--p1) 14%, var(--surface));
+  stroke: var(--p1);
+  stroke-width: 2;
+}
+.grafo-recurso rect {
+  fill: color-mix(in srgb, var(--p3) 12%, var(--surface));
+  stroke: var(--p3);
+  stroke-width: 2;
+}
+.grafo-instancia {
+  fill: var(--p3);
+}
+.grafo-arista {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.grafo-arista.grafo-asignacion {
+  stroke: var(--fg-soft);
+}
+.grafo-arista.grafo-solicitud {
+  stroke: var(--warn);
+  stroke-dasharray: 6 5;
+}
+.grafo-arista.grafo-ciclo {
+  stroke: var(--bad);
+  stroke-width: 2.5;
+}
+.flecha-asignacion {
+  fill: var(--fg-soft);
+}
+.flecha-solicitud {
+  fill: var(--warn);
+}
+.flecha-ciclo {
+  fill: var(--bad);
+}
+.grafo-asignacion figcaption {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.grafo-ley::before {
+  content: '';
+  display: inline-block;
+  width: 1.4rem;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  border-top: 2px solid var(--fg-soft);
+}
+.grafo-ley-solicitud::before {
+  border-top: 2px dashed var(--warn);
+}
+.grafo-ley-instancia::before {
+  width: 6px;
+  height: 6px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--p3);
+}
+
+/* ── Diagramas fijos ── */
+.dg-nodo rect,
+.dg-nodo path {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+.dg-activo rect {
+  fill: color-mix(in srgb, var(--p1) 14%, var(--surface));
+  stroke: var(--p1);
+}
+.dg-listo rect {
+  fill: color-mix(in srgb, var(--p3) 12%, var(--surface));
+  stroke: var(--p3);
+}
+.dg-bloqueado rect {
+  fill: color-mix(in srgb, var(--p4) 12%, var(--surface));
+  stroke: var(--p4);
+}
+.dg-decision path {
+  fill: color-mix(in srgb, var(--p5) 12%, var(--surface));
+  stroke: var(--p5);
+}
+.dg-flecha path {
+  fill: none;
+  stroke: var(--fg-soft);
+  stroke-width: 1.6;
+}
+.dg-flecha.dg-tenue path {
+  stroke: var(--muted);
+  stroke-dasharray: 5 4;
+}
+.dg-punta {
+  fill: var(--fg-soft);
+}
+.diagrama .dg-etiqueta {
+  font-size: 11px;
+  fill: var(--muted);
+  paint-order: stroke;
+  stroke: var(--surface-2);
+  stroke-width: 4px;
+}
+.dg-panel rect {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-dasharray: 4 4;
+}
+.diagrama .dg-panel text,
+.diagrama .dg-zona {
+  text-anchor: start;
+  font-size: 11px;
+  fill: var(--muted);
+}
+.dg-separador {
+  stroke: var(--line-strong);
+}

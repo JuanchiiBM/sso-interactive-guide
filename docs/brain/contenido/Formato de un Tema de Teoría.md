@@ -23,8 +23,8 @@ Estructura del cuerpo:
 
 - **Sin `#` H1**: el título lo pone la página desde el frontmatter.
 - `##` para secciones (arman el índice lateral "En esta página"), `###` para subsecciones.
-- Tablas para comparar; ` ```mermaid ` solo si el diagrama explica algo (estados de un proceso,
-  grafo de asignación).
+- Tablas para comparar; ` ```grafo ` o ` ```diagrama <id> ` solo si el diagrama explica algo (estados de un proceso,
+  grafo de asignación). **Nunca mermaid en el sitio.**
 - Fórmulas en `código inline` (no hay KaTeX).
 - Cierre: `## Preguntas de parcial` (pregunta en negrita + respuesta en `>`) y una línea de fuente.
 

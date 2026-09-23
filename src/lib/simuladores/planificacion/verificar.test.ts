@@ -1,20 +1,42 @@
 import { describe, expect, it } from 'vitest'
-import { verificarLineaCPU } from './verificar'
+import { simularPlanificacion } from './simular'
+import { grillaEsperada, verificarGantt, type GrillaGantt } from './verificar'
 
-describe('verificarLineaCPU', () => {
-  it('acepta la respuesta exacta, incluida la CPU ociosa', () => {
-    const v = verificarLineaCPU(['A', null, 'B'], ['A', null, 'B'])
-    expect(v).toEqual({ ok: true, correctos: 3, total: 3, primerError: null })
+const r = simularPlanificacion({
+  algoritmo: 'fifo',
+  procesos: [
+    { id: 'A', llegada: 0, rafagas: [1, 2, 1] },
+    { id: 'B', llegada: 0, rafagas: [2] },
+  ],
+})
+
+describe('grillaEsperada', () => {
+  it('marca CPU y uso de E/S por proceso', () => {
+    // A: CPU t0, E/S t1-2, CPU t3 · B: CPU t1-2
+    expect(grillaEsperada(r, ['A', 'B'])).toEqual({
+      A: ['cpu', 'io', 'io', 'cpu'],
+      B: [null, 'cpu', 'cpu', null],
+    })
+  })
+})
+
+describe('verificarGantt', () => {
+  const esperada = grillaEsperada(r, ['A', 'B'])
+
+  it('acepta la respuesta exacta', () => {
+    const v = verificarGantt(esperada, structuredClone(esperada))
+    expect(v).toMatchObject({ ok: true, correctos: 8, total: 8 })
   })
 
-  it('informa el primer instante erróneo', () => {
-    const v = verificarLineaCPU(['A', 'A', 'B', 'B'], ['A', 'B', 'B', 'A'])
+  it('una E/S sin marcar es error, y se informa el primero en el tiempo', () => {
+    const resp: GrillaGantt = { A: ['cpu', null, 'io', 'cpu'], B: [null, 'cpu', 'cpu', 'cpu'] }
+    const v = verificarGantt(esperada, resp)
     expect(v.ok).toBe(false)
-    expect(v.correctos).toBe(2)
-    expect(v.primerError).toBe(1)
+    expect(v.correctos).toBe(6)
+    expect(v.primerError).toEqual({ proceso: 'A', t: 1, esperado: 'io', marcado: null })
   })
 
-  it('una respuesta incompleta cuenta los vacíos como ociosos', () => {
-    expect(verificarLineaCPU(['A', 'B'], ['A']).primerError).toBe(1)
+  it('una respuesta vacía no rompe', () => {
+    expect(verificarGantt(esperada, {}).correctos).toBe(2)
   })
 })

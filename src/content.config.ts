@@ -48,6 +48,21 @@ const ejercicios = defineCollection({
     tags: z.array(z.string()).default([]),
     /** Resoluciones paso a paso generadas por simulador (una por inciso). */
     simulaciones: z.array(simulacionSchema).default([]),
+    /** Multiple choice por inciso; la justificación (markdown) se ve recién al acertar. */
+    preguntas: z
+      .array(
+        z
+          .object({
+            enunciado: z.string(),
+            opciones: z
+              .array(z.object({ texto: z.string(), explicacion: z.string().optional() }))
+              .min(2),
+            correcta: z.number().int().nonnegative(),
+            justificacion: z.string(),
+          })
+          .refine((p) => p.correcta < p.opciones.length, 'correcta fuera de rango'),
+      )
+      .default([]),
   }),
 })
 

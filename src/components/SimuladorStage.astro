@@ -27,10 +27,6 @@ const boton =
   </header>
 
   <div class="p-4 flex flex-col gap-3" data-desafio>
-    <p class="text-sm text-fg-soft">
-      Armá el Gantt: hacé clic en la celda del proceso que tiene la CPU en cada instante (dejá la
-      columna vacía si la CPU está ociosa). La resolución se desbloquea cuando acertás.
-    </p>
     <div class="overflow-x-auto pb-2" data-desafio-grid></div>
     <div class="flex flex-wrap items-center gap-2">
       <button
@@ -49,8 +45,8 @@ const boton =
       </button>
       <button
         type="button"
-        class="ml-auto rounded-lg px-3 py-1.5 text-sm text-muted hover:text-fg hover:bg-hover"
-        data-desafio-accion="rendirse"
+        class="ml-auto rounded-lg px-3 py-1.5 text-sm boton-rendirse"
+        data-desafio-accion="resolucion"
       >
         Me rindo
       </button>

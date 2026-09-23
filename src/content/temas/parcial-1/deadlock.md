@@ -46,12 +46,14 @@ Representa el estado de asignación de los recursos en un instante:
 
 Ejemplo con dos recursos de una sola instancia cada uno y un ciclo: P1 tiene R1 y pide R2, y P2 tiene R2 y pide R1.
 
-```mermaid
-flowchart LR
-  R1[R1 · 1 instancia] --> P1((P1))
-  P1 -. solicita .-> R2[R2 · 1 instancia]
-  R2 --> P2((P2))
-  P2 -. solicita .-> R1
+```grafo
+procesos: P1, P2
+recursos: R1, R2
+R1 -> P1
+P1 -> R2
+R2 -> P2
+P2 -> R1
+resaltar-ciclo
 ```
 
 **Cómo leer el grafo:**

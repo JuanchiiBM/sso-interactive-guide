@@ -21,7 +21,7 @@ cookie `theme` y emite `themechange`. Un script inline en `Layout.astro` resuelv
 primer paint (cookie → `prefers-color-scheme`) para evitar el flash.
 **Gotchas:**
 
-- Mermaid se re-renderiza al cambiar el tema (`lib/mermaid.ts` escucha `themechange`).
+- Los SVG de grafos/diagramas usan clases CSS con tokens, así que cambian de tema solos, sin JS.
 - Shiki emite ambas paletas; el CSS de `global.css` elige la oscura con `[data-theme='dark']`.
 - `prose.css` y `simulador.css` se importan con `layer(components)`: si quedan fuera de capa le
   ganan a las utilidades de Tailwind (ej. `max-w-none` no pisaba el `max-width` de `.prose`).
