@@ -1,0 +1,98 @@
+---
+/** Sidebar estático: temas del parcial con sus ejercicios. JS solo para el drawer mobile. */
+import { getCatalogo, temaHref, ejercicioHref } from '@lib/catalogo'
+
+interface Props {
+  activeId?: string
+}
+
+const { activeId } = Astro.props
+const catalogo = await getCatalogo(1)
+---
+
+<div
+  data-sidebar-backdrop
+  class="fixed inset-0 z-40 bg-black/50 hidden md:hidden"
+  aria-hidden="true"
+></div>
+<aside
+  data-sidebar
+  class="fixed md:sticky top-0 md:top-14 left-0 z-50 md:z-auto h-dvh md:h-[calc(100dvh-3.5rem)] w-72 shrink-0 -translate-x-full md:translate-x-0 transition-transform bg-surface border-r border-line overflow-y-auto"
+  aria-label="Temas y ejercicios"
+>
+  <div class="flex md:hidden items-center justify-between px-4 h-14 border-b border-line">
+    <span class="font-heading text-sm">Menú</span>
+    <button
+      type="button"
+      data-sidebar-close
+      class="size-8 inline-flex items-center justify-center rounded-md text-muted hover:text-fg hover:bg-hover"
+      aria-label="Cerrar menú"
+    >
+      <svg
+        class="size-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" d="M6 18 18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="px-2 py-4">
+    <p class="px-2 mb-2 text-[11px] uppercase tracking-wider text-muted">1er parcial</p>
+    {catalogo.map(({ tema, ejercicios }, i) => {
+      const temaActivo = activeId === tema.id
+      const abierto = temaActivo || ejercicios.some((e) => e.id === activeId)
+      return (
+        <details class="group mb-0.5" open={abierto}>
+          <summary class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer list-none text-sm text-fg-soft hover:bg-hover hover:text-fg [&::-webkit-details-marker]:hidden">
+            <span class="font-mono text-[11px] text-muted w-4">{i + 1}</span>
+            <span class="flex-1 truncate">{tema.data.titulo}</span>
+            <span class="text-[10px] text-muted">{ejercicios.length || ''}</span>
+            <svg
+              class="size-3 text-muted transition-transform group-open:rotate-90"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6" />
+            </svg>
+          </summary>
+          <ul class="ml-6 border-l border-line pl-2 py-1">
+            <li>
+              <a
+                href={temaHref(tema.id)}
+                class:list={[
+                  'block px-2 py-1 rounded text-[13px]',
+                  temaActivo ? 'text-accent bg-accent-soft' : 'text-muted hover:text-fg',
+                ]}
+                aria-current={temaActivo ? 'page' : undefined}
+              >
+                Teoría
+              </a>
+            </li>
+            {ejercicios.map((e) => (
+              <li>
+                <a
+                  href={ejercicioHref(e.id)}
+                  class:list={[
+                    'block px-2 py-1 rounded text-[13px] truncate',
+                    activeId === e.id ? 'text-accent bg-accent-soft' : 'text-muted hover:text-fg',
+                  ]}
+                  aria-current={activeId === e.id ? 'page' : undefined}
+                >
+                  Ej. {e.data.fuente.numero} · {e.data.titulo}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )
+    })}
+  </nav>
+</aside>

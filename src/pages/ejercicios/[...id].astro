@@ -1,0 +1,96 @@
+---
+import Layout from '@layouts/Layout.astro'
+import SimuladorStage from '@components/SimuladorStage.astro'
+import { getEntry, render } from 'astro:content'
+import { getEjercicios, ejercicioHref, temaHref } from '@lib/catalogo'
+import { algoritmoUI, dificultadUI, tipoUI } from '@lib/presentacion'
+
+export async function getStaticPaths() {
+  const ejercicios = await getEjercicios()
+  return ejercicios.map((ejercicio) => {
+    const hermanos = ejercicios.filter((e) => e.data.tema.id === ejercicio.data.tema.id)
+    const i = hermanos.indexOf(ejercicio)
+    return {
+      params: { id: ejercicio.id },
+      props: { ejercicio, anterior: hermanos[i - 1], siguiente: hermanos[i + 1] },
+    }
+  })
+}
+
+const { ejercicio, anterior, siguiente } = Astro.props
+const { titulo, fuente, dificultad, tipo, tags, simulaciones } = ejercicio.data
+const tema = await getEntry(ejercicio.data.tema)
+const { Content } = await render(ejercicio)
+const dif = dificultadUI[dificultad]
+const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
+  sim.etiqueta ?? `Gantt · ${algoritmoUI[sim.algoritmo] ?? sim.algoritmo}`
+---
+
+<Layout title={`Ej. ${fuente.numero} · ${titulo}`} activeId={ejercicio.id}>
+  <article class="max-w-4xl">
+    <nav class="text-xs text-muted" aria-label="Ubicación">
+      <a href="/ejercicios/" class="hover:text-fg">
+        Ejercicios
+      </a>
+      <span aria-hidden="true"> / </span>
+      <a href={temaHref(tema!.id)} class="hover:text-fg">
+        {tema!.data.titulo}
+      </a>
+    </nav>
+
+    <h1 class="mt-3 font-heading text-2xl md:text-3xl text-fg">
+      <span class="text-muted">Ej. {fuente.numero}</span> · {titulo}
+    </h1>
+
+    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-fg-soft">
+      <span class="inline-flex items-center gap-1.5">
+        <span class="size-1.5 rounded-full" style={`background:${dif.color}`}></span>
+        {dif.label}
+      </span>
+      <span>{tipoUI[tipo]}</span>
+      <span class="text-muted">{fuente.guia}</span>
+      {tags.map((t) => (
+        <span class="font-mono text-muted">#{t}</span>
+      ))}
+    </div>
+
+    <section class="prose mt-8 max-w-none" aria-label="Enunciado">
+      <Content />
+    </section>
+
+    <section class="mt-12" aria-labelledby="resolucion">
+      <h2 id="resolucion" class="font-heading text-xl text-fg mb-4">
+        Resolución
+      </h2>
+      {simulaciones.length > 0 ? (
+        <div class="flex flex-col gap-4">
+          {simulaciones.map((sim) => (
+            <SimuladorStage simulacion={sim} titulo={etiquetaSim(sim)} />
+          ))}
+        </div>
+      ) : (
+        <p class="rounded-xl border border-dashed border-line p-4 text-sm text-muted">
+          Todavía no hay resolución cargada para este ejercicio.
+        </p>
+      )}
+    </section>
+
+    <nav
+      class="mt-14 flex justify-between gap-4 border-t border-line pt-6 text-sm"
+      aria-label="Navegación entre ejercicios"
+    >
+      {anterior ? (
+        <a href={ejercicioHref(anterior.id)} class="text-muted hover:text-fg">
+          ← Ej. {anterior.data.fuente.numero} · {anterior.data.titulo}
+        </a>
+      ) : (
+        <span />
+      )}
+      {siguiente && (
+        <a href={ejercicioHref(siguiente.id)} class="text-muted hover:text-fg text-right">
+          Ej. {siguiente.data.fuente.numero} · {siguiente.data.titulo} →
+        </a>
+      )}
+    </nav>
+  </article>
+</Layout>

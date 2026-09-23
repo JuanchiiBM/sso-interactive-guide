@@ -1,0 +1,51 @@
+# ── Build / generados ──
+dist/
+.astro/
+.vercel/
+coverage/
+
+# ── Dependencias ──
+node_modules/
+# El proyecto usa pnpm: se versiona pnpm-lock.yaml, no los lockfiles de otros gestores
+package-lock.json
+yarn.lock
+bun.lockb
+
+# ── Logs ──
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Variables de entorno (se versiona solo .env.example si hace falta) ──
+.env
+.env.*
+!.env.example
+
+# ── PDFs de cátedra/libros: fuente local, nunca al repo público (ver brain: Fuentes y Derechos) ──
+*.pdf
+fuentes-privadas/
+
+# ── Sistema operativo ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editores ──
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# ── Obsidian (el brain se abre como vault; el estado de la UI es personal) ──
+docs/brain/.obsidian/workspace*.json
+docs/brain/.obsidian/cache
+docs/brain/.trash/
+
+# ── Claude Code: settings locales por usuario ──
+.claude/settings.local.json
+
+# ── Python (scripts de la skill project-brain) ──
+__pycache__/
+*.pyc

@@ -1,0 +1,135 @@
+---
+/** Host estático de un simulador paso a paso. Comportamiento: src/lib/simulador-page.ts */
+import type { z } from 'astro/zod'
+import type { simulacionSchema } from '../content.config'
+
+interface Props {
+  simulacion: z.infer<typeof simulacionSchema>
+  titulo?: string
+}
+
+const { simulacion, titulo = 'Resolución paso a paso' } = Astro.props
+const configJson = JSON.stringify(simulacion).replace(/</g, '\\u003c')
+const boton =
+  'inline-flex size-8 items-center justify-center rounded-md text-fg-soft hover:text-fg hover:bg-hover transition-colors'
+---
+
+<section
+  data-simulador
+  tabindex="0"
+  class="rounded-xl border border-line bg-surface-2 overflow-hidden"
+  aria-label={titulo}
+>
+  <script type="application/json" data-simulador-config set:html={configJson}></script>
+  <header class="flex items-center gap-2 px-4 py-2.5 border-b border-line">
+    <h2 class="font-heading text-sm text-fg">{titulo}</h2>
+    <span class="ml-auto font-mono text-xs text-muted" data-sim-contador></span>
+  </header>
+
+  <div class="p-4 flex flex-col gap-3" data-desafio>
+    <p class="text-sm text-fg-soft">
+      Armá el Gantt: hacé clic en la celda del proceso que tiene la CPU en cada instante (dejá la
+      columna vacía si la CPU está ociosa). La resolución se desbloquea cuando acertás.
+    </p>
+    <div class="overflow-x-auto pb-2" data-desafio-grid></div>
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        class="rounded-lg bg-fg text-surface px-3 py-1.5 text-sm font-medium hover:opacity-90"
+        data-desafio-accion="verificar"
+      >
+        Verificar
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border border-line px-3 py-1.5 text-sm text-fg-soft hover:bg-hover"
+        data-desafio-accion="limpiar"
+      >
+        Limpiar
+      </button>
+      <button
+        type="button"
+        class="ml-auto rounded-lg px-3 py-1.5 text-sm text-muted hover:text-fg hover:bg-hover"
+        data-desafio-accion="rendirse"
+      >
+        Me rindo
+      </button>
+    </div>
+    <p class="text-sm min-h-5" aria-live="polite" data-desafio-feedback></p>
+  </div>
+
+  <div data-sim-resolucion hidden>
+    <div class="p-4 flex flex-col gap-4 min-h-40 border-t border-line" data-sim-viz>
+      <p class="text-sm text-muted">Cargando simulación…</p>
+    </div>
+
+    <p
+      class="mx-4 mb-3 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-fg-soft min-h-10"
+      aria-live="polite"
+      data-sim-texto
+    ></p>
+
+    <div class="flex items-center gap-1 px-3 py-2 border-t border-line">
+      <button type="button" class={boton} data-sim-accion="inicio" aria-label="Ir al inicio">
+        <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M6 5h2v14H6zM20 5v14L9 12z"></path>
+        </svg>
+      </button>
+      <button type="button" class={boton} data-sim-accion="atras" aria-label="Paso anterior">
+        <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M18 5v14L7 12z"></path>
+        </svg>
+      </button>
+      <button
+        type="button"
+        class:list={[boton, 'group bg-hover']}
+        data-sim-accion="play"
+        data-sim-play
+        aria-label="Reproducir"
+      >
+        <svg
+          class="size-4 group-data-[playing=true]:hidden"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M7 5v14l12-7z"></path>
+        </svg>
+        <svg
+          class="size-4 hidden group-data-[playing=true]:block"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M7 5h4v14H7zM13 5h4v14h-4z"></path>
+        </svg>
+      </button>
+      <button type="button" class={boton} data-sim-accion="adelante" aria-label="Paso siguiente">
+        <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M6 5v14l11-7z"></path>
+        </svg>
+      </button>
+      <button type="button" class={boton} data-sim-accion="fin" aria-label="Ir al final">
+        <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M16 5h2v14h-2zM4 5v14l11-7z"></path>
+        </svg>
+      </button>
+      <input
+        type="range"
+        min="0"
+        value="0"
+        class="mx-2 flex-1 accent-[var(--accent)]"
+        aria-label="Paso"
+        data-sim-slider
+      />
+      <button
+        type="button"
+        class="px-2 h-8 rounded-md font-mono text-xs text-fg-soft hover:bg-hover"
+        data-sim-accion="velocidad"
+        aria-label="Cambiar velocidad"
+      >
+        <span data-sim-speed-label>1×</span>
+      </button>
+    </div>
+  </div>
+</section>

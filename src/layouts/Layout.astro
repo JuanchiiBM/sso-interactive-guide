@@ -1,0 +1,79 @@
+---
+import '@styles/global.css'
+import SiteHeader from '@components/SiteHeader.astro'
+import SiteSidebar from '@components/SiteSidebar.astro'
+import { SITE, universidadLabel } from '@lib/site'
+import { THEME_COLORS } from '@lib/theme'
+
+interface Props {
+  title?: string
+  description?: string
+  /** Id del tema o ejercicio activo, para marcarlo en el sidebar. */
+  activeId?: string
+}
+
+const { title, description = SITE.descripcion, activeId } = Astro.props
+const fullTitle = title
+  ? `${title} · ${SITE.materia} ${universidadLabel}`
+  : `${SITE.nombre} · ${SITE.materia} ${universidadLabel}`
+const canonical = new URL(Astro.url.pathname, Astro.site).href
+---
+
+<!doctype html>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      rel="preload"
+      href="/fonts/GeistPixel-Square.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content={THEME_COLORS.dark} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:site_name" content={`${SITE.nombre} — ${universidadLabel}`} />
+    <!-- Sin FOUC: resolver tema antes del primer paint (misma lógica que src/lib/theme.ts) -->
+    <script is:inline define:vars={{ colors: THEME_COLORS }}>
+      const saved = document.cookie
+        .split('; ')
+        .find((c) => c.startsWith('theme='))
+        ?.split('=')[1]
+      const theme =
+        saved === 'light' || saved === 'dark'
+          ? saved
+          : matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark'
+      document.documentElement.dataset.theme = theme
+      document.documentElement.style.colorScheme = theme
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors[theme])
+    </script>
+  </head>
+  <body class="bg-surface text-fg font-sans antialiased min-h-dvh">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-100 focus:px-3 focus:py-2 focus:rounded-md focus:bg-fg focus:text-surface"
+    >
+      Ir al contenido principal
+    </a>
+    <SiteHeader />
+    <div class="flex">
+      <SiteSidebar activeId={activeId} />
+      <main id="main-content" class="flex-1 min-w-0 px-4 py-8 md:px-10 md:py-10">
+        <slot />
+      </main>
+    </div>
+    <script>
+      import '@scripts/client.ts'
+    </script>
+  </body>
+</html>

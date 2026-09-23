@@ -1,0 +1,28 @@
+---
+import Layout from '@layouts/Layout.astro'
+import { getTemas, temaHref } from '@lib/catalogo'
+
+const temas = await getTemas(1)
+---
+
+<Layout title="Teoría">
+  <h1 class="font-heading text-2xl text-fg">Teoría · 1er parcial</h1>
+  <p class="mt-2 text-fg-soft">
+    Resumen por tema, con las preguntas de parcial respondidas al final de cada uno.
+  </p>
+  <ol class="mt-8 max-w-2xl divide-y divide-line border-y border-line">
+    {temas.map((tema, i) => (
+      <li>
+        <a href={temaHref(tema.id)} class="flex gap-4 py-4 group">
+          <span class="font-mono text-sm text-muted pt-0.5">{String(i + 1).padStart(2, '0')}</span>
+          <span>
+            <span class="block font-heading text-fg group-hover:text-accent">
+              {tema.data.titulo}
+            </span>
+            <span class="block mt-1 text-sm text-fg-soft">{tema.data.resumen}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</Layout>

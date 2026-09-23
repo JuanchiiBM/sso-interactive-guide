@@ -1,0 +1,78 @@
+---
+import Layout from '@layouts/Layout.astro'
+import { getCatalogo, temaHref } from '@lib/catalogo'
+import { SITE, universidadLabel } from '@lib/site'
+
+const catalogo = await getCatalogo(1)
+const totalEjercicios = catalogo.reduce((n, c) => n + c.ejercicios.length, 0)
+const conSimulador = catalogo.reduce(
+  (n, c) => n + c.ejercicios.filter((e) => e.data.simulaciones.length > 0).length,
+  0,
+)
+---
+
+<Layout>
+  <section class="max-w-3xl">
+    <p class="text-xs uppercase tracking-widest text-accent mb-3">
+      {SITE.universidadNombre} · {universidadLabel}
+    </p>
+    <h1 class="font-heading text-3xl md:text-4xl text-fg leading-tight">
+      {SITE.materia}, interactivo
+    </h1>
+    <p class="mt-4 text-fg-soft leading-relaxed">
+      Teoría resumida y los ejercicios de las guías de la cátedra, con resoluciones que podés
+      reproducir paso a paso: cada instante del Gantt y cada decisión del planificador, explicados.
+    </p>
+    <div class="mt-6 flex flex-wrap gap-3">
+      <a
+        href="/ejercicios/"
+        class="inline-flex items-center gap-2 rounded-lg bg-fg text-surface px-4 py-2 text-sm font-medium hover:opacity-90"
+      >
+        Ir a los ejercicios
+      </a>
+      <a
+        href="/teoria/"
+        class="inline-flex items-center gap-2 rounded-lg border border-line-strong px-4 py-2 text-sm text-fg hover:bg-hover"
+      >
+        Leer la teoría
+      </a>
+    </div>
+    <dl class="mt-8 flex gap-8 text-sm">
+      <div>
+        <dt class="text-muted">Temas</dt>
+        <dd class="font-mono text-xl text-fg">{catalogo.length}</dd>
+      </div>
+      <div>
+        <dt class="text-muted">Ejercicios</dt>
+        <dd class="font-mono text-xl text-fg">{totalEjercicios}</dd>
+      </div>
+      <div>
+        <dt class="text-muted">Con simulador</dt>
+        <dd class="font-mono text-xl text-fg">{conSimulador}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="mt-14">
+    <h2 class="font-heading text-lg text-fg mb-4">1er parcial</h2>
+    <ol class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {catalogo.map(({ tema, ejercicios }, i) => (
+        <li>
+          <a
+            href={temaHref(tema.id)}
+            class="group block h-full rounded-xl border border-line bg-surface-2 p-4 hover:border-line-strong transition-colors"
+          >
+            <div class="flex items-baseline gap-2">
+              <span class="font-mono text-xs text-muted">{String(i + 1).padStart(2, '0')}</span>
+              <h3 class="font-heading text-fg group-hover:text-accent">{tema.data.titulo}</h3>
+            </div>
+            <p class="mt-2 text-sm text-fg-soft leading-snug">{tema.data.resumen}</p>
+            <p class="mt-3 text-xs text-muted">
+              {ejercicios.length > 0 ? `${ejercicios.length} ejercicios` : 'Solo teoría'}
+            </p>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </section>
+</Layout>

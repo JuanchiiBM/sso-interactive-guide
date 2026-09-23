@@ -1,0 +1,83 @@
+/* Visualizadores de simuladores (Gantt, métricas). Colores siempre desde tokens. */
+.gantt-grid {
+  display: grid;
+  gap: 2px;
+  min-width: max-content;
+}
+.gantt-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+}
+.gantt-cell {
+  height: 1.6rem;
+  border-radius: 3px;
+  background: var(--surface-3);
+  transition: background-color 160ms ease;
+}
+.gantt-cpu {
+  background: var(--c);
+}
+.gantt-listo {
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.gantt-io {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--c) 55%, transparent) 0 3px,
+    transparent 3px 6px
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.gantt-espera-io {
+  background: radial-gradient(color-mix(in srgb, var(--c) 60%, transparent) 1px, transparent 1.5px)
+    0 0 / 5px 5px;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.gantt-actual {
+  outline: 2px solid var(--step);
+  outline-offset: 1px;
+}
+.gantt-tiempo {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-align: left;
+}
+.metricas-tabla {
+  font-size: 0.8rem;
+  border-collapse: collapse;
+  width: max-content;
+}
+.metricas-tabla :where(th, td) {
+  border: 1px solid var(--line);
+  padding: 0.3rem 0.7rem;
+  font-family: var(--font-mono);
+  text-align: center;
+}
+.metricas-tabla th {
+  background: var(--surface-3);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+/* Entrada del desafío: celdas clickeables */
+.gantt-input {
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+}
+.gantt-input:hover {
+  background: color-mix(in srgb, var(--c) 30%, var(--surface-3));
+}
+.gantt-input[aria-pressed='true'] {
+  background: var(--c);
+}
+.gantt-error {
+  outline: 2px solid var(--bad);
+  outline-offset: 1px;
+}

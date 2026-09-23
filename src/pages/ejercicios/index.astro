@@ -1,0 +1,63 @@
+---
+import Layout from '@layouts/Layout.astro'
+import EjercicioCard from '@components/EjercicioCard.astro'
+import { getCatalogo, temaHref } from '@lib/catalogo'
+
+const catalogo = (await getCatalogo(1)).filter((c) => c.ejercicios.length > 0)
+const chip =
+  'rounded-full border border-line px-3 py-1 text-xs text-fg-soft hover:bg-hover aria-pressed:border-accent aria-pressed:text-accent aria-pressed:bg-accent-soft'
+---
+
+<Layout title="Ejercicios">
+  <h1 class="font-heading text-2xl text-fg">Ejercicios · 1er parcial</h1>
+  <p class="mt-2 text-fg-soft max-w-2xl">
+    Enunciados de las guías de la cátedra. Los marcados <span class="text-accent">Paso a paso</span>
+    traen una resolución que podés reproducir instante por instante.
+  </p>
+
+  <div class="mt-6 flex flex-wrap gap-2" data-filtros role="group" aria-label="Filtrar ejercicios">
+    <button type="button" class={chip} data-filtro="tema" data-valor="" aria-pressed="true">
+      Todos
+    </button>
+    {catalogo.map(({ tema }) => (
+      <button
+        type="button"
+        class={chip}
+        data-filtro="tema"
+        data-valor={tema.id}
+        aria-pressed="false"
+      >
+        {tema.data.titulo}
+      </button>
+    ))}
+    <span class="mx-1 w-px bg-line" aria-hidden="true"></span>
+    <button type="button" class={chip} data-filtro="simulador" data-valor="si" aria-pressed="false">
+      Solo paso a paso
+    </button>
+  </div>
+
+  {catalogo.map(({ tema, ejercicios }) => (
+    <section class="mt-10" data-grupo-tema={tema.id}>
+      <h2 class="font-heading text-lg text-fg mb-3">
+        <a href={temaHref(tema.id)} class="hover:text-accent">
+          {tema.data.titulo}
+        </a>
+      </h2>
+      <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {ejercicios.map((e) => (
+          <li>
+            <EjercicioCard ejercicio={e} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+  <p class="mt-10 text-sm text-muted hidden" data-sin-resultados>
+    No hay ejercicios con esos filtros.
+  </p>
+
+  <script>
+    import { initFiltrosEjercicios } from '@lib/filtros-ejercicios'
+    initFiltrosEjercicios()
+  </script>
+</Layout>

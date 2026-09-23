@@ -1,0 +1,150 @@
+@import 'tailwindcss';
+@import './prose.css' layer(components);
+@import './simulador.css' layer(components);
+
+/* Tema por data-theme en <html> (claro/oscuro). Tokens semánticos: nunca colores fijos en componentes. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist Pixel Square';
+  src: url('/fonts/GeistPixel-Square.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root,
+[data-theme='dark'] {
+  --surface: #0a0a0a;
+  --surface-2: #121212;
+  --surface-3: #1a1a1a;
+  --fg: #ededed;
+  --fg-soft: #b4b4b4;
+  --muted: #7a7a7a;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --hover: rgba(255, 255, 255, 0.06);
+  --accent: #60a5fa;
+  --accent-soft: rgba(96, 165, 250, 0.12);
+  --step: #fcd34d;
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  /* Paleta de procesos (Gantt, tablas). Índice = orden del proceso. */
+  --p1: #60a5fa;
+  --p2: #f472b6;
+  --p3: #34d399;
+  --p4: #fbbf24;
+  --p5: #a78bfa;
+  --p6: #fb923c;
+  --p7: #22d3ee;
+  --p8: #f87171;
+}
+
+[data-theme='light'] {
+  --surface: #ffffff;
+  --surface-2: #f6f6f6;
+  --surface-3: #ececec;
+  --fg: #171717;
+  --fg-soft: #404040;
+  --muted: #6b6b6b;
+  --line: rgba(0, 0, 0, 0.09);
+  --line-strong: rgba(0, 0, 0, 0.18);
+  --hover: rgba(0, 0, 0, 0.05);
+  --accent: #1d4ed8;
+  --accent-soft: rgba(29, 78, 216, 0.09);
+  --step: #a16207;
+  --ok: #047857;
+  --warn: #b45309;
+  --bad: #b91c1c;
+  --p1: #2563eb;
+  --p2: #db2777;
+  --p3: #059669;
+  --p4: #d97706;
+  --p5: #7c3aed;
+  --p6: #ea580c;
+  --p7: #0891b2;
+  --p8: #dc2626;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-fg: var(--fg);
+  --color-fg-soft: var(--fg-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-hover: var(--hover);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-step: var(--step);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+}
+
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-heading: 'Geist Pixel Square', system-ui, sans-serif;
+}
+
+html {
+  background: var(--surface);
+  color: var(--fg);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 3px;
+}
+
+.theme-icon-light {
+  display: none;
+}
+[data-theme='light'] .theme-icon-light {
+  display: block;
+}
+[data-theme='light'] .theme-icon-dark {
+  display: none;
+}
+
+/* Shiki dual theme: el HTML trae ambas paletas, el tema activo elige */
+[data-theme='dark'] .astro-code,
+[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,35 @@
+/** Consultas a las content collections, agrupadas para navegación (solo build/SSR). */
+import { getCollection, type CollectionEntry } from 'astro:content'
+
+export type Tema = CollectionEntry<'temas'>
+export type Ejercicio = CollectionEntry<'ejercicios'>
+
+export interface TemaConEjercicios {
+  tema: Tema
+  ejercicios: Ejercicio[]
+}
+
+export async function getTemas(parcial?: 1 | 2): Promise<Tema[]> {
+  const temas = await getCollection('temas', (t) => parcial == null || t.data.parcial === parcial)
+  return temas.sort((a, b) => a.data.parcial - b.data.parcial || a.data.orden - b.data.orden)
+}
+
+export async function getEjercicios(): Promise<Ejercicio[]> {
+  const ejercicios = await getCollection('ejercicios')
+  return ejercicios.sort((a, b) => compararNumero(a.data.fuente.numero, b.data.fuente.numero))
+}
+
+export async function getCatalogo(parcial?: 1 | 2): Promise<TemaConEjercicios[]> {
+  const [temas, ejercicios] = await Promise.all([getTemas(parcial), getEjercicios()])
+  return temas.map((tema) => ({
+    tema,
+    ejercicios: ejercicios.filter((e) => e.data.tema.id === tema.id),
+  }))
+}
+
+export const temaHref = (id: string) => `/teoria/${id}/`
+export const ejercicioHref = (id: string) => `/ejercicios/${id}/`
+
+function compararNumero(a: string | number, b: string | number): number {
+  return String(a).localeCompare(String(b), 'es', { numeric: true })
+}

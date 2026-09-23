@@ -1,0 +1,44 @@
+{
+  "name": "sso-interactive-guide",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Guía interactiva de Sistemas Operativos (UTN): teoría + ejercicios resueltos paso a paso.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepare": "husky",
+    "format": "prettier . --write",
+    "lint": "eslint . --fix"
+  },
+  "lint-staged": {
+    "*": "prettier --ignore-unknown --write"
+  },
+  "packageManager": "pnpm@11.20.0",
+  "dependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "astro": "7.1.1",
+    "mermaid": "^12.0.0",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@stylistic/eslint-plugin": "5.10.0",
+    "eslint": "10.7.0",
+    "eslint-plugin-n": "18.2.2",
+    "eslint-plugin-promise": "7.3.0",
+    "globals": "17.7.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.1.0",
+    "prettier": "3.9.5",
+    "prettier-plugin-astro": "^1.0.1",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  }
+}
