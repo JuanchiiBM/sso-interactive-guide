@@ -105,6 +105,30 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
       )
       .min(1),
   }),
+  /** Gantt de código: sentencias con duración + semáforos/recursos (ver brain). */
+  z.object({
+    kind: z.literal('codigo'),
+    etiqueta: z.string().optional(),
+    algoritmo: z.enum(['fifo', 'rr', 'prioridades', 'prioridades-desalojo']),
+    quantum: z.number().positive().optional(),
+    duracion: z.number().int().nonnegative().optional(),
+    atomicas: z.boolean().optional(),
+    semaforos: z.record(z.string(), z.number().int().nonnegative()).optional(),
+    recursos: z.record(z.string(), z.number().int().positive()).optional(),
+    detector: z.object({ sentencia: z.string() }).optional(),
+    hasta: z.number().int().positive().optional(),
+    hastaQueTerminen: z.array(z.string()).optional(),
+    procesos: z
+      .array(
+        z.object({
+          id: z.string(),
+          llegada: z.number().int().nonnegative(),
+          prioridad: z.number().optional(),
+          codigo: z.string(),
+        }),
+      )
+      .min(1),
+  }),
 ])
 
 const ejercicios = defineCollection({

@@ -26,8 +26,10 @@ const tema = await getEntry(ejercicio.data.tema)
 const { Content } = await render(ejercicio)
 const dif = dificultadUI[dificultad]
 const ayuda = [
-  simulaciones.length > 0 &&
+  simulaciones.some((s) => s.kind === 'planificacion') &&
     'Armá el Gantt: en cada instante marcá quién usa la CPU (click) y quién usa el dispositivo de E/S (click derecho). Dejá vacío lo que está en listos o esperando.',
+  simulaciones.some((s) => s.kind === 'codigo') &&
+    'Armá el Gantt: en cada instante marcá quién usa la CPU (click) y quién está bloqueado en un semáforo, un recurso o un sleep (click derecho). Dejá vacío lo que está en listos o todavía no llegó.',
   preguntas.length > 0 &&
     'Elegí una opción por pregunta y verificá. Si fallás, te decimos por qué esa opción no es.',
   semaforos.length > 0 &&

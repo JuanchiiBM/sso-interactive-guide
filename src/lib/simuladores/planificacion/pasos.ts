@@ -11,7 +11,11 @@ export interface EstadoGantt {
 }
 
 export function pasosPlanificacion(config: ConfigPlanificacion): Step<EstadoGantt>[] {
-  const resultado = simularPlanificacion(config)
+  return pasosDeResultado(simularPlanificacion(config))
+}
+
+/** Un paso por tick más el final con métricas; lo comparten planificación y Gantt de código. */
+export function pasosDeResultado(resultado: ResultadoPlanificacion): Step<EstadoGantt>[] {
   const procesos = resultado.hilos
 
   const pasos: Step<EstadoGantt>[] = resultado.ticks.map((tick) => ({

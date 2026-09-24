@@ -68,7 +68,8 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
           celda.classList.add(meta.clase)
           const k = tick.cpus.indexOf(id)
           if (multi && k >= 0) celda.textContent = String(k + 1)
-          celda.title = `${etiqueta(id)} · t=${tick.t}: ${meta.label}${multi && k >= 0 ? ` ${k + 1}` : ''}`
+          const sentencia = tick.sentencias?.[id] ? ` (${tick.sentencias[id]})` : ''
+          celda.title = `${etiqueta(id)} · t=${tick.t}: ${etiquetaEstado(state, estado)}${multi && k >= 0 ? ` ${k + 1}` : ''}${sentencia}`
         }
         celda.style.setProperty('--c', colorProceso(i))
       }
@@ -105,6 +106,16 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
         const cola = d.cola.length ? ` (cola: ${d.cola.join(' → ')})` : ''
         panel.append(chip(d.nombre, `${d.usando ?? '—'}${cola}`))
       }
+    } else if (tickActual.sincro) {
+      const id = tickActual.cpu
+      if (id && tickActual.sentencias?.[id])
+        panel.append(chip('Ejecuta', tickActual.sentencias[id]))
+      panel.append(chip('Bloqueados', tickActual.io.join(', ') || '—'))
+      for (const s of tickActual.sincro) {
+        const duenos = s.duenos?.length ? ` · de ${s.duenos.join(', ')}` : ''
+        const cola = s.cola.length ? ` (cola: ${s.cola.join(' → ')})` : ''
+        panel.append(chip(s.nombre, `${s.valor}${duenos}${cola}`))
+      }
     } else {
       panel.append(chip('E/S', tickActual.io.join(', ') || '—'))
       if (tickActual.colaIO.length) panel.append(chip('Cola E/S', tickActual.colaIO.join(' → ')))
@@ -124,15 +135,22 @@ function chip(label: string, value: string): HTMLElement {
   return c
 }
 
-function leyenda({ resultado }: EstadoGantt): HTMLElement {
+/** En el Gantt de código "bloqueado" es en un semáforo, recurso o sleep, no E/S. */
+function etiquetaEstado({ resultado }: EstadoGantt, estado: EstadoProceso): string {
+  if (estado === 'bloqueado' && resultado.bloqueoSincro) return 'Bloqueado'
+  return CELDA[estado]?.label ?? estado
+}
+
+function leyenda(state: EstadoGantt): HTMLElement {
+  const { resultado } = state
   const box = el('div', 'flex flex-wrap gap-4 text-[11px] text-muted')
   const usados = new Set(resultado.ticks.flatMap((t) => Object.values(t.estados)))
   for (const [estado, meta] of Object.entries(CELDA)) {
-    if (estado === 'espera-admision' && !usados.has(estado)) continue
+    if ((estado === 'espera-admision' || resultado.bloqueoSincro) && !usados.has(estado as EstadoProceso)) continue
     const item = el('span', 'inline-flex items-center gap-1.5')
     const muestra = el('span', `gantt-cell ${meta!.clase} inline-block size-3`)
     muestra.style.setProperty('--c', 'var(--muted)')
-    item.append(muestra, meta!.label)
+    item.append(muestra, etiquetaEstado(state, estado as EstadoProceso))
     box.append(item)
   }
   return box

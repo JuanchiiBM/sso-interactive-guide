@@ -122,6 +122,10 @@ export interface Tick {
   /** Por hilo planificable (ULT o KLT simple). */
   estados: Record<string, EstadoProceso>
   eventos: string[]
+  /** Solo Gantt de código: sentencia que ejecuta cada uno en este tick. */
+  sentencias?: Record<string, string>
+  /** Solo Gantt de código: semáforos y recursos al inicio del tick. */
+  sincro?: { nombre: string; valor: number; cola: string[]; duenos?: string[] }[]
 }
 
 export interface MetricasProceso {
@@ -147,4 +151,6 @@ export interface ResultadoPlanificacion {
   hilos: string[]
   /** Solo con ULTs: KLT de cada ULT. */
   kltDe?: Record<string, string>
+  /** Solo Gantt de código: `tick.io` son los bloqueados (semáforo, recurso o sleep), no la E/S. */
+  bloqueoSincro?: boolean
 }

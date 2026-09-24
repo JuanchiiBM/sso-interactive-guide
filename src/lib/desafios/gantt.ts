@@ -20,9 +20,11 @@ export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[])
   const esperada = grillaEsperada(resultado, procesos)
   const total = resultado.ticks.length
   const multi = resultado.procesadores > 1
+  // en el Gantt de código el click derecho marca bloqueado (semáforo, recurso o sleep)
+  const io = resultado.bloqueoSincro ? 'Bloqueado' : 'E/S'
   const nombre: Record<Pincel, string> = multi
-    ? { cpu: 'CPU 1', cpu2: 'CPU 2', io: 'E/S' }
-    : { cpu: 'CPU', cpu2: 'CPU 2', io: 'E/S' }
+    ? { cpu: 'CPU 1', cpu2: 'CPU 2', io }
+    : { cpu: 'CPU', cpu2: 'CPU 2', io }
   const tipos: Pincel[] = multi ? ['cpu', 'cpu2', 'io'] : ['cpu', 'io']
   const respuesta: GrillaGantt = Object.fromEntries(
     procesos.map((p) => [p, Array(total).fill(null)]),
@@ -51,7 +53,7 @@ export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[])
   }
   const ayuda = document.createElement('span')
   ayuda.className = 'ml-2 text-muted'
-  ayuda.textContent = 'Click derecho siempre marca E/S.'
+  ayuda.textContent = `Click derecho siempre marca ${io}.`
   pinceles.append(ayuda)
 
   const grid = document.createElement('div')
