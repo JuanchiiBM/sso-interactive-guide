@@ -147,3 +147,78 @@
 .dg-separador {
   stroke: var(--line-strong);
 }
+
+/* ── Gantt estático (```gantt): solo CPU y E/S ── */
+.gantt-estatico {
+  overflow-x: auto;
+}
+.gantt-estatico svg {
+  margin: 0;
+}
+.gantt-estatico .ge-etiqueta {
+  text-anchor: end;
+  fill: var(--fg-soft);
+}
+.gantt-estatico .ge-eje {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.gantt-estatico .ge-cpu-n {
+  font-size: 11px;
+  fill: var(--surface);
+}
+.ge-p1 {
+  --c: var(--p1);
+}
+.ge-p2 {
+  --c: var(--p2);
+}
+.ge-p3 {
+  --c: var(--p3);
+}
+.ge-p4 {
+  --c: var(--p4);
+}
+.ge-p5 {
+  --c: var(--p5);
+}
+.ge-p6 {
+  --c: var(--p6);
+}
+.ge-p7 {
+  --c: var(--p7);
+}
+.ge-p8 {
+  --c: var(--p8);
+}
+rect.ge-cpu {
+  fill: var(--c);
+}
+rect.ge-io {
+  fill: color-mix(in srgb, var(--c) 22%, transparent);
+  stroke: var(--c);
+  stroke-dasharray: 3 2;
+}
+rect.ge-vacia {
+  fill: none;
+  stroke: var(--line);
+}
+.gantt-estatico figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.ge-ref {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin: 0 0.25rem 0 0.75rem;
+  border-radius: 2px;
+  vertical-align: -0.1rem;
+}
+.ge-ref.ge-cpu {
+  background: var(--fg-soft);
+}
+.ge-ref.ge-io {
+  border: 1px dashed var(--fg-soft);
+}

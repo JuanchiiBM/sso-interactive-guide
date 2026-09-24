@@ -1,8 +1,8 @@
 ---
 tipo: componente
-aliases: [grafo, grafo de asignación, resource allocation graph, RAG, diagrama, svg, bloques, bloqueSVG, renderGrafo, renderDiagrama, satteri]
+aliases: [grafo, grafo de asignación, resource allocation graph, RAG, diagrama, svg, bloques, bloqueSVG, renderGrafo, renderDiagrama, satteri, gantt, gantt estático, gantt inverso, renderGanttEstatico]
 tags: [componente, contenido, svg]
-actualizado: 2026-09-23
+actualizado: 2026-09-24
 ---
 # Bloques SVG grafo y diagrama
 
@@ -24,6 +24,17 @@ mismo par se curvan. ⚠️ No usar `resaltar-ciclo` en un enunciado donde detec
 ## ```diagrama <id> — diagramas fijos de teoría
 Registro en `DIAGRAMAS` (`src/lib/diagramas/index.ts`): `estados-proceso`, `ciclo-instruccion`,
 `hilos-ult-klt`. Se dibujan a mano con las primitivas de `svg.ts` (`caja`, `rombo`, `flecha`, `marco`).
+
+## ```gantt — Gantt ya resuelto (enunciados de Gantt inverso)
+El cuerpo es la **misma config YAML** que una `simulaciones:` de planificación (sin `kind`, con
+`titulo` opcional). En build corre `simularPlanificacion` y dibuja solo **CPU y E/S** (como en el
+examen; Listo no se dibuja para no regalar la cola). Filas = `r.hilos`, con prefijo de KLT si hay ULTs.
+Código: `src/lib/diagramas/gantt-estatico.ts`. Se usa en planificación Ej. 17–19 e hilos Ej. 11–13.
+
+- La config tiene que reproducir el Gantt **oficial**: copiala de un caso ya validado en
+  `catedra.test.ts` / `hilos.test.ts`. Antes de escribir el MC, corré los distractores en el
+  simulador: ninguno tiene que dar el mismo Gantt.
+- Imports **relativos** (no `@lib/`): lo importa `bloques-svg.ts`, que también carga vitest sin el alias.
 
 ## Dónde se engancha
 - Colecciones (`.md`): plugin mdast de **Sätteri** (`bloquesSVGPlugin`) en `astro.config.mjs` →
