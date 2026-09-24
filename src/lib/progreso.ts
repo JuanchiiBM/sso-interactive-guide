@@ -41,17 +41,7 @@ function pintarResueltos(): void {
   document.dispatchEvent(new Event(`${EVENTO}:pintado`))
 }
 
-/** Los borradores del editor de semáforos ya no se guardan: se borran los que hayan quedado. */
-function limpiarBorradores(): void {
-  try {
-    for (const k of Object.keys(localStorage)) {
-      if (k.startsWith('so:borrador:')) localStorage.removeItem(k)
-    }
-  } catch {}
-}
-
 export function initProgreso(): void {
-  limpiarBorradores()
   pintarResueltos()
   document.addEventListener(EVENTO, pintarResueltos)
 }

@@ -10,6 +10,24 @@ export function initSemaforos(): void {
   for (const box of $$<HTMLElement>('[data-sem]')) init(box)
 }
 
+// borrador del código hasta resolverlo: al pasar todos los tests se borra (si después se edita, vuelve)
+const BORRADOR = 'so:borrador:v2:'
+
+function leerBorrador(clave: string): string | null {
+  try {
+    return localStorage.getItem(BORRADOR + clave)
+  } catch {
+    return null
+  }
+}
+
+function guardarBorrador(clave: string, texto: string | null): void {
+  try {
+    if (texto == null) localStorage.removeItem(BORRADOR + clave)
+    else localStorage.setItem(BORRADOR + clave, texto)
+  } catch {}
+}
+
 function init(box: HTMLElement): void {
   const spec = JSON.parse($('[data-sem-spec]', box)!.textContent!) as EjercicioSemaforos
   const clave = `${rutaActual()}#sem-${box.dataset.semClave}`
@@ -26,7 +44,10 @@ function init(box: HTMLElement): void {
       editor.value = t
     },
   }
-  editor.value = original
+  // la plantilla sin tocar no se guarda como borrador
+  const guardar = (t: string) => guardarBorrador(clave, t === original ? null : t)
+  editor.value = leerBorrador(clave) ?? original
+  editor.addEventListener('input', () => guardar(editor.value))
   void import('@lib/editor/editor-c').then(({ crearEditorC }) => {
     const host = document.createElement('div')
     host.className = 'sem-editor-host'
@@ -34,6 +55,7 @@ function init(box: HTMLElement): void {
     editor.hidden = true
     const cm = crearEditorC(host, {
       valor: editor.value,
+      alCambiar: guardar,
       lint: (t) => parsear(t, spec).errores,
     })
     codigo = { get: cm.getValue, set: cm.setValue }
@@ -63,7 +85,10 @@ function init(box: HTMLElement): void {
       setTimeout(() => {
         const r = verificarSemaforos(codigo.get(), spec)
         pintar(r)
-        if (r.ok) control.acerto()
+        if (r.ok) {
+          guardarBorrador(clave, null)
+          control.acerto()
+        }
       }, 20)
     }
   })

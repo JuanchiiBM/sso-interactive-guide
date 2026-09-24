@@ -72,6 +72,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href
         <slot />
       </main>
     </div>
+    <!-- marca los resueltos antes del primer render (si no, parpadea al navegar); la lógica viva está en lib/progreso.ts -->
+    <script is:inline>
+      try {
+        for (const el of document.querySelectorAll('[data-claves]')) {
+          const claves = el.dataset.claves.split('|').filter(Boolean)
+          const ok = claves.length > 0 && claves.every((k) => localStorage.getItem('so:resuelto:' + k) === '1')
+          el.toggleAttribute('data-resuelto', ok)
+        }
+      } catch {}
+    </script>
     <script>
       import '@scripts/client.ts'
     </script>

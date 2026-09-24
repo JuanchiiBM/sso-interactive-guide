@@ -47,9 +47,10 @@ Si el `wait` que traba está en el prólogo, se explica que corre una sola vez.
 ## Editor
 CodeMirror 6 (`src/lib/editor/editor-c.ts`), importado lazy (~165 KB gzip) sobre el `<textarea>`
 de respaldo. Resaltado C con tokens `--code-*` de `global.css` (ambos temas); `semaphore`, `wait`,
-`signal` y `TRUE` se marcan aparte con un `MatchDecorator` (no son C estándar). **No se guardan
-borradores** (decisión del dueño): cada visita arranca con la plantilla. `initProgreso` borra los
-`so:borrador:*` que hayan quedado de versiones anteriores.
+`signal` y `TRUE` se marcan aparte con un `MatchDecorator` (no son C estándar). Borrador en
+localStorage (`so:borrador:v2:` + clave) **hasta resolverlo**: al pasar todos los tests se borra; si
+después se vuelve a editar, se guarda de nuevo. La plantilla sin tocar no se guarda. Si cambia la
+sintaxis, subir la versión de la clave.
 
 ## Semántica del modelo
 - Cada línea del enunciado es una **acción atómica**. Un proceso "está en" una acción cuando su
