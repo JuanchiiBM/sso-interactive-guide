@@ -178,6 +178,8 @@ export interface ResultadoPlanificacion {
   kltDe?: Record<string, string>
   /** Con overhead de interrupciones: el Gantt agrega la fila "SO". */
   so?: boolean
+  /** Instantes con 2+ CPUs libres donde el orden de asignación es arbitrario (ver `variantesPlanificacion`). */
+  decisionesCpu?: number
   /** Solo Gantt de código: `tick.io` son los bloqueados (semáforo, recurso o sleep), no la E/S. */
   bloqueoSincro?: boolean
 }

@@ -8,6 +8,7 @@ import { pasosPlanificacion, type EstadoGantt } from '@lib/simuladores/planifica
 import { renderGantt } from '@lib/visualizers/gantt'
 import type { ConfigPlanificacion } from '@lib/simuladores/planificacion/tipos'
 import { crearDesafioGantt } from '@lib/desafios/gantt'
+import { variantesPlanificacion } from '@lib/simuladores/planificacion/verificar'
 import { pasosCodigo } from '@lib/simuladores/codigo/pasos'
 import type { ConfigCodigo } from '@lib/simuladores/codigo/tipos'
 import type { Desafio } from '@lib/desafios/tipos'
@@ -18,7 +19,7 @@ type Registro = {
   pasos: (config: never) => Step<unknown>[]
   render: (root: HTMLElement, state: never) => void
   /** Sin desafío, la resolución se muestra directo. */
-  desafio?: (root: HTMLElement, pasos: never) => Desafio
+  desafio?: (root: HTMLElement, pasos: never, config: never) => Desafio
 }
 
 /** Un simulador por `kind` del schema. Agregar acá cada tipo nuevo. */
@@ -26,7 +27,8 @@ const SIMULADORES: Record<string, Registro> = {
   planificacion: {
     pasos: (c: ConfigPlanificacion) => pasosPlanificacion(c),
     render: (root, s: EstadoGantt) => renderGantt(root, s),
-    desafio: (root, pasos: Step<EstadoGantt>[]) => crearDesafioGantt(root, pasos),
+    desafio: (root, pasos: Step<EstadoGantt>[], c: ConfigPlanificacion) =>
+      crearDesafioGantt(root, pasos, variantesPlanificacion(c).slice(1)),
   },
   codigo: {
     pasos: (c: ConfigCodigo) => pasosCodigo(c),
@@ -100,7 +102,9 @@ function initSimulador(host: HTMLElement, indice: number): void {
   const resolucion = $<HTMLElement>('[data-sim-resolucion]', host)
   if (sim.desafio) {
     const crear = sim.desafio
-    initDesafio(host, `${rutaActual()}#${indice}`, (root) => crear(root, pasos as never))
+    initDesafio(host, `${rutaActual()}#${indice}`, (root) =>
+      crear(root, pasos as never, config as never),
+    )
   } else {
     $('[data-desafio]', host)?.remove()
     if (resolucion) resolucion.hidden = false

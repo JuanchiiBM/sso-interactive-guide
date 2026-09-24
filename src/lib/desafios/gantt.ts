@@ -6,22 +6,33 @@ import {
   type EstadoGantt,
 } from '@lib/simuladores/planificacion/pasos'
 import {
+  extenderGrilla,
   grillaEsperada,
   verificarGantt,
   type GrillaGantt,
   type Marca,
 } from '@lib/simuladores/planificacion/verificar'
 import type { Desafio } from '@lib/desafios/tipos'
+import type { ResultadoPlanificacion } from '@lib/simuladores/planificacion/tipos'
 import { FILA_SO } from '@lib/simuladores/planificacion/tipos'
 
 type Pincel = Exclude<Marca, null>
 
-export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[]): Desafio {
+/** `alternativas`: otros Gantts igual de válidos (elecciones arbitrarias); acierta si coincide con alguno. */
+export function crearDesafioGantt(
+  root: HTMLElement,
+  pasos: Step<EstadoGantt>[],
+  alternativas: ResultadoPlanificacion[] = [],
+): Desafio {
   const { resultado } = pasos[0].state
   const esperada = grillaEsperada(resultado, pasos[0].state.procesos)
   const procesos = Object.keys(esperada)
   const etiqueta = (id: string) => (id === FILA_SO ? 'SO' : etiquetaHilo(resultado, id))
-  const total = resultado.ticks.length
+  const total = Math.max(resultado.ticks.length, ...alternativas.map((r) => r.ticks.length))
+  const esperadas = [
+    esperada,
+    ...alternativas.map((r) => grillaEsperada(r, pasos[0].state.procesos)),
+  ].map((g) => extenderGrilla(g, total))
   const multi = resultado.procesadores > 1
   // en el Gantt de código el click derecho marca bloqueado (semáforo, recurso o sleep)
   const io = resultado.bloqueoSincro ? 'Bloqueado' : 'E/S'
@@ -109,19 +120,20 @@ export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[])
     const celda = celdas.get(`${id}:${t}`)!
     celda.dataset.marca = marca ?? ''
     celda.textContent = multi && marca === 'cpu' ? '1' : multi && marca === 'cpu2' ? '2' : ''
-    celda.setAttribute(
-      'aria-label',
-      `${etiqueta(id)}, t=${t}${marca ? `: ${nombre[marca]}` : ''}`,
-    )
+    celda.setAttribute('aria-label', `${etiqueta(id)}, t=${t}${marca ? `: ${nombre[marca]}` : ''}`)
   }
 
   return {
     verificar() {
       // decisión de UX: no se indica dónde está el error, solo si el Gantt es correcto
-      const { ok } = verificarGantt(esperada, respuesta)
-      return ok
-        ? { ok, mensaje: '¡Correcto! El Gantt coincide.' }
-        : { ok, mensaje: 'Hay errores en el Gantt. Revisalo y volvé a verificar.' }
+      const i = esperadas.findIndex((e) => verificarGantt(e, respuesta).ok)
+      if (i < 0)
+        return { ok: false, mensaje: 'Hay errores en el Gantt. Revisalo y volvé a verificar.' }
+      const mensaje =
+        i === 0
+          ? '¡Correcto! El Gantt coincide.'
+          : '¡Correcto! Elegiste otra CPU igual de válida: la resolución muestra la otra opción.'
+      return { ok: true, mensaje }
     },
     limpiar() {
       for (const p of procesos) for (let t = 0; t < total; t++) set(p, t, null)
