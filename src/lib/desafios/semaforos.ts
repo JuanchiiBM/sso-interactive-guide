@@ -3,33 +3,16 @@ import { $, $$ } from '@lib/dom'
 import { verificarSemaforos } from '@lib/semaforos/explorar'
 import { parsear } from '@lib/semaforos/parser'
 import type { EjercicioSemaforos, ResultadoVerificacion } from '@lib/semaforos/tipos'
-import { estaResuelto } from '@lib/progreso'
+import { estaResuelto, rutaActual } from '@lib/progreso'
 import { controlarResolucion } from '@lib/desafios/boton-resolucion'
 
 export function initSemaforos(): void {
   for (const box of $$<HTMLElement>('[data-sem]')) init(box)
 }
 
-// v2: sintaxis void func() { }; los borradores v1 (proceso X:) ya no parsean
-const BORRADOR = 'so:borrador:v2:'
-
-function leer(clave: string): string | null {
-  try {
-    return localStorage.getItem(BORRADOR + clave)
-  } catch {
-    return null
-  }
-}
-
-function guardar(clave: string, texto: string): void {
-  try {
-    localStorage.setItem(BORRADOR + clave, texto)
-  } catch {}
-}
-
 function init(box: HTMLElement): void {
   const spec = JSON.parse($('[data-sem-spec]', box)!.textContent!) as EjercicioSemaforos
-  const clave = `${location.pathname}#sem-${box.dataset.semClave}`
+  const clave = `${rutaActual()}#sem-${box.dataset.semClave}`
   const editor = $<HTMLTextAreaElement>('[data-sem-editor]', box)!
   const salida = $<HTMLElement>('[data-sem-resultados]', box)!
   const resolucion = $<HTMLElement>('[data-sem-resolucion]', box)!
@@ -43,8 +26,7 @@ function init(box: HTMLElement): void {
       editor.value = t
     },
   }
-  editor.value = leer(clave) ?? original
-  editor.addEventListener('input', () => guardar(clave, editor.value))
+  editor.value = original
   void import('@lib/editor/editor-c').then(({ crearEditorC }) => {
     const host = document.createElement('div')
     host.className = 'sem-editor-host'
@@ -52,7 +34,6 @@ function init(box: HTMLElement): void {
     editor.hidden = true
     const cm = crearEditorC(host, {
       valor: editor.value,
-      alCambiar: (t) => guardar(clave, t),
       lint: (t) => parsear(t, spec).errores,
     })
     codigo = { get: cm.getValue, set: cm.setValue }
@@ -67,13 +48,14 @@ function init(box: HTMLElement): void {
       salida.replaceChildren()
     },
   })
-  if (estaResuelto(clave)) mensaje('Ya lo resolviste antes. Podés volver a intentarlo.', 'var(--muted)')
+  if (estaResuelto(clave))
+    mensaje('Ya lo resolviste antes. Podés volver a intentarlo.', 'var(--muted)')
 
   box.addEventListener('click', (e) => {
-    const accion = (e.target as Element).closest<HTMLElement>('[data-sem-accion]')?.dataset.semAccion
+    const accion = (e.target as Element).closest<HTMLElement>('[data-sem-accion]')?.dataset
+      .semAccion
     if (accion === 'restablecer') {
       codigo.set(original)
-      guardar(clave, original)
       salida.replaceChildren()
     } else if (accion === 'verificar') {
       mensaje('Probando todas las intercalaciones…', 'var(--muted)')

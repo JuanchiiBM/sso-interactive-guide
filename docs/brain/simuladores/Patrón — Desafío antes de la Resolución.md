@@ -42,3 +42,16 @@ Progreso por navegador en `src/lib/progreso.ts` (`so:resuelto:<path>#<id>`).
 
 **Abierto:** la grilla revela la duración total; faltan desafíos para ejercicios de código (semáforos).
 **Conectado con:** [[Simuladores]], [[Patrón — Steps y Playback]], [[Cómo agregar un simulador]]
+
+## Ejercicio resuelto (sidebar, cards y filtro)
+Un ejercicio cuenta como **resuelto** cuando están resueltas **todas** sus partes interactivas.
+Las claves se arman en build con `clavesEjercicio(ejercicioHref(id), data)` (`src/lib/progreso.ts`)
+y van en `data-claves` de las cards y de los links del sidebar; `initProgreso` les pone
+`data-resuelto` (borde verde, punto verde) y el filtro "Solo no resueltos" lo lee.
+
+- ⚠️ Las claves tienen que coincidir con las de cada desafío: `ruta#N` (Gantt, N = orden de las
+  simulaciones), `ruta#mc-N`, `ruta#sem-N`, con `rutaActual()` (barra final). Si un desafío cambia
+  su clave, cambiala también en `clavesEjercicio`.
+- `marcarResuelto` dispara `so:progreso` y se repinta en vivo (el sidebar se pone verde al acertar la
+  última parte).
+

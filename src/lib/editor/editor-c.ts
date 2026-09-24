@@ -68,7 +68,7 @@ const tema = EditorView.theme({
 
 export function crearEditorC(
   host: HTMLElement,
-  opts: { valor: string; alCambiar: (texto: string) => void; lint: (texto: string) => ErrorLinea[] },
+  opts: { valor: string; lint: (texto: string) => ErrorLinea[] },
 ): EditorC {
   const lintExt = linter(
     (view) => {
@@ -98,9 +98,6 @@ export function crearEditorC(
         lintGutter(),
         lintExt,
         EditorState.tabSize.of(2),
-        EditorView.updateListener.of((u) => {
-          if (u.docChanged) opts.alCambiar(u.state.doc.toString())
-        }),
       ],
     }),
   })

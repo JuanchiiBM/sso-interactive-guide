@@ -2,6 +2,7 @@
 import type { Ejercicio } from '@lib/catalogo'
 import { ejercicioHref, rotuloEjercicio } from '@lib/catalogo'
 import { dificultadUI, tipoUI } from '@lib/presentacion'
+import { clavesEjercicio } from '@lib/progreso'
 
 interface Props {
   ejercicio: Ejercicio
@@ -24,13 +25,18 @@ const dif = dificultadUI[dificultad]
   href={ejercicioHref(ejercicio.id)}
   class:list={[
     'group flex h-full flex-col rounded-xl border border-line bg-surface-2 p-4 hover:border-line-strong transition-colors',
+    'data-resuelto:border-ok/70 data-resuelto:hover:border-ok',
   ]}
   data-ejercicio-card
+  data-claves={clavesEjercicio(ejercicioHref(ejercicio.id), ejercicio.data).join('|')}
   data-tema={ejercicio.data.tema.id}
   data-dificultad={dificultad}
   data-simulador={interactivo ? 'si' : 'no'}
 >
-  <span class="font-mono text-[11px] text-muted">{rotuloEjercicio(fuente.numero)}</span>
+  <span class="flex items-center gap-2 font-mono text-[11px] text-muted">
+    {rotuloEjercicio(fuente.numero)}
+    <span class="ml-auto hidden text-ok group-data-resuelto:inline">✓ Resuelto</span>
+  </span>
   <span class="mt-1 font-heading text-fg group-hover:text-accent">{titulo}</span>
   <span class="mt-auto pt-3 flex flex-wrap items-center gap-2 text-[11px]">
     <span class="inline-flex items-center gap-1.5 text-fg-soft">

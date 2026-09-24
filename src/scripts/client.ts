@@ -4,6 +4,7 @@ import { initSidebar } from '@lib/sidebar'
 import { initAllSimuladores } from '@lib/simulador-page'
 import { initMultipleChoice } from '@lib/desafios/multiple-choice'
 import { initSemaforos } from '@lib/desafios/semaforos'
+import { initProgreso } from '@lib/progreso'
 
 document.addEventListener('click', (event) => {
   const target = event.target
@@ -16,3 +17,4 @@ initSidebar()
 initAllSimuladores()
 initMultipleChoice()
 initSemaforos()
+initProgreso()
