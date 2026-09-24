@@ -389,3 +389,25 @@ describe('La Nonna: el código del dueño', { timeout: 30_000 }, () => {
     expect(fallidos(mal, d)).toContain('El mostrador no se desborda ni se saca del vacío')
   })
 })
+
+describe('Deadlock Ej. 15: reescribir waits y signals', { timeout: 30_000 }, () => {
+  const d = desafio('deadlock/ej-15.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('el Proceso 3 pidiendo b antes que a vuelve a dar deadlock', () => {
+    const mal = solucion.replace(
+      '    signal (sem_b);\n    wait (sem_a);\n    wait (sem_b);\n    b = a * b;',
+      '    wait (sem_a);\n    b = a * b;',
+    )
+    expect(fallidos(mal, d)).toContain('Regla 1: no hay deadlock')
+  })
+  it('si el Proceso 1 retiene b hasta el final, viola la regla 2', () => {
+    const mal = solucion
+      .replace('    a = a * b;\n    signal (sem_b);\n    a = a + c + d;', '    a = a * b;\n    a = a + c + d;')
+      .replace('    a = a + c + 1;\n    signal (sem_a);', '    a = a + c + 1;\n    signal (sem_a);\n    signal (sem_b);')
+    expect(fallidos(mal, d)).toEqual(['Regla 2: se libera lo que la siguiente sentencia no usa'])
+  })
+  it('conservar sem_c y sem_d sobra', () => {
+    const mal = solucion.replace('semaphore sem_a = 1, sem_b = 1;', 'semaphore sem_a = 1, sem_b = 1, sem_c = 1, sem_d = 1;')
+    expect(fallidos(mal, d)).toEqual(['Sin semáforos de más'])
+  })
+})
