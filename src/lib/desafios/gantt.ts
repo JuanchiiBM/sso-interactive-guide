@@ -1,6 +1,10 @@
 /** Entrada del alumno para un Gantt: click = CPU (una por instante y CPU), click derecho = E/S. */
 import type { Step } from '@lib/playback'
-import type { EstadoGantt } from '@lib/simuladores/planificacion/pasos'
+import {
+  columnaEtiquetas,
+  etiquetaHilo,
+  type EstadoGantt,
+} from '@lib/simuladores/planificacion/pasos'
 import {
   grillaEsperada,
   verificarGantt,
@@ -52,19 +56,19 @@ export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[])
 
   const grid = document.createElement('div')
   grid.className = 'gantt-grid'
-  grid.style.gridTemplateColumns = `3rem repeat(${total}, minmax(1.5rem, 1fr))`
+  grid.style.gridTemplateColumns = `${columnaEtiquetas(resultado)} repeat(${total}, minmax(1.5rem, 1fr))`
 
   procesos.forEach((id, i) => {
     const label = document.createElement('div')
-    label.className = 'gantt-label'
-    label.textContent = id
+    label.className = 'gantt-label pr-2'
+    label.textContent = etiquetaHilo(resultado, id)
     grid.append(label)
     for (let t = 0; t < total; t++) {
       const celda = document.createElement('button')
       celda.type = 'button'
       celda.className = 'gantt-cell gantt-input'
       celda.style.setProperty('--c', `var(--p${(i % 8) + 1})`)
-      celda.setAttribute('aria-label', `${id}, t=${t}`)
+      celda.setAttribute('aria-label', `${etiquetaHilo(resultado, id)}, t=${t}`)
       celda.addEventListener('click', () => alternar(id, t, pincel))
       celda.addEventListener('contextmenu', (e) => {
         e.preventDefault()
@@ -97,7 +101,10 @@ export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[])
     const celda = celdas.get(`${id}:${t}`)!
     celda.dataset.marca = marca ?? ''
     celda.textContent = multi && marca === 'cpu' ? '1' : multi && marca === 'cpu2' ? '2' : ''
-    celda.setAttribute('aria-label', `${id}, t=${t}${marca ? `: ${nombre[marca]}` : ''}`)
+    celda.setAttribute(
+      'aria-label',
+      `${etiquetaHilo(resultado, id)}, t=${t}${marca ? `: ${nombre[marca]}` : ''}`,
+    )
   }
 
   return {

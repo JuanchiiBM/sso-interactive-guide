@@ -11,11 +11,32 @@ import type {
 export const normalizar = (s: string) => s.replace(/\s+/g, '').replace(/;+$/, '')
 
 const RE_SEM = /^(semaphore|semaforo|semáforo)\s+(.+?)$/i
-const RE_DECL = /^([A-Za-z_]\w*)\s*(?:\[\s*(\w+)\s*\])?\s*=\s*(\{[^}]*\}|-?\d+|[A-Za-z_]\w*)$/
+const RE_DECL = /^([A-Za-z_]\w*)\s*(?:\[\s*(\w+)\s*\])?\s*=\s*(\{[^}]*\}|-?\d+|[A-Za-z_]\w*|\?)$/
 const RE_PROC = /^void\s+([A-Za-z_]\w*)\s*\(\s*(?:void)?\s*\)\s*(\{)?$/
-const RE_OP = /^(wait|signal)\s*\(\s*([A-Za-z_]\w*)\s*(?:\[\s*(.+?)\s*\])?\s*\)\s*(;)?$/i
+// admite la notación de las resoluciones: wait(s) x3; = tres wait seguidos
+const RE_OP = /^(wait|signal)\s*\(\s*([A-Za-z_]\w*)\s*(?:\[\s*(.+?)\s*\])?\s*\)\s*(?:[xX]\s*(\d+))?\s*(;)?$/i
 const RE_WHILE = /^while\s*\(\s*(true|1)\s*\)\s*(\{)?$/i
 const RUIDO = /^(while\s*\(\s*(true|1)\s*\)\s*\{?|\{|\}|do\s*\{?|\}\s*while.*)$/i
+
+/** Semáforo a completar en una plantilla: `wait(______);`. */
+const HUECO = /^_{2,}$/
+
+/** Una línea wait/signal como tokens normalizados, uno por repetición (`wait(s)x3` → 3 tokens). */
+function tokensOp(linea: string): string[] {
+  const m = linea.trim().match(RE_OP)
+  if (!m) return []
+  const token = `${m[1].toLowerCase()}(${m[2]}${m[3] != null ? `[${m[3].replace(/\s+/g, '')}]` : ''})`
+  return Array(Number(m[4] ?? 1)).fill(token)
+}
+
+/** Compara el código escrito con el original; un hueco `______` acepta cualquier semáforo. */
+function coinciden(esperado: string[], obtenido: string[]): boolean {
+  if (esperado.length !== obtenido.length) return false
+  return esperado.every((e, i) => {
+    const hueco = e.match(/^(wait|signal)\(_{2,}\)$/)
+    return hueco ? obtenido[i].startsWith(`${hueco[1]}(`) : e === obtenido[i]
+  })
+}
 
 /** Nombre de la función C de un proceso: "De Paul" → De_Paul. */
 export const identificador = (nombre: string) =>
@@ -142,6 +163,11 @@ export function parsear(
     if (nombre in semaforos) return error(linea, `El semáforo ${nombre} está declarado dos veces`)
     const tamano = tam == null ? 1 : valorDe(tam)
     if (tamano == null || tamano < 1) return error(linea, `Tamaño inválido "${tam}" para ${nombre}`)
+    if (valorTxt === '?') {
+      // plantilla de "inicializar": queda declarado para no marcar cada wait, pero falta el valor
+      semaforos[nombre] = { valores: Array(tamano).fill(0), esArray: tam != null }
+      return error(linea, `Completá el valor inicial de ${nombre} (en lugar de ?)`)
+    }
     let valores: (number | undefined)[]
     if (valorTxt.startsWith('{')) {
       if (tam == null) return error(linea, `${nombre} no es un array: no se inicializa con { }`)
@@ -215,15 +241,21 @@ export function parsear(
 
     const op = texto.match(RE_OP)
     let instr: Instruccion | null = null
+    let veces = 1
     if (op) {
       if (op[1] !== op[1].toLowerCase()) error(linea, `Se escribe "${op[1].toLowerCase()}" en minúscula`)
-      if (!op[4]) error(linea, 'Falta ";" al final')
+      if (!op[5]) error(linea, 'Falta ";" al final')
+      if (op[4] != null) {
+        veces = Number(op[4])
+        if (veces < 1 || veces > 20) error(linea, `Repetición inválida: x${op[4]} (entre x1 y x20)`)
+      }
       const ref: RefSemaforo = { nombre: op[2], ...(op[3] != null ? { indice: op[3] } : {}) }
       if (ref.indice != null && !/^\d+$/.test(ref.indice) && !indices.has(ref.indice)) {
         const validos = [...indices].join(', ')
         error(linea, `Índice desconocido "${ref.indice}" (podés usar un número${validos ? ` o: ${validos}` : ''})`)
       }
       instr = { tipo: op[1].toLowerCase() as 'wait' | 'signal', sem: ref, linea }
+      if (ej.soloInicializar) escritas.get(actual.nombre)!.push(...tokensOp(texto))
     } else if (/^(wait|signal)\b/i.test(texto)) {
       error(linea, 'Uso: wait(nombre); signal(nombre); o con array: wait(nombre[indice]);')
     } else {
@@ -237,7 +269,7 @@ export function parsear(
       }
     }
     // lo que está después de un while(TRUE) nunca se ejecuta: cuenta para el código, no para el modelo
-    if (instr && !trasCiclo) actual.instrucciones.push(instr)
+    if (instr && !trasCiclo) for (let k = 0; k < veces; k++) actual.instrucciones.push(instr)
   })
 
   for (const abierta of llaves) error(abierta.linea, 'Falta cerrar la llave "{" abierta acá')
@@ -246,7 +278,8 @@ export function parsear(
     for (const ins of p.instrucciones) {
       if (ins.tipo === 'accion') continue
       const decl = semaforos[ins.sem.nombre]
-      if (!decl) error(ins.linea, `El semáforo ${ins.sem.nombre} no está declarado/inicializado`)
+      if (HUECO.test(ins.sem.nombre)) error(ins.linea, 'Completá el semáforo que va en este hueco')
+      else if (!decl) error(ins.linea, `El semáforo ${ins.sem.nombre} no está declarado/inicializado`)
       else if (decl.esArray && ins.sem.indice == null) {
         error(ins.linea, `${ins.sem.nombre} es un array: indicá la posición, ej. ${ins.sem.nombre}[i]`)
       } else if (!decl.esArray && ins.sem.indice != null) {
@@ -258,14 +291,19 @@ export function parsear(
   // el código original tiene que quedar intacto y en el mismo orden
   for (const def of ej.procesos) {
     const esperado = unirCondicionales(def.codigo.split('\n'))
-      .map((l) => l.trim())
-      .filter((l) => l && !RUIDO.test(l) && !RE_OP.test(l))
-      .map(normalizar)
+      .map((l) => l.replace(/\/\/.*$/, '').trim())
+      .filter((l) => l && !RUIDO.test(l))
+      .flatMap((l) => (RE_OP.test(l) ? (ej.soloInicializar ? tokensOp(l) : []) : [normalizar(l)]))
     const obtenido = escritas.get(def.nombre)
     if (!obtenido) {
       error(0, `Falta la función ${identificador(def.nombre)}()`)
-    } else if (esperado.join('|') !== obtenido.join('|')) {
-      error(0, `El código original de ${identificador(def.nombre)}() cambió: solo se pueden agregar wait/signal`)
+    } else if (!coinciden(esperado, obtenido)) {
+      error(
+        0,
+        ej.soloInicializar
+          ? `En ${identificador(def.nombre)}() solo se completan los huecos (______) y los valores iniciales: no se agregan, sacan ni mueven wait/signal`
+          : `El código original de ${identificador(def.nombre)}() cambió: solo se pueden agregar wait/signal`,
+      )
     }
   }
 

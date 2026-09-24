@@ -253,3 +253,36 @@ describe('motor v2: arrays, locales al azar y recursos implícitos', () => {
     expect(r.tests[0].motivo).toMatch(/P en pedir\(b\)/)
   })
 })
+
+describe('soloInicializar y huecos', () => {
+  const ej: EjercicioSemaforos = {
+    soloInicializar: true,
+    procesos: [
+      { nombre: 'A', instancias: 1, codigo: 'while(TRUE){\n  wait(______);\n  print("A");\n  signal(sb);\n}' },
+      { nombre: 'B', instancias: 1, codigo: 'while(TRUE){\n  wait(sb);\n  print("B");\n  signal(sa);\n}' },
+    ],
+    acciones: { 'print("A")': {}, 'print("B")': {} },
+    tests: [{ tipo: 'secuencia', acciones: ['print("A")', 'print("B")'] }, { tipo: 'sin-deadlock' }],
+  }
+  const cod = (hueco: string, extra = '') =>
+    `semaphore sa = 1, sb = 0;\nvoid A() {\n  while(TRUE){\n    wait(${hueco});\n    print("A");\n    signal(sb);${extra}\n  }\n}\nvoid B() {\n  while(TRUE){\n    wait(sb);\n    print("B");\n    signal(sa);\n  }\n}`
+
+  it('un hueco sin completar es error de compilación', () => {
+    expect(mensajes(cod('______'), ej)).toContain('Completá el semáforo que va en este hueco')
+  })
+
+  it('completar el hueco y los valores pasa', () => {
+    expect(verificarSemaforos(cod('sa'), ej).ok).toBe(true)
+  })
+
+  it('no se pueden agregar wait/signal', () => {
+    expect(mensajes(cod('sa', '\n    signal(sa);'), ej).some((m) => /solo se completan los huecos/.test(m))).toBe(true)
+  })
+})
+
+describe('plantillas de inicializar con ?', () => {
+  it('un ? marca solo la declaración, no cada wait que usa el semáforo', () => {
+    const f = prog('semaphore m = ?;', { Hilo: MUTEX })
+    expect(mensajes(f, contador)).toEqual(['Completá el valor inicial de m (en lugar de ?)'])
+  })
+})

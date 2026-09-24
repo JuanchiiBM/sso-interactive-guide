@@ -1,6 +1,6 @@
 ---
 tipo: servicio
-aliases: [planificación, planificacion, scheduler, scheduling, gantt, simularPlanificacion, fifo, sjf, srt, rr, round robin, hrrn, prioridades, vrr, virtual round robin, multinivel, feedback, afinidad, multiprocesador, multiprogramación, estimación, dispositivos]
+aliases: [planificación, planificacion, scheduler, hilos, ult, klt, jacketing, wrapper, biblioteca de hilos, scheduling, gantt, simularPlanificacion, fifo, sjf, srt, rr, round robin, hrrn, prioridades, vrr, virtual round robin, multinivel, feedback, afinidad, multiprocesador, multiprogramación, estimación, dispositivos]
 tags: [simulador, planificacion]
 actualizado: 2026-09-23
 ---
@@ -9,7 +9,7 @@ actualizado: 2026-09-23
 
 **Propósito:** simular la planificación de corto plazo tick a tick y producir el Gantt + métricas.
 **Ubicación:** `src/lib/simuladores/planificacion/` (`simular.ts`, `pasos.ts`, `tipos.ts`,
-`verificar.ts`; tests `simular.test.ts` y `variantes.test.ts`); visualizador
+`verificar.ts`; tests `simular.test.ts`, `variantes.test.ts`, `catedra.test.ts` y `hilos.test.ts`); visualizador
 `src/lib/visualizers/gantt.ts`; desafío `src/lib/desafios/gantt.ts`.
 
 **Uso** (desde el frontmatter de un ejercicio; todo lo opcional tiene un default que deja el
@@ -94,6 +94,73 @@ Cada tick `t` representa el intervalo `[t, t+1)`. Orden dentro del tick:
   aunque el otro esté libre. El Gantt agrega una fila por CPU arriba y el número de CPU en la celda;
   el desafío tiene pinceles CPU 1 / CPU 2 / E/S (`Marca`: `'cpu'` = CPU 1, `'cpu2'` = CPU 2).
 
+## Hilos (ULT sobre KLT)
+
+**Modelo:** el SO planifica **KLTs** (cualquier `algoritmo`); un KLT sin `hilos` es un proceso de
+siempre. Un KLT con `hilos` tiene una **biblioteca** que elige el ULT **solo mientras el KLT tiene
+la CPU**. Las filas del Gantt (y del desafío) son los hilos planificables: cada ULT, etiquetado
+"KA · UA1", y cada KLT simple. `Tick.cpus`, `io`, `estados` y las métricas son por hilo;
+`listos`/`colas` son KLTs. Con ULTs, `Tick.bibliotecas` (ULT elegido + cola de cada biblioteca) y
+`Tick.quantum` (lo que le queda al KLT de cada CPU) alimentan el panel del paso a paso.
+
+```yaml
+procesos:
+  - id: KA
+    biblioteca: sjf # fifo (default) | sjf | srt ("SJF con desalojo") | rr | prioridades | prioridades-desalojo
+    quantumBiblioteca: 2 # solo con biblioteca rr
+    modoIO: jacketing # directa | wrapper (default) | jacketing
+    hilos: # los que llegan juntos entran a la biblioteca en este orden
+      - { id: UA1, llegada: 0, rafagas: [3, 1, 2] }
+      - { id: UA2, llegada: 0, rafagas: [1, 1, 1], prioridad: 1 }
+  - { id: KC, llegada: 0, rafagas: [1, 1, 2] } # KLT simple
+```
+
+**Reglas (salen de las resoluciones oficiales):**
+
+- **El quantum es del KLT:** cambiar de ULT (fin de ULT, desalojo de la biblioteca, jacketing) no lo
+  reinicia (1P 1C2024 TT t4). VRR cuenta el CPU del KLT, no del ULT.
+- **Modos de E/S** (`modoIO`, por KLT):
+  - `directa`: bloquea **todo el KLT**; al volver la biblioteca no se enteró y **sigue el mismo ULT**
+    aunque haya otros listos antes (1R 1C2026 TT, KLT B).
+  - `wrapper`: bloquea **todo el KLT**; el ULT vuelve al final de la cola de la biblioteca, que
+    **replanifica** al volver a ejecutar (1R 1C2026 TT, KLT A; 1P 1C2026 TT Ej. 2).
+  - `jacketing`: solo se bloquea el ULT; el KLT sigue con otro. Si no le queda ninguno listo, **deja
+    la CPU** y vuelve a listos (origen `io`, como un desbloqueo) cuando un ULT termina su E/S o llega
+    uno nuevo (origen `nuevo`). No hay paralelismo entre ULTs del mismo KLT.
+- La E/S sigue siendo el **dispositivo único FIFO**, compartido por ULTs y KLTs.
+- **Biblioteca sin desalojo** (fifo, sjf, prioridades): si el SO desaloja al KLT, al volver sigue el
+  mismo ULT. **Desalojante** (srt, prioridades-desalojo): revisa solo cuando entra un ULT a su cola
+  (llegada, fin de E/S con jacketing, vuelta del KLT con wrapper) — en el tick en que llega si el KLT
+  ejecuta, o al redespacharlo. Empate → no desaloja.
+- **SJF/SRT/HRRN del SO:** la ráfaga de un KLT es la (restante) del ULT que su biblioteca elegiría en
+  ese momento (1R 1C2026 TM Ej. 2: en t4 KA gana con la ráfaga 1 de U1). SO no consume tiempo.
+- 2 CPUs: cada KLT en su CPU → cargar `afinidad: true` (1P 2C2025 TT Ej. 2).
+
+**Decisiones de interpretación:**
+
+- `modoIO` default **`wrapper`** (sin jacketing, convención de la cátedra). Directa vs wrapper no lo
+  fija ninguna regla; el único enunciado que no lo dice y distingue (1P 1C2026 TT Ej. 2, KB) da
+  wrapper. Los Ej. 2, 3 y 5 de la guía lo asumen con una nota visible.
+- ULTs simultáneos: **orden de declaración** (no alfabético): los inversos deducen el orden
+  (1P 1C2026 TT Ej. 2: UB2 antes que UB1). Entre KLTs sigue el desempate alfabético.
+- En la cola de la biblioteca rige el mismo desempate: clock (quantum de la biblioteca) > E/S > nuevo.
+- Quantum de biblioteca RR: corre solo mientras el ULT ejecuta y **sobrevive** al desalojo del KLT.
+- Un ULT que llega con el KLT bloqueado por E/S (directa/wrapper) espera en la cola de la biblioteca.
+- Métricas por hilo: "espera" de un ULT = instantes listo en su biblioteca (esté o no su KLT en listos).
+- KLT "termina" cuando terminaron todos sus ULTs; admisión (`multiprogramacion`) cuenta KLTs.
+- No soportado con ULTs: estimación con `alfa`, HRRN en la biblioteca, overhead del SO, suspensión
+  por mediano plazo.
+
+**Validación:** `hilos.test.ts` compara 8 Gantt oficiales (instante por instante, más los fines) y
+las 4 preguntas "¿desde qué instante cambia si…?" de esas resoluciones (todas coinciden). Saltados:
+1P 1C2025 TT Ej. 3 (suspensión por prioridad en multiprogramación), 1P 1C2026 TT Ej. 3 (2 u.t. de
+SO por interrupción), 1R 1C2026 TM Ej. 4 (Gantt de un estudiante con error a propósito).
+
+**Erratas de resoluciones** (se testea lo correcto, con comentario):
+
+- 1P 2C2025 TM Ej. 2, t9: la biblioteca SRT de P2 corre ULT2.1 (restan 3) con ULT2.2 lista (ráfaga
+  2, volvió de E/S por jacketing en t7). Oficial `aaaacdcbbcccbaadd`; correcto `aaaacdcbbddcbaacc`.
+
 ## Decisiones de interpretación (la guía no las fija)
 
 - **Prioridad:** número menor = mayor prioridad. Se infiere del Ej. 10 ("prioridad < 1 = crítico").
@@ -135,6 +202,8 @@ Cada tick `t` representa el intervalo `[t, t+1)`. Orden dentro del tick:
   (RR vs VRR, VRR acumulado de Stallings, dispositivos nombrados vs único, grado 1 vs sin límite,
   SJF/SRT por estimación vs real y la cuenta de α ≠ 0,5, 2 CPUs con y sin afinidad) y los
   **Ej. 10 y 11 resueltos a mano** (`CAAAABAAAAACBBBCCCB-----BBBBB`, `AABBCCABCCCCBACCCAAC--CCCCC`).
+- **Hilos 1–5 de la guía:** el Ej. 1 (directa / wrapper / jacketing) está resuelto a mano en
+  `hilos.test.ts`; el modelo de hilos se validó contra 8 resoluciones oficiales (ver Hilos).
 - ⚠️ Las resoluciones de los Ej. 2–9 salen del simulador y **todavía no se cotejaron** contra una
   resolución de la cátedra (7a/7b y 9b se revisaron tick a tick a mano).
 

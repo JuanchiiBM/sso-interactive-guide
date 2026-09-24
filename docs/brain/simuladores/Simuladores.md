@@ -10,7 +10,8 @@ actualizado: 2026-09-23
 Resolvedores paso a paso: lógica pura en `src/lib/simuladores/<tipo>/` + visualizador DOM.
 
 - [[Simulador de Planificación]] — Gantt de corto plazo (FIFO, SJF, SRT, RR, VRR, prioridades,
-  HRRN, multinivel, feedback; varios dispositivos, grado de multiprogramación, 2 CPUs).
+  HRRN, multinivel, feedback; varios dispositivos, grado de multiprogramación, 2 CPUs; hilos ULT/KLT
+  con biblioteca, syscall directa / wrapper / jacketing).
 - [[Patrón — Desafío antes de la Resolución]] — la respuesta se ve recién al acertar.
 - [[Verificador de Semáforos]] — ejercicios de código con tests sobre todas las intercalaciones.
 - [[Cómo agregar un simulador]] — receta para un `kind` nuevo.
@@ -28,8 +29,21 @@ Resolvedores paso a paso: lógica pura en `src/lib/simuladores/<tipo>/` + visual
 | Colas multinivel y feedback multinivel                   | 10, 11                         |
 | E/S única FIFO o en paralelo · desempate de la cátedra  | todos                          |
 
-**Falta modelar:** Hilos ULT/KLT, jacketing (Hilos 1–5). Pendiente cotejar las resoluciones generadas
-contra resoluciones de la cátedra (ver ⚠️ en [[Simulador de Planificación]]).
+## Cobertura contra la guía de Hilos
+
+| Soportado hoy                                                  | Ejercicios con simulación |
+| -------------------------------------------------------------- | ------------------------- |
+| ULTs con biblioteca FIFO: syscall directa, wrapper, jacketing | 1a, 1b, 1c                |
+| SO en RR + biblioteca FIFO (sin jacketing, wrapper asumido)     | 2, 3                      |
+| KLTs simples (se planifican como procesos)                      | 4                         |
+| KLTs simples y KLT con ULTs juntos                              | 5                         |
+
+Validado contra 8 Gantt oficiales de parciales (`hilos.test.ts`, ver Hilos en
+[[Simulador de Planificación]]).
+
+**Falta modelar:** overhead del SO por interrupción, suspensión por mediano plazo, estimación α y
+HRRN dentro de la biblioteca. Pendiente cotejar las resoluciones generadas de la guía de
+Planificación contra resoluciones de la cátedra (ver ⚠️ en [[Simulador de Planificación]]).
 
 Otros simuladores candidatos: grafo de asignación (deadlock), banquero/detección con matrices (teoría
 de deadlock; la guía no trae numéricos), traza de semáforos (sincronización).

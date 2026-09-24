@@ -1,17 +1,20 @@
 /**
  * Simulador de planificación de corto plazo, tick a tick (unidad de tiempo entera).
- * Modelo, variantes y desempates: docs/brain/simuladores/Simulador de Planificación.md
+ * Modelo, variantes, hilos y desempates: docs/brain/simuladores/Simulador de Planificación.md
  */
-import type {
-  AlgoritmoBase,
-  ColaConfig,
-  ConfigPlanificacion,
-  EstadoDispositivo,
-  EstadoProceso,
-  MetricasProceso,
-  OrigenListo,
-  ResultadoPlanificacion,
-  Tick,
+import {
+  esKlt,
+  type AlgoritmoBase,
+  type AlgoritmoBiblioteca,
+  type ColaConfig,
+  type ConfigPlanificacion,
+  type EstadoDispositivo,
+  type EstadoProceso,
+  type MetricasProceso,
+  type ModoIO,
+  type OrigenListo,
+  type ResultadoPlanificacion,
+  type Tick,
 } from './tipos'
 
 // Criterio de la guía UTN FRBA: clock > fin de evento (E/S) > nuevo; después, nombre ascendente
@@ -19,19 +22,45 @@ const DESEMPATE_DEFAULT: OrigenListo[] = ['desalojo', 'io', 'nuevo']
 const LIMITE_TICKS = 10_000
 const DISPOSITIVO_UNICO = 'E/S'
 
-interface Pcb {
+/** Lo que ejecuta en una CPU: un proceso / KLT simple o un ULT. */
+interface Hilo {
   id: string
   llegada: number
   rafagas: number[]
   prioridad: number
   dispositivos?: string[]
-  colaFija: number
   rafaga: number
   restante: number
   estado: EstadoProceso
   espera: number
   primerCPU: number | null
   fin: number | null
+  /** Solo ULTs: su KLT. */
+  klt: Pcb | null
+}
+
+/** Biblioteca de ULTs de un KLT: decide solo mientras el KLT tiene la CPU. */
+interface Biblioteca {
+  algoritmo: AlgoritmoBiblioteca
+  quantum: number | null
+  modo: ModoIO
+  ults: Hilo[]
+  actual: Hilo | null
+  listos: Hilo[]
+  /** Entró un ULT a su cola desde la última decisión: una biblioteca desalojante revisa. */
+  novedad: boolean
+  /** Quantum de la biblioteca ya usado por `actual`. */
+  usado: number
+  pendientes: { h: Hilo; origen: OrigenListo }[]
+  /** ULT cuya E/S (directa o wrapper) tiene bloqueado a todo el KLT. */
+  bloqueante: Hilo | null
+  /** Volvió de una syscall directa: la biblioteca no se enteró y sigue el mismo. */
+  trasDirecta: boolean
+}
+
+/** Lo que planifica el SO: proceso, KLT simple (es su propio hilo) o KLT con biblioteca. */
+interface Pcb extends Hilo {
+  colaFija: number
   listoDesde: number
   /** Cola de listos en la que está (o de la que salió si ejecuta). */
   cola: number
@@ -40,6 +69,7 @@ interface Pcb {
   afinidad: number | null
   /** Estimación por índice de ráfaga (solo ráfagas de CPU). */
   est: number[]
+  bib: Biblioteca | null
 }
 
 interface Entrante {
@@ -55,7 +85,39 @@ interface Cpu {
   limite: number | null
 }
 
+interface DatosHilo {
+  id: string
+  llegada: number
+  rafagas: number[]
+  prioridad?: number
+  dispositivos?: string[]
+}
+
 const DESALOJANTES: AlgoritmoBase[] = ['srt', 'prioridades-desalojo']
+
+const NOMBRE_BIB: Record<AlgoritmoBiblioteca, string> = {
+  fifo: 'FIFO',
+  sjf: 'SJF',
+  srt: 'SRT',
+  rr: 'RR',
+  prioridades: 'prioridades',
+  'prioridades-desalojo': 'prioridades con desalojo',
+}
+
+const nuevoHilo = (u: DatosHilo, klt: Pcb | null): Hilo => ({
+  id: u.id,
+  llegada: u.llegada,
+  rafagas: u.rafagas,
+  prioridad: u.prioridad ?? 0,
+  dispositivos: u.dispositivos,
+  rafaga: 0,
+  restante: u.rafagas[0] ?? 0,
+  estado: 'nuevo',
+  espera: 0,
+  primerCPU: null,
+  fin: null,
+  klt,
+})
 
 export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlanificacion {
   const { algoritmo, quantum, ioUnica = true, prioridadMenorEsMejor = true, alfa } = config
@@ -75,46 +137,64 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
   const defColas = definirColas(config)
   const ultimaCola = defColas.length - 1
 
-  const pcbs = new Map<string, Pcb>(
-    config.procesos.map((p) => {
-      let colaFija = 0
-      if (algoritmo === 'multinivel') {
-        if (p.cola == null || p.cola < 1 || p.cola > defColas.length) {
-          throw new Error(`Multinivel: ${p.id} necesita una cola entre 1 y ${defColas.length}`)
-        }
-        colaFija = p.cola - 1
+  const pcbs = new Map<string, Pcb>()
+  const hilos = new Map<string, Hilo>()
+  const registrar = (h: Hilo) => {
+    if (hilos.has(h.id) || pcbs.has(h.id)) throw new Error(`Id repetido: ${h.id}`)
+    hilos.set(h.id, h)
+  }
+  for (const p of config.procesos) {
+    let colaFija = 0
+    if (algoritmo === 'multinivel') {
+      if (p.cola == null || p.cola < 1 || p.cola > defColas.length) {
+        throw new Error(`Multinivel: ${p.id} necesita una cola entre 1 y ${defColas.length}`)
       }
-      return [
-        p.id,
-        {
-          id: p.id,
-          llegada: p.llegada,
-          rafagas: p.rafagas,
-          prioridad: p.prioridad ?? 0,
-          dispositivos: p.dispositivos,
-          colaFija,
-          rafaga: 0,
-          restante: p.rafagas[0],
-          estado: 'nuevo',
-          espera: 0,
-          primerCPU: null,
-          fin: null,
-          listoDesde: p.llegada,
-          cola: colaFija,
-          usadoVRR: 0,
-          afinidad: null,
-          est: [],
-        },
-      ]
-    }),
-  )
+      colaFija = p.cola - 1
+    }
+    const so = { colaFija, cola: colaFija, usadoVRR: 0, afinidad: null, est: [] }
+    if (!esKlt(p)) {
+      const pcb: Pcb = { ...nuevoHilo(p, null), ...so, listoDesde: p.llegada, bib: null }
+      registrar(pcb)
+      pcbs.set(p.id, pcb)
+      continue
+    }
+    if (!p.hilos.length) throw new Error(`${p.id} no tiene ULTs`)
+    if (alfa != null) throw new Error('La estimación con α no está soportada con ULTs')
+    const algBib = p.biblioteca ?? 'fifo'
+    if (algBib === 'rr' && !p.quantumBiblioteca) {
+      throw new Error(`La biblioteca RR de ${p.id} requiere quantumBiblioteca`)
+    }
+    const llegada = Math.min(...p.hilos.map((u) => u.llegada))
+    const base = nuevoHilo({ id: p.id, llegada, rafagas: [], prioridad: p.prioridad }, null)
+    const pcb: Pcb = { ...base, ...so, listoDesde: llegada, bib: null }
+    const ults = p.hilos.map((u) => nuevoHilo(u, pcb))
+    pcb.bib = {
+      algoritmo: algBib,
+      quantum: algBib === 'rr' ? p.quantumBiblioteca! : null,
+      modo: p.modoIO ?? 'wrapper',
+      ults,
+      actual: null,
+      listos: [],
+      novedad: false,
+      usado: 0,
+      pendientes: [],
+      bloqueante: null,
+      trasDirecta: false,
+    }
+    if (hilos.has(p.id) || pcbs.has(p.id)) throw new Error(`Id repetido: ${p.id}`)
+    pcbs.set(p.id, pcb)
+    ults.forEach(registrar)
+  }
   const todos = [...pcbs.values()]
   const get = (id: string) => pcbs.get(id)!
+  const getH = (id: string) => hilos.get(id)!
+  const hayHilos = todos.some((p) => p.bib)
+  const quien = hayHilos ? 'El SO' : 'El planificador'
 
   const colas: string[][] = defColas.map(() => [])
   const cpus: Cpu[] = Array.from({ length: nCpus }, () => ({ id: null, usado: 0, limite: null }))
   const dispositivos = new Map<string, EstadoDispositivo>()
-  const conDispositivos = config.procesos.some((p) => p.dispositivos?.length)
+  const conDispositivos = [...hilos.values()].some((h) => h.dispositivos?.length)
   const enParalelo = new Set<string>()
   const colaNew: string[] = []
   let admitidos = 0
@@ -131,10 +211,39 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
   }
   const cpuTxt = (k: number) => (nCpus > 1 ? ` en el CPU ${k + 1}` : '')
 
+  const mejorULT = (a: Hilo, b: Hilo, alg: AlgoritmoBiblioteca): boolean => {
+    if (alg === 'sjf' || alg === 'srt') return a.restante < b.restante
+    if (alg === 'prioridades' || alg === 'prioridades-desalojo') {
+      return prioridadMenorEsMejor ? a.prioridad < b.prioridad : a.prioridad > b.prioridad
+    }
+    return false
+  }
+  // El ULT que correría si el KLT tuviera la CPU ahora (empate → el primero de la cola)
+  const candidato = (b: Biblioteca): { h: Hilo | null; desaloja: boolean } => {
+    let mejorListo: Hilo | null = null
+    for (const u of b.listos)
+      if (!mejorListo || mejorULT(u, mejorListo, b.algoritmo)) mejorListo = u
+    if (!b.actual) return { h: mejorListo, desaloja: false }
+    const desaloja =
+      !b.trasDirecta &&
+      b.novedad &&
+      mejorListo != null &&
+      DESALOJANTES.includes(b.algoritmo) &&
+      mejorULT(mejorListo, b.actual, b.algoritmo)
+    return desaloja ? { h: mejorListo, desaloja } : { h: b.actual, desaloja }
+  }
+  // Para SJF/SRT/HRRN del SO, la ráfaga de un KLT es la del ULT que su biblioteca tiene elegido
+  const hiloActivo = (p: Pcb): Hilo => (p.bib ? (candidato(p.bib).h ?? p) : p)
+
   const estimacion = (p: Pcb) => p.est[p.rafaga]
   const criterioSJF = (p: Pcb, alg: AlgoritmoBase) => {
-    if (alfa == null) return p.restante
+    if (alfa == null) return hiloActivo(p).restante
     return alg === 'srt' ? estimacion(p) - (p.rafagas[p.rafaga] - p.restante) : estimacion(p)
+  }
+  const responseRatio = (p: Pcb, t: number): number => {
+    const h = hiloActivo(p)
+    const s = h.rafagas[h.rafaga]
+    return (t - p.listoDesde + s) / s
   }
 
   const mejor = (a: Pcb, b: Pcb, alg: AlgoritmoBase, t: number): boolean => {
@@ -170,6 +279,7 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     if (alfa == null || p.est[p.rafaga] != null) return ''
     const r = p.rafaga
     const input = config.procesos.find((x) => x.id === p.id)!
+    if (esKlt(input)) return ''
     let tAnt: number
     let rAnt: number
     if (r === 0) {
@@ -192,7 +302,7 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
   }
 
   /** Devuelve el nombre del dispositivo si es uno nombrado (para la descripción). */
-  const enviarAIO = (p: Pcb): string | null => {
+  const enviarAIO = (p: Hilo): string | null => {
     const n = (p.rafaga - 1) / 2
     const nombre = p.dispositivos?.[n] ?? (ioUnica ? DISPOSITIVO_UNICO : null)
     if (nombre == null) {
@@ -224,16 +334,242 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     }
     return `${p.id} termina su E/S y vuelve a ${nombreCola(q)}.`
   }
+  const vuelveKLT = (p: Pcb, q: number): string => {
+    if (algoritmo === 'vrr') {
+      return q === 0
+        ? `${p.id} pasa a la cola auxiliar (usó ${p.usadoVRR} de ${quantum} de su quantum)`
+        : `${p.id} vuelve a la cola de listos principal (ya había agotado su quantum)`
+    }
+    if (algoritmo === 'feedback' && trasIO === 'primera' && p.cola !== 0) {
+      return `${p.id} es promovido a ${nombreCola(0)}`
+    }
+    return `${p.id} vuelve a ${nombreCola(q)}`
+  }
+
+  const motivoULT = (b: Biblioteca, h: Hilo): string => {
+    switch (b.algoritmo) {
+      case 'fifo':
+        return 'FIFO: primero en su cola'
+      case 'rr':
+        return `RR Q=${b.quantum}: primero en su cola`
+      case 'sjf':
+        return `SJF: ráfaga ${h.restante}`
+      case 'srt':
+        return `SRT: le restan ${h.restante}`
+      default:
+        return `${NOMBRE_BIB[b.algoritmo]}: prioridad ${h.prioridad}`
+    }
+  }
+  const criterioULT = (b: Biblioteca, nuevo: Hilo, viejo: Hilo): string =>
+    b.algoritmo === 'srt'
+      ? `le restan ${nuevo.restante} < ${viejo.restante}`
+      : `prioridad ${nuevo.prioridad} vs ${viejo.prioridad}`
+  const quantumKLT = (p: Pcb, slot: Cpu): string => {
+    if (slot.limite == null) return ''
+    const n = slot.limite - slot.usado
+    return ` El quantum de ${p.id} no se reinicia: le ${n === 1 ? 'queda' : 'quedan'} ${n}.`
+  }
+
+  /** Decisión de la biblioteca del KLT que está en `slot` (recién despachado o siguiendo). */
+  const elegirULT = (p: Pcb, slot: Cpu, recien: boolean, t: number, eventos: string[]) => {
+    const b = p.bib!
+    const { h, desaloja } = candidato(b)
+    if (!h) throw new Error(`${p.id} está en CPU sin ULTs listos`)
+    if (desaloja && b.actual) {
+      eventos.push(
+        `${h.id} desaloja a ${b.actual.id} dentro de ${p.id} (biblioteca ${NOMBRE_BIB[b.algoritmo]}: ${criterioULT(b, h, b.actual)}).${recien ? '' : quantumKLT(p, slot)}`,
+      )
+      b.listos.push(b.actual)
+      b.actual = null
+    }
+    if (!b.actual) {
+      b.listos.splice(b.listos.indexOf(h), 1)
+      b.actual = h
+      b.usado = 0
+      if (!desaloja) {
+        eventos.push(
+          `La biblioteca de ${p.id} elige a ${h.id} (${motivoULT(b, h)}).${recien ? '' : quantumKLT(p, slot)}`,
+        )
+      }
+    } else if (recien) {
+      const motivo = b.trasDirecta
+        ? 'hizo la E/S con una syscall directa: la biblioteca no se enteró y no replanifica'
+        : DESALOJANTES.includes(b.algoritmo)
+          ? 'ningún ULT listo lo mejora'
+          : `${NOMBRE_BIB[b.algoritmo]} sin desalojo: sigue el ULT que tenía elegido`
+      eventos.push(`La biblioteca de ${p.id} sigue con ${h.id} (${motivo}).`)
+    }
+    b.novedad = false
+    b.trasDirecta = false
+    h.primerCPU ??= t
+  }
+
+  const finKLT = (p: Pcb, instante: number) => {
+    p.estado = 'fin'
+    p.fin = instante
+    admitidos -= 1
+  }
+
+  const vencerQuantum = (slot: Cpu, p: Pcb) => {
+    const q =
+      algoritmo === 'vrr' ? 1 : algoritmo === 'feedback' ? Math.min(p.cola + 1, ultimaCola) : p.cola
+    const texto =
+      algoritmo === 'feedback' && q !== p.cola
+        ? `${p.id} agota su quantum (Q=${slot.limite}) y baja a ${nombreCola(q)}.`
+        : `${p.id} agota su ${algoritmo === 'vrr' && p.cola === 0 ? 'quantum restante' : 'quantum'} (${slot.limite}) y va al final de ${nombreCola(q)}.`
+    p.estado = 'listo'
+    pendientes.push({ id: p.id, origen: 'desalojo', cola: q, texto })
+    slot.id = null
+  }
+
+  /** Fin de la E/S de un ULT: según el modo, vuelve a la biblioteca o desbloquea a todo el KLT. */
+  const finIOUlt = (h: Hilo, termino: boolean) => {
+    const p = h.klt!
+    const b = p.bib!
+    if (!termino) h.estado = 'listo'
+    const fin = termino ? ' y finaliza' : ''
+    if (b.bloqueante === h) {
+      b.bloqueante = null
+      if (b.modo === 'directa') {
+        if (termino) b.actual = null
+        else b.trasDirecta = true
+      } else if (!termino) {
+        b.pendientes.push({ h, origen: 'io' })
+      }
+      const luego = termino
+        ? ''
+        : b.modo === 'directa'
+          ? ` (seguirá ${h.id}: la biblioteca no se enteró de la E/S)`
+          : ' (al volver a ejecutar, la biblioteca replanifica)'
+      avisos.push(`${h.id} termina su E/S${fin} y se desbloquea ${p.id}${luego}.`)
+      return
+    }
+    if (!termino) b.pendientes.push({ h, origen: 'io' })
+    avisos.push(
+      `${h.id} termina su E/S${fin}${termino ? '' : ` y vuelve a la cola de la biblioteca de ${p.id}`}.`,
+    )
+  }
+
+  /** Fin del tick para un KLT con ULTs en CPU: fin de ráfaga del ULT o de quantum de la biblioteca. */
+  const finTickULT = (p: Pcb, slot: Cpu, instante: number) => {
+    const b = p.bib!
+    const h = b.actual!
+    if (h.restante > 0) {
+      if (b.quantum != null && b.usado >= b.quantum) {
+        b.pendientes.push({ h, origen: 'desalojo' })
+        b.actual = null
+        avisos.push(
+          `${h.id} agota el quantum de la biblioteca (${b.quantum}) y va al final de la cola de ${p.id}.`,
+        )
+      }
+      return
+    }
+    h.rafaga += 1
+    b.actual = null
+    if (h.rafaga >= h.rafagas.length) {
+      h.estado = 'fin'
+      h.fin = instante
+      avisos.push(`${h.id} finaliza.`)
+      return
+    }
+    h.restante = h.rafagas[h.rafaga]
+    const disp = enviarAIO(h)
+    const d = disp ? ` (${disp})` : ''
+    if (b.modo === 'jacketing') {
+      avisos.push(`${h.id} pide E/S${d} con jacketing: se bloquea solo ${h.id}, no todo ${p.id}.`)
+      return
+    }
+    b.bloqueante = h
+    if (b.modo === 'directa') b.actual = h
+    p.estado = 'bloqueado'
+    slot.id = null
+    avisos.push(
+      b.modo === 'directa'
+        ? `${h.id} hace E/S${d} con una syscall directa: se bloquea todo ${p.id} y la biblioteca no se entera.`
+        : `${h.id} hace E/S${d} por wrapper: se bloquea todo ${p.id}.`,
+    )
+  }
+
+  /** Cierre del instante para los KLTs con ULTs: colas de biblioteca, CPU y desbloqueos. */
+  const cerrarBibliotecas = (instante: number) => {
+    const orden = (o: OrigenListo) => desempate.indexOf(o)
+    for (const p of todos) {
+      const b = p.bib
+      if (!b?.pendientes.length) continue
+      b.pendientes.sort(
+        (x, y) => orden(x.origen) - orden(y.origen) || b.ults.indexOf(x.h) - b.ults.indexOf(y.h),
+      )
+      for (const e of b.pendientes) b.listos.push(e.h)
+      b.pendientes = []
+      b.novedad = true
+    }
+    for (const slot of cpus) {
+      const p = slot.id ? get(slot.id) : null
+      const b = p?.bib
+      if (!p || !b) continue
+      if (!b.actual && !b.listos.length) {
+        slot.id = null
+        if (b.ults.every((u) => u.fin != null)) {
+          finKLT(p, instante)
+          avisos.push(`${p.id} termina: no le quedan ULTs.`)
+        } else {
+          p.estado = 'bloqueado'
+          avisos.push(`${p.id} no tiene ULTs listos: deja la CPU.`)
+        }
+      } else if (slot.limite != null && slot.usado >= slot.limite) {
+        vencerQuantum(slot, p)
+      }
+    }
+    for (const p of todos) {
+      const b = p.bib
+      if (!b || p.estado !== 'bloqueado' || b.bloqueante) continue
+      if (b.actual || b.listos.length) {
+        const q = colaTrasIO(p)
+        p.estado = 'listo'
+        pendientes.push({ id: p.id, origen: 'io', cola: q, texto: `${vuelveKLT(p, q)}.` })
+      } else if (b.ults.every((u) => u.fin != null)) {
+        finKLT(p, instante)
+      }
+    }
+  }
 
   for (let t = 0; t < LIMITE_TICKS; t++) {
     if (todos.every((p) => p.fin != null)) break
     const eventos: string[] = avisos
     avisos = []
 
+    // ULTs que llegan: entran a la cola de su biblioteca, en el orden en que se declararon
+    for (const p of todos) {
+      const b = p.bib
+      const llegados = b?.ults.filter((u) => u.llegada === t) ?? []
+      if (!b || !llegados.length) continue
+      for (const u of llegados) {
+        u.estado = 'listo'
+        b.listos.push(u)
+      }
+      b.novedad = true
+      if (p.llegada === t) continue
+      const ids = llegados.map((u) => u.id).join(', ')
+      if (p.estado === 'bloqueado' && !b.bloqueante) {
+        p.estado = 'listo'
+        pendientes.push({
+          id: p.id,
+          origen: 'nuevo',
+          cola: colaNuevo(p),
+          texto: `Llega ${ids} a la biblioteca de ${p.id}, que no tenía ULTs listos: ${p.id} entra a ${nombreCola(colaNuevo(p))}.`,
+        })
+      } else {
+        eventos.push(`Llega ${ids} a la biblioteca de ${p.id}.`)
+      }
+    }
+
     const llegan = todos.filter((p) => p.llegada === t).sort((a, b) => a.id.localeCompare(b.id))
     for (const p of llegan) {
       if (grado == null) {
-        pendientes.push({ id: p.id, origen: 'nuevo', cola: colaNuevo(p) })
+        const texto = p.bib
+          ? `Llega ${p.id} (ULTs: ${p.bib.listos.map((u) => u.id).join(', ')}) a ${nombreCola(colaNuevo(p))}.`
+          : undefined
+        pendientes.push({ id: p.id, origen: 'nuevo', cola: colaNuevo(p), texto })
       } else {
         colaNew.push(p.id)
         p.estado = 'espera-admision'
@@ -298,6 +634,7 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
       slot.id = null
     })
 
+    const recien = cpus.map(() => false)
     cpus.forEach((slot, k) => {
       if (slot.id) return
       const sel = buscar(k, t)
@@ -341,24 +678,39 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
         multicola: defColas.length > 1,
       })
       eventos.push(
-        `El planificador elige a ${id}${cpuTxt(k)}${porAfinidad ? ' por afinidad' : ''}${motivo}.`,
+        `${quien} elige a ${id}${cpuTxt(k)}${porAfinidad ? ' por afinidad' : ''}${motivo}.`,
       )
+      recien[k] = true
+    })
+
+    cpus.forEach((slot, k) => {
+      const p = slot.id ? get(slot.id) : null
+      if (p?.bib) elegirULT(p, slot, recien[k], t, eventos)
     })
 
     for (const d of dispositivos.values()) {
       if (d.usando || d.cola.length === 0) continue
       d.usando = d.cola.shift()!
-      get(d.usando).estado = 'bloqueado'
+      getH(d.usando).estado = 'bloqueado'
       const nombre = d.nombre === DISPOSITIVO_UNICO ? 'de E/S' : d.nombre
       eventos.push(`${d.usando} toma el dispositivo ${nombre}.`)
     }
 
     const listos = colas.flat()
     const usandoIO = [...[...dispositivos.values()].flatMap((d) => d.usando ?? []), ...enParalelo]
+    const enCpu = cpus.map((c) => {
+      if (!c.id) return null
+      const p = get(c.id)
+      return p.bib ? p.bib.actual!.id : p.id
+    })
+    const estados: Record<string, EstadoProceso> = {}
+    for (const h of hilos.values()) {
+      estados[h.id] = h.klt && enCpu.includes(h.id) ? 'ejecutando' : h.estado
+    }
     ticks.push({
       t,
-      cpu: cpus[0].id,
-      cpus: cpus.map((c) => c.id),
+      cpu: enCpu[0],
+      cpus: enCpu,
       io: usandoIO,
       colaIO: [...dispositivos.values()].flatMap((d) => d.cola),
       listos,
@@ -372,35 +724,61 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
         dispositivos: [...dispositivos.values()].map((d) => ({ ...d, cola: [...d.cola] })),
       }),
       ...(grado != null && { nuevos: [...colaNew] }),
-      estados: Object.fromEntries(todos.map((p) => [p.id, p.estado])),
+      ...(hayHilos && {
+        bibliotecas: todos.flatMap((p) =>
+          p.bib
+            ? [
+                {
+                  klt: p.id,
+                  elegido: p.bib.actual?.id ?? null,
+                  listos: p.bib.listos.map((u) => u.id),
+                },
+              ]
+            : [],
+        ),
+        quantum: cpus.map((c) => (c.id && c.limite != null ? c.limite - c.usado : null)),
+      }),
+      estados,
       eventos,
     })
 
     // ── Ejecución del tick [t, t+1) ──
-    for (const id of listos) get(id).espera += 1
+    for (const id of listos) if (!get(id).bib) get(id).espera += 1
+    for (const h of hilos.values()) if (h.klt && estados[h.id] === 'listo') h.espera += 1
     for (const slot of cpus) {
       if (!slot.id) continue
       const p = get(slot.id)
-      p.restante -= 1
+      const h = p.bib ? p.bib.actual! : p
+      h.restante -= 1
       p.usadoVRR += 1
       slot.usado += 1
+      if (p.bib) p.bib.usado += 1
     }
-    for (const id of usandoIO) get(id).restante -= 1
+    for (const id of usandoIO) getH(id).restante -= 1
 
     // ── Eventos al final del tick (instante t+1) ──
     for (const id of usandoIO) {
-      const p = get(id)
-      if (p.restante > 0) continue
+      const h = getH(id)
+      if (h.restante > 0) continue
       enParalelo.delete(id)
       for (const d of dispositivos.values()) if (d.usando === id) d.usando = null
-      p.rafaga += 1
-      if (p.rafaga >= p.rafagas.length) {
-        p.estado = 'fin'
-        p.fin = t + 1
+      h.rafaga += 1
+      const termino = h.rafaga >= h.rafagas.length
+      if (termino) {
+        h.estado = 'fin'
+        h.fin = t + 1
+      } else {
+        h.restante = h.rafagas[h.rafaga]
+      }
+      if (h.klt) {
+        finIOUlt(h, termino)
+        continue
+      }
+      if (termino) {
         admitidos -= 1
         continue
       }
-      p.restante = p.rafagas[p.rafaga]
+      const p = get(id)
       const q = colaTrasIO(p)
       pendientes.push({ id, origen: 'io', cola: q, texto: textoTrasIO(p, q) })
     }
@@ -408,6 +786,10 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     for (const slot of cpus) {
       if (!slot.id) continue
       const p = get(slot.id)
+      if (p.bib) {
+        finTickULT(p, slot, t + 1)
+        continue
+      }
       if (p.restante === 0) {
         slot.id = null
         p.rafaga += 1
@@ -424,24 +806,13 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
           )
         }
       } else if (slot.limite != null && slot.usado >= slot.limite) {
-        const q =
-          algoritmo === 'vrr'
-            ? 1
-            : algoritmo === 'feedback'
-              ? Math.min(p.cola + 1, ultimaCola)
-              : p.cola
-        const texto =
-          algoritmo === 'feedback' && q !== p.cola
-            ? `${p.id} agota su quantum (Q=${slot.limite}) y baja a ${nombreCola(q)}.`
-            : `${p.id} agota su ${algoritmo === 'vrr' && p.cola === 0 ? 'quantum restante' : 'quantum'} (${slot.limite}) y va al final de ${nombreCola(q)}.`
-        p.estado = 'listo'
-        pendientes.push({ id: p.id, origen: 'desalojo', cola: q, texto })
-        slot.id = null
+        vencerQuantum(slot, p)
       }
     }
+    if (hayHilos) cerrarBibliotecas(t + 1)
   }
 
-  const metricas: MetricasProceso[] = todos.map((p) => ({
+  const metricas: MetricasProceso[] = [...hilos.values()].map((p) => ({
     id: p.id,
     llegada: p.llegada,
     finalizacion: p.fin ?? NaN,
@@ -458,6 +829,12 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     promedioEspera: prom(metricas.map((m) => m.espera)),
     fin: Math.max(...metricas.map((m) => m.finalizacion)),
     procesadores: nCpus,
+    hilos: [...hilos.keys()],
+    ...(hayHilos && {
+      kltDe: Object.fromEntries(
+        [...hilos.values()].flatMap((h) => (h.klt ? [[h.id, h.klt.id]] : [])),
+      ),
+    }),
   }
 }
 
@@ -500,11 +877,6 @@ function nombreCorto(
 ) {
   if (algoritmo === 'vrr') return q === 0 ? 'Auxiliar' : 'Principal'
   return `Cola ${q + 1} · ${etiquetaAlgoritmo(defColas[q])}`
-}
-
-function responseRatio(p: Pcb, t: number): number {
-  const s = p.rafagas[p.rafaga]
-  return (t - p.listoDesde + s) / s
 }
 
 function criterio(

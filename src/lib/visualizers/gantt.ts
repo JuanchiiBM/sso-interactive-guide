@@ -1,5 +1,9 @@
 /** Diagrama de Gantt en DOM plano. Se repinta completo en cada paso (grids chicos). */
-import type { EstadoGantt } from '@lib/simuladores/planificacion/pasos'
+import {
+  columnaEtiquetas,
+  etiquetaHilo,
+  type EstadoGantt,
+} from '@lib/simuladores/planificacion/pasos'
 import type { EstadoProceso } from '@lib/simuladores/planificacion/tipos'
 
 const colorProceso = (i: number) => `var(--p${(i % 8) + 1})`
@@ -31,7 +35,8 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
   const color = (id: string) => colorProceso(Math.max(0, procesos.indexOf(id)))
 
   const grid = el('div', 'gantt-grid')
-  grid.style.gridTemplateColumns = `3rem repeat(${resultado.ticks.length}, minmax(1.5rem, 1fr))`
+  const etiqueta = (id: string) => etiquetaHilo(resultado, id)
+  grid.style.gridTemplateColumns = `${columnaEtiquetas(resultado)} repeat(${resultado.ticks.length}, minmax(1.5rem, 1fr))`
   grid.setAttribute('role', 'table')
   grid.setAttribute('aria-label', 'Diagrama de Gantt')
 
@@ -45,7 +50,7 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
         celda.classList.add('gantt-cpu')
         celda.style.setProperty('--c', color(id))
         celda.textContent = id
-        celda.title = `CPU ${k + 1} · t=${tick.t}: ${id}`
+        celda.title = `CPU ${k + 1} · t=${tick.t}: ${etiqueta(id)}`
       }
       if (tick.t === hasta) celda.classList.add('gantt-actual')
       grid.append(celda)
@@ -53,7 +58,7 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
   }
 
   procesos.forEach((id, i) => {
-    grid.append(el('div', 'gantt-label', id))
+    grid.append(el('div', 'gantt-label pr-2', etiqueta(id)))
     for (const tick of resultado.ticks) {
       const celda = el('div', 'gantt-cell')
       if (tick.t <= limite) {
@@ -63,7 +68,7 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
           celda.classList.add(meta.clase)
           const k = tick.cpus.indexOf(id)
           if (multi && k >= 0) celda.textContent = String(k + 1)
-          celda.title = `${id} · t=${tick.t}: ${meta.label}${multi && k >= 0 ? ` ${k + 1}` : ''}`
+          celda.title = `${etiqueta(id)} · t=${tick.t}: ${meta.label}${multi && k >= 0 ? ` ${k + 1}` : ''}`
         }
         celda.style.setProperty('--c', colorProceso(i))
       }
@@ -78,12 +83,22 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
   const panel = el('div', 'flex flex-wrap gap-x-6 gap-y-2 text-xs text-fg-soft')
   if (tickActual) {
     tickActual.cpus.forEach((id, k) =>
-      panel.append(chip(multi ? `CPU ${k + 1}` : 'CPU', id ?? '—')),
+      panel.append(chip(multi ? `CPU ${k + 1}` : 'CPU', id ? etiqueta(id) : '—')),
     )
+    // con ULTs: quantum que le queda a cada KLT en CPU y la decisión de cada biblioteca
+    tickActual.quantum?.forEach((q, k) => {
+      const id = tickActual.cpus[k]
+      if (q != null && id) panel.append(chip(`Quantum ${resultado.kltDe?.[id] ?? id}`, String(q)))
+    })
+    for (const b of tickActual.bibliotecas ?? []) {
+      const cola = b.listos.length ? ` (cola: ${b.listos.join(' → ')})` : ''
+      panel.append(chip(`Biblioteca ${b.klt}`, `${b.elegido ?? '—'}${cola}`))
+    }
     if (tickActual.colas) {
       for (const c of tickActual.colas) panel.append(chip(c.nombre, c.procesos.join(' → ') || '∅'))
     } else {
-      panel.append(chip('Listos', tickActual.listos.join(' → ') || '∅'))
+      const nombre = tickActual.bibliotecas ? 'Listos (SO)' : 'Listos'
+      panel.append(chip(nombre, tickActual.listos.join(' → ') || '∅'))
     }
     if (tickActual.dispositivos) {
       for (const d of tickActual.dispositivos) {
@@ -132,7 +147,8 @@ function tablaMetricas({ resultado }: EstadoGantt): HTMLElement {
   tabla.append(head)
   for (const m of resultado.metricas) {
     const row = el('tr')
-    for (const v of [m.id, m.llegada, m.finalizacion, m.retorno, m.espera, m.respuesta]) {
+    const id = etiquetaHilo(resultado, m.id)
+    for (const v of [id, m.llegada, m.finalizacion, m.retorno, m.espera, m.respuesta]) {
       row.append(el('td', '', String(v)))
     }
     tabla.append(row)

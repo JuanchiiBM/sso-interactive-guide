@@ -5,7 +5,7 @@ export function initFiltrosEjercicios(): void {
   const barra = $<HTMLElement>('[data-filtros]')
   if (!barra) return
 
-  const estado = { tema: '', simulador: '' }
+  const estado = { tema: '', simulador: '', dificultad: '' }
 
   const aplicar = () => {
     let visibles = 0
@@ -14,7 +14,8 @@ export function initFiltrosEjercicios(): void {
       for (const card of $$<HTMLElement>('[data-ejercicio-card]', grupo)) {
         const ok =
           (!estado.tema || card.dataset.tema === estado.tema) &&
-          (!estado.simulador || card.dataset.simulador === estado.simulador)
+          (!estado.simulador || card.dataset.simulador === estado.simulador) &&
+          (!estado.dificultad || card.dataset.dificultad === estado.dificultad)
         card.parentElement!.hidden = !ok
         if (ok) enGrupo++
       }
@@ -35,7 +36,7 @@ export function initFiltrosEjercicios(): void {
       }
     } else {
       const activo = btn.getAttribute('aria-pressed') !== 'true'
-      estado.simulador = activo ? (btn.dataset.valor ?? '') : ''
+      estado[filtro] = activo ? (btn.dataset.valor ?? '') : ''
       btn.setAttribute('aria-pressed', String(activo))
     }
     aplicar()

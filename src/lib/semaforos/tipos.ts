@@ -68,6 +68,8 @@ export interface EjercicioSemaforos {
   recursosImplicitos?: Record<string, { cantidad: number; instancias: number }>
   /** Declaraciones que trae la plantilla (ejercicios donde hay que corregir semáforos dados). */
   inicial?: string
+  /** Los wait/signal del enunciado quedan fijos: solo se completan huecos `______` y valores iniciales. */
+  soloInicializar?: boolean
   /** Constantes que el alumno puede usar al inicializar o como tamaño (ej. M = 3). */
   constantes?: Record<string, number>
   tests: TestSemaforos[]
@@ -84,6 +86,8 @@ export type TestSemaforos = (
   | { tipo: 'secuencia'; acciones: string[]; nombre?: string }
   | { tipo: 'orden-instancias'; accion: string; proceso: string; nombre?: string }
   | { tipo: 'rango'; variable: string; min?: number; max?: number; nombre?: string }
+  | { tipo: 'valor-alcanzable'; variable: string; valor: number; nombre?: string }
+  | { tipo: 'simultaneas'; acciones: [string, string]; nombre?: string }
   | { tipo: 'sin-deadlock'; nombre?: string }
   | { tipo: 'sin-inanicion'; nombre?: string }
   | { tipo: 'todas-ejecutan'; nombre?: string }

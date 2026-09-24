@@ -22,6 +22,23 @@ const procesoSchema = z.object({
   prioridad: z.number().optional(),
 })
 
+/** KLT con ULTs: el SO lo planifica; adentro, su biblioteca elige el ULT. */
+const kltSchema = z.object({
+  id: z.string(),
+  /** Algoritmo de la biblioteca (default fifo). `srt` = "SJF con desalojo". */
+  biblioteca: z
+    .enum(['fifo', 'sjf', 'srt', 'rr', 'prioridades', 'prioridades-desalojo'])
+    .optional(),
+  /** Solo con `biblioteca: rr`. */
+  quantumBiblioteca: z.number().positive().optional(),
+  /** E/S de un ULT: directa | wrapper (default: sin jacketing) | jacketing. */
+  modoIO: z.enum(['directa', 'wrapper', 'jacketing']).optional(),
+  prioridad: z.number().optional(),
+  cola: z.number().int().positive().optional(),
+  /** ULTs; los que llegan juntos entran a la biblioteca en este orden. */
+  hilos: z.array(procesoSchema).min(1),
+})
+
 export const simulacionSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('planificacion'),
@@ -70,17 +87,21 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
     trasIO: z.enum(['primera', 'misma']).optional(),
     procesadores: z.number().int().min(1).max(2).optional(),
     afinidad: z.boolean().optional(),
+    /** Procesos (o KLTs simples) y KLTs con ULTs (`hilos`). */
     procesos: z
       .array(
-        procesoSchema.extend({
-          /** Dispositivo de cada ráfaga de E/S, en orden. */
-          dispositivos: z.array(z.string()).optional(),
-          /** Multinivel: cola fija (1 = mayor prioridad). */
-          cola: z.number().int().positive().optional(),
-          estimacionInicial: z.number().nonnegative().optional(),
-          estimacionAnterior: z.number().nonnegative().optional(),
-          rafagaAnterior: z.number().nonnegative().optional(),
-        }),
+        z.union([
+          kltSchema,
+          procesoSchema.extend({
+            /** Dispositivo de cada ráfaga de E/S, en orden. */
+            dispositivos: z.array(z.string()).optional(),
+            /** Multinivel: cola fija (1 = mayor prioridad). */
+            cola: z.number().int().positive().optional(),
+            estimacionInicial: z.number().nonnegative().optional(),
+            estimacionAnterior: z.number().nonnegative().optional(),
+            rafagaAnterior: z.number().nonnegative().optional(),
+          }),
+        ]),
       )
       .min(1),
   }),

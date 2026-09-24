@@ -20,6 +20,8 @@ const testSchema = z.discriminatedUnion('tipo', [
     nombre,
     motivo,
   }),
+  z.object({ tipo: z.literal('valor-alcanzable'), variable: z.string(), valor: z.number(), nombre, motivo }),
+  z.object({ tipo: z.literal('simultaneas'), acciones: z.tuple([z.string(), z.string()]), nombre, motivo }),
   z.object({ tipo: z.literal('sin-deadlock'), nombre, motivo }),
   z.object({ tipo: z.literal('sin-inanicion'), nombre, motivo }),
   z.object({ tipo: z.literal('todas-ejecutan'), nombre, motivo }),
@@ -46,7 +48,7 @@ export const desafioSemaforosSchema = z.object({
   /** Aclaraciones del modelo para el alumno (markdown corto), ej. "Para verificar se usa M = 3". */
   nota: z.string().optional(),
   procesos: z
-    .array(z.object({ nombre: z.string(), instancias: z.number().int().min(1).max(5), codigo: z.string() }))
+    .array(z.object({ nombre: z.string(), instancias: z.number().int().min(1).max(6), codigo: z.string() }))
     .min(1),
   acciones: z.record(z.string(), accionSchema),
   variables: z.record(z.string(), z.number()).optional(),
@@ -64,6 +66,8 @@ export const desafioSemaforosSchema = z.object({
   constantes: z.record(z.string(), z.number()).optional(),
   /** Declaraciones precargadas en la plantilla (ej. cuando hay que corregir un código dado). */
   inicial: z.string().optional(),
+  /** Los wait/signal del enunciado quedan fijos: solo se completan huecos `______` y valores iniciales. */
+  soloInicializar: z.boolean().optional(),
   tests: z.array(testSchema).min(1),
   /** Solución de referencia (se muestra al resolver). */
   solucion: z.string(),

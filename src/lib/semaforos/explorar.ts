@@ -17,6 +17,7 @@ import type {
 const MAX_ESTADOS = 250_000
 const TOPE_SEMAFORO = 12
 const TOPE_VARIABLE = 8
+const ALCANZABILIDAD = new Set(['concurrencia-alcanzable', 'capacidad-alcanzable', 'simultaneas', 'valor-alcanzable', 'todas-ejecutan'])
 /** pc de un proceso que terminó (función sin while(TRUE)). */
 const FIN = -1
 
@@ -73,6 +74,10 @@ export function nombreTest(t: TestSemaforos): string {
       return `Los ${t.proceso} hacen ${t.accion} en orden`
     case 'rango':
       return `${t.variable} se mantiene entre ${t.min ?? '-∞'} y ${t.max ?? '∞'}`
+    case 'simultaneas':
+      return `Pueden estar a la vez en ${t.acciones[0]} y ${t.acciones[1]}`
+    case 'valor-alcanzable':
+      return `${t.variable} puede llegar a ${t.valor}`
     case 'sin-deadlock':
       return 'Nunca quedan todos bloqueados (sin deadlock)'
     case 'sin-inanicion':
@@ -227,7 +232,8 @@ export function explorar(
   const coincide = (patron: string, nombre: string) =>
     patron.endsWith('[*]') ? nombre.startsWith(`${patron.slice(0, -3)}[`) : nombre === patron
 
-  const chequearEstado = (e: Estado) => {
+  const chequearEstado = (e: Estado): boolean => {
+    let violado = false
     // recursos en uso por instancia (resueltos con sus locales)
     const enUso = instancias.map((inst, j) => {
       const ins = instrEn(inst, e.pcs[j])
@@ -248,9 +254,11 @@ export function explorar(
           const detalle = dentro.map((d) => `${d.accion} (línea ${d.linea})`).join(' y ')
           if (t.tipo === 'exclusion' && dentro.length > 1) {
             fallar(k, `Dos procesos pueden estar usando ${nombre} al mismo tiempo: ${detalle}.`)
+            violado = true
           }
           if (t.tipo === 'capacidad' && dentro.length > t.max) {
             fallar(k, `En alguna intercalación hay ${dentro.length} usando ${nombre} a la vez.`)
+            violado = true
           }
         }
       } else if (t.tipo === 'concurrencia-max' || t.tipo === 'concurrencia-alcanzable') {
@@ -261,14 +269,23 @@ export function explorar(
         maximo[k] = Math.max(maximo[k], n)
         if (t.tipo === 'concurrencia-max' && n > t.max) {
           fallar(k, `En alguna intercalación hay ${n} procesos a la vez en ${t.accion}.`)
+          violado = true
         }
+      } else if (t.tipo === 'simultaneas') {
+        const en = instancias.map((i, j) => instrEn(i, e.pcs[j])).map((x) => (x?.tipo === 'accion' ? x.accion : null))
+        const a = en.indexOf(t.acciones[0])
+        if (a >= 0 && en.some((x, j) => j !== a && x === t.acciones[1])) maximo[k] = 1
+      } else if (t.tipo === 'valor-alcanzable') {
+        if (e.vars[idxVar.get(t.variable)!] >= t.valor) maximo[k] = Math.max(maximo[k], t.valor)
       } else if (t.tipo === 'rango') {
         const v = e.vars[idxVar.get(t.variable)!]
         if ((t.min != null && v < t.min) || (t.max != null && v > t.max)) {
           fallar(k, `Hay una intercalación en la que ${t.variable} llega a valer ${v}.`)
+          violado = true
         }
       }
     })
+    return violado
   }
 
   const inicial: Estado = {
@@ -359,6 +376,7 @@ export function explorar(
 
   const kDeadlock = tests.findIndex((t) => t.tipo === 'sin-deadlock')
   let acotada = false
+  let podado = false
   const cola: number[] = [registrar(inicial).id]
 
   for (let cabeza = 0; cabeza < cola.length; cabeza++) {
@@ -369,7 +387,12 @@ export function explorar(
       for (let r = cabeza; r < cola.length; r++) optimista.add(cola[r])
       break
     }
-    chequearEstado(e)
+    // un estado que ya viola un test de seguridad no se expande (ver brain: poda por violación)
+    if (chequearEstado(e)) {
+      podado = true
+      optimista.add(id)
+      continue
+    }
     let habilitadas = 0
 
     instancias.forEach((_, j) => {
@@ -458,6 +481,12 @@ export function explorar(
     if (t.tipo === 'capacidad-alcanzable' && maximo[k] < t.valor) {
       m = `Nunca llegan a estar ${t.valor} usando ${t.recurso.replace('[*]', '')} a la vez (como mucho ${maximo[k]}): la sincronización restringe más de lo necesario.`
     }
+    if (t.tipo === 'simultaneas' && maximo[k] === 0) {
+      m = t.motivo ?? `Nunca pueden estar a la vez en ${t.acciones[0]} y ${t.acciones[1]}: la sección crítica abarca más de lo necesario.`
+    }
+    if (t.tipo === 'valor-alcanzable' && maximo[k] < t.valor) {
+      m = t.motivo ?? `${t.variable} nunca llega a ${t.valor}: la sincronización restringe más de lo necesario.`
+    }
     if (t.tipo === 'todas-ejecutan') {
       const faltan = [...new Set(Object.keys(ej.acciones).map(textoAccion))].filter((a) => !ejecutadas.has(a))
       m = faltan.length ? `Nunca llega a ejecutarse: ${faltan.join(', ')}.` : undefined
@@ -465,6 +494,8 @@ export function explorar(
     if (t.tipo === 'max-semaforos' && nSemaforos > t.max) {
       m = `Usaste ${nSemaforos} semáforos y el enunciado pide como máximo ${t.max}.`
     }
+    // con poda, "nunca se alcanza" no es concluyente: el fallo de seguridad ya basta
+    if (podado && ALCANZABILIDAD.has(t.tipo)) m = undefined
     return { nombre: nombreTest(t), ok: m == null, ...(m ? { motivo: m } : {}) }
   })
   return { tests: resultados, ok: resultados.every((r) => r.ok), acotada }

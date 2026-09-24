@@ -24,6 +24,35 @@ export interface ProcesoInput {
   rafagaAnterior?: number
 }
 
+/** Cómo pide E/S un ULT: syscall directa, wrapper de la biblioteca o wrapper con jacketing. */
+export type ModoIO = 'directa' | 'wrapper' | 'jacketing'
+
+export type AlgoritmoBiblioteca = Exclude<AlgoritmoBase, 'hrrn'>
+
+/** Hilo de usuario: lo planifica la biblioteca de su KLT. */
+export interface UltInput {
+  id: string
+  llegada: number
+  rafagas: number[]
+  prioridad?: number
+  dispositivos?: string[]
+}
+
+/** KLT con ULTs: el SO lo planifica como un proceso; adentro, la biblioteca elige el ULT. */
+export interface KltInput {
+  id: string
+  hilos: UltInput[]
+  /** Algoritmo de la biblioteca (default fifo). */
+  biblioteca?: AlgoritmoBiblioteca
+  quantumBiblioteca?: number
+  /** Default 'wrapper': la cátedra asume que no hay jacketing salvo que se diga. */
+  modoIO?: ModoIO
+  prioridad?: number
+  cola?: number
+}
+
+export const esKlt = (p: ProcesoInput | KltInput): p is KltInput => 'hilos' in p
+
 export interface ColaConfig {
   algoritmo: AlgoritmoBase
   quantum?: number
@@ -32,7 +61,8 @@ export interface ColaConfig {
 export interface ConfigPlanificacion {
   algoritmo: Algoritmo
   quantum?: number
-  procesos: ProcesoInput[]
+  /** Procesos o KLTs simples, y KLTs con ULTs (`hilos`). */
+  procesos: (ProcesoInput | KltInput)[]
   /** Orden en que entran a listos los que llegan en el mismo instante. */
   desempate?: OrigenListo[]
   /** true (default): la E/S es un único dispositivo FIFO; false: E/S en paralelo. */
@@ -69,7 +99,7 @@ export interface EstadoDispositivo {
 /** Lo que pasó en un tick [t, t+1). */
 export interface Tick {
   t: number
-  /** Quién ocupa el CPU 1 (o el único). */
+  /** Hilo en el CPU 1 (o el único): proceso, KLT simple o ULT. */
   cpu: string | null
   /** Ocupación de cada CPU. */
   cpus: (string | null)[]
@@ -85,6 +115,11 @@ export interface Tick {
   dispositivos?: EstadoDispositivo[]
   /** Solo con grado de multiprogramación: esperan admisión en New. */
   nuevos?: string[]
+  /** Solo con ULTs: ULT elegido y cola de cada biblioteca. */
+  bibliotecas?: { klt: string; elegido: string | null; listos: string[] }[]
+  /** Solo con ULTs: quantum que le queda al KLT de cada CPU (null = sin quantum u ociosa). */
+  quantum?: (number | null)[]
+  /** Por hilo planificable (ULT o KLT simple). */
   estados: Record<string, EstadoProceso>
   eventos: string[]
 }
@@ -108,4 +143,8 @@ export interface ResultadoPlanificacion {
   promedioEspera: number
   fin: number
   procesadores: number
+  /** Hilos planificables en orden (ULTs y KLTs simples): las filas del Gantt. */
+  hilos: string[]
+  /** Solo con ULTs: KLT de cada ULT. */
+  kltDe?: Record<string, string>
 }

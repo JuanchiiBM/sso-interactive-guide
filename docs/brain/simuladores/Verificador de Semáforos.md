@@ -58,6 +58,15 @@ localStorage con clave versionada (`so:borrador:v2:`): si cambia la sintaxis, su
   **reducción por simetría** (se ordenan sus pcs en la clave del estado).
 - BFS con tope: 250 000 estados, semáforos ≤ 12, variables ≤ 8. Si se corta, la UI avisa
   "exploración acotada" (pasa en productor-consumidor sin límite).
+- **Poda por violación:** un estado que ya viola un test de seguridad (`exclusion`, `capacidad`,
+  `concurrencia-max`, `rango`) no se expande y queda optimista. Sin esto, el código sin sincronizar
+  de LyL (Ej. 23) llegaba al tope en >5 s. Consecuencias: si hubo poda, los tests de
+  alcanzabilidad (`*-alcanzable`, `valor-alcanzable`, `simultaneas`, `todas-ejecutan`) se reportan
+  OK (no son concluyentes, y el fallo de seguridad ya alcanza). La inanición **sí** se sigue
+  buscando: al ser optimistas los podados, la que aparece es real (el test de las trazas del
+  1R 1C2025 lo necesita).
+- Costo de referencia: LyL (6 instancias, 7 semáforos) ≈ 3 s la solución correcta. Más de eso en
+  el navegador ya molesta: al cargar parciales, bajá instancias/constantes antes de agregar tests.
 
 ## Tests disponibles (`tests:` del frontmatter)
 `exclusion` (recurso) · `capacidad` / `capacidad-alcanzable` (recurso, N) · `concurrencia-max` /

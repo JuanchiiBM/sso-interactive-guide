@@ -22,7 +22,9 @@ const dif = dificultadUI[dificultad]
 
 <a
   href={ejercicioHref(ejercicio.id)}
-  class="group flex h-full flex-col rounded-xl border border-line bg-surface-2 p-4 hover:border-line-strong transition-colors"
+  class:list={[
+    'group flex h-full flex-col rounded-xl border border-line bg-surface-2 p-4 hover:border-line-strong transition-colors',
+  ]}
   data-ejercicio-card
   data-tema={ejercicio.data.tema.id}
   data-dificultad={dificultad}

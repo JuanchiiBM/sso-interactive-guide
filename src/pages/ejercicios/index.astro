@@ -11,8 +11,10 @@ const chip =
 <Layout title="Ejercicios">
   <h1 class="font-heading text-2xl text-fg">Ejercicios · 1er parcial</h1>
   <p class="mt-2 text-fg-soft max-w-2xl">
-    Enunciados de las guías de la cátedra. Los <span class="text-accent">interactivos</span>
-    esconden la respuesta hasta que la acertás: armás el Gantt o elegís la opción correcta.
+    Enunciados de las guías de la cátedra y de parciales anteriores (<span class="text-parcial"
+      >en violeta</span
+    >). Los <span class="text-accent">interactivos</span>{' '}esconden la respuesta hasta que la
+    acertás: armás el Gantt, escribís el código o elegís la opción correcta.
   </p>
 
   <div class="mt-6 flex flex-wrap gap-2" data-filtros role="group" aria-label="Filtrar ejercicios">
@@ -33,6 +35,9 @@ const chip =
     <span class="mx-1 w-px bg-line" aria-hidden="true"></span>
     <button type="button" class={chip} data-filtro="simulador" data-valor="si" aria-pressed="false">
       Solo interactivos
+    </button>
+    <button type="button" class={chip} data-filtro="dificultad" data-valor="parcial" aria-pressed="false">
+      Solo de parcial
     </button>
   </div>
 
