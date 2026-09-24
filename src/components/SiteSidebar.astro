@@ -1,6 +1,6 @@
 ---
 /** Sidebar estático: temas del parcial con sus ejercicios. JS solo para el drawer mobile. */
-import { getCatalogo, temaHref, ejercicioHref } from '@lib/catalogo'
+import { getCatalogo, temaHref, ejercicioHref, rotuloEjercicio } from '@lib/catalogo'
 
 interface Props {
   activeId?: string
@@ -86,7 +86,7 @@ const catalogo = await getCatalogo(1)
                   ]}
                   aria-current={activeId === e.id ? 'page' : undefined}
                 >
-                  Ej. {e.data.fuente.numero} · {e.data.titulo}
+                  {rotuloEjercicio(e.data.fuente.numero)} · {e.data.titulo}
                 </a>
               </li>
             ))}

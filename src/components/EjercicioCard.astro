@@ -1,6 +1,6 @@
 ---
 import type { Ejercicio } from '@lib/catalogo'
-import { ejercicioHref } from '@lib/catalogo'
+import { ejercicioHref, rotuloEjercicio } from '@lib/catalogo'
 import { dificultadUI, tipoUI } from '@lib/presentacion'
 
 interface Props {
@@ -30,7 +30,7 @@ const dif = dificultadUI[dificultad]
   data-dificultad={dificultad}
   data-simulador={interactivo ? 'si' : 'no'}
 >
-  <span class="font-mono text-[11px] text-muted">Ej. {fuente.numero}</span>
+  <span class="font-mono text-[11px] text-muted">{rotuloEjercicio(fuente.numero)}</span>
   <span class="mt-1 font-heading text-fg group-hover:text-accent">{titulo}</span>
   <span class="mt-auto pt-3 flex flex-wrap items-center gap-2 text-[11px]">
     <span class="inline-flex items-center gap-1.5 text-fg-soft">

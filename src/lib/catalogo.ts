@@ -30,6 +30,12 @@ export async function getCatalogo(parcial?: 1 | 2): Promise<TemaConEjercicios[]>
 export const temaHref = (id: string) => `/teoria/${id}/`
 export const ejercicioHref = (id: string) => `/ejercicios/${id}/`
 
+/** "Ej. 12", o "Simulacro" / "Simulacro 2" para los de numeración `S`, `S2`. */
+export function rotuloEjercicio(numero: string | number): string {
+  const m = String(numero).match(/^S(\d*)$/)
+  return m ? `Simulacro${m[1] ? ` ${m[1]}` : ''}` : `Ej. ${numero}`
+}
+
 function compararNumero(a: string | number, b: string | number): number {
   return String(a).localeCompare(String(b), 'es', { numeric: true })
 }
