@@ -14,7 +14,8 @@ const RE_SEM = /^(semaphore|semaforo|semáforo)\s+(.+?)$/i
 const RE_DECL = /^([A-Za-z_]\w*)\s*(?:\[\s*(\w+)\s*\])?\s*=\s*(\{[^}]*\}|-?\d+|[A-Za-z_]\w*|\?)$/
 const RE_PROC = /^void\s+([A-Za-z_]\w*)\s*\(\s*(?:void)?\s*\)\s*(\{)?$/
 // admite la notación de las resoluciones: wait(s) x3; = tres wait seguidos
-const RE_OP = /^(wait|signal)\s*\(\s*([A-Za-z_]\w*)\s*(?:\[\s*(.+?)\s*\])?\s*\)\s*(?:[xX]\s*(\d+))?\s*(;)?$/i
+const RE_OP =
+  /^(wait|signal)\s*\(\s*([A-Za-z_]\w*)\s*(?:\[\s*(.+?)\s*\])?\s*\)\s*(?:[xX]\s*(\d+))?\s*(;)?$/i
 const RE_WHILE = /^while\s*\(\s*(true|1)\s*\)\s*(\{)?$/i
 const RUIDO = /^(while\s*\(\s*(true|1)\s*\)\s*\{?|\{|\}|do\s*\{?|\}\s*while.*)$/i
 
@@ -40,11 +41,7 @@ function coinciden(esperado: string[], obtenido: string[]): boolean {
 
 /** Nombre de la función C de un proceso: "De Paul" → De_Paul. */
 export const identificador = (nombre: string) =>
-  nombre
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .trim()
-    .replace(/\W+/g, '_')
+  nombre.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().replace(/\W+/g, '_')
 
 const indentar = (codigo: string) =>
   codigo
@@ -124,6 +121,8 @@ export function unirCondicionales(lineas: string[]): string[] {
 export function indicesValidos(ej: EjercicioSemaforos): Set<string> {
   return new Set([
     'id',
+    'id()',
+    ...(ej.aliasId ?? []),
     ...(ej.locales ?? []),
     ...Object.keys(ej.variables ?? {}),
     ...Object.keys(ej.constantes ?? {}),
@@ -156,7 +155,10 @@ export function parsear(
   const declarar = (linea: number, decl: string) => {
     const m = decl.match(RE_DECL)
     if (!m) {
-      error(linea, `Declaración inválida: "${decl}" (usá semaphore nombre = valor; o semaphore nombre[N] = valor;)`)
+      error(
+        linea,
+        `Declaración inválida: "${decl}" (usá semaphore nombre = valor; o semaphore nombre[N] = valor;)`,
+      )
       return
     }
     const [, nombre, tam, valorTxt] = m
@@ -171,15 +173,23 @@ export function parsear(
     let valores: (number | undefined)[]
     if (valorTxt.startsWith('{')) {
       if (tam == null) return error(linea, `${nombre} no es un array: no se inicializa con { }`)
-      valores = valorTxt.slice(1, -1).split(',').map((v) => valorDe(v.trim()))
+      valores = valorTxt
+        .slice(1, -1)
+        .split(',')
+        .map((v) => valorDe(v.trim()))
       if (valores.length !== tamano) {
-        return error(linea, `${nombre} tiene ${tamano} posiciones pero se inicializaron ${valores.length}`)
+        return error(
+          linea,
+          `${nombre} tiene ${tamano} posiciones pero se inicializaron ${valores.length}`,
+        )
       }
     } else {
       valores = Array(tamano).fill(valorDe(valorTxt))
     }
-    if (valores.some((v) => v == null)) return error(linea, `Valor desconocido en la declaración de ${nombre}`)
-    if (valores.some((v) => v! < 0)) return error(linea, `El semáforo ${nombre} no puede inicializarse en negativo`)
+    if (valores.some((v) => v == null))
+      return error(linea, `Valor desconocido en la declaración de ${nombre}`)
+    if (valores.some((v) => v! < 0))
+      return error(linea, `El semáforo ${nombre} no puede inicializarse en negativo`)
     semaforos[nombre] = { valores: valores as number[], esArray: tam != null }
   }
 
@@ -243,7 +253,8 @@ export function parsear(
     let instr: Instruccion | null = null
     let veces = 1
     if (op) {
-      if (op[1] !== op[1].toLowerCase()) error(linea, `Se escribe "${op[1].toLowerCase()}" en minúscula`)
+      if (op[1] !== op[1].toLowerCase())
+        error(linea, `Se escribe "${op[1].toLowerCase()}" en minúscula`)
       if (!op[5]) error(linea, 'Falta ";" al final')
       if (op[4] != null) {
         veces = Number(op[4])
@@ -252,7 +263,10 @@ export function parsear(
       const ref: RefSemaforo = { nombre: op[2], ...(op[3] != null ? { indice: op[3] } : {}) }
       if (ref.indice != null && !/^\d+$/.test(ref.indice) && !indices.has(ref.indice)) {
         const validos = [...indices].join(', ')
-        error(linea, `Índice desconocido "${ref.indice}" (podés usar un número${validos ? ` o: ${validos}` : ''})`)
+        error(
+          linea,
+          `Índice desconocido "${ref.indice}" (podés usar un número${validos ? ` o: ${validos}` : ''})`,
+        )
       }
       instr = { tipo: op[1].toLowerCase() as 'wait' | 'signal', sem: ref, linea }
       if (ej.soloInicializar) escritas.get(actual.nombre)!.push(...tokensOp(texto))
@@ -279,9 +293,13 @@ export function parsear(
       if (ins.tipo === 'accion') continue
       const decl = semaforos[ins.sem.nombre]
       if (HUECO.test(ins.sem.nombre)) error(ins.linea, 'Completá el semáforo que va en este hueco')
-      else if (!decl) error(ins.linea, `El semáforo ${ins.sem.nombre} no está declarado/inicializado`)
+      else if (!decl)
+        error(ins.linea, `El semáforo ${ins.sem.nombre} no está declarado/inicializado`)
       else if (decl.esArray && ins.sem.indice == null) {
-        error(ins.linea, `${ins.sem.nombre} es un array: indicá la posición, ej. ${ins.sem.nombre}[i]`)
+        error(
+          ins.linea,
+          `${ins.sem.nombre} es un array: indicá la posición, ej. ${ins.sem.nombre}[i]`,
+        )
       } else if (!decl.esArray && ins.sem.indice != null) {
         error(ins.linea, `${ins.sem.nombre} no es un array: no lleva [ ]`)
       }

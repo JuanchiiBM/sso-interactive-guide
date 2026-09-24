@@ -2,7 +2,7 @@
 tipo: servicio
 aliases: [semáforos, semaforos, wait, signal, semaphore, sincronización, verificador, model checking, intercalaciones, tests, leetcode, verificarSemaforos]
 tags: [simulador, sincronizacion, deadlock]
-actualizado: 2026-09-23
+actualizado: 2026-09-24
 ---
 # Verificador de Semáforos
 
@@ -95,10 +95,26 @@ expone contadores internos que el alumno no conoce.
 | `funciones: {actual(): {variable}}` + `modulos` | funciones del enunciado usables como índice | Sinc. 13      |
 | `Proceso::accion` en `acciones`    | misma línea con spec distinta según el proceso         | `posicionarse()`   |
 | test `orden-instancias`            | las instancias hacen una acción en orden de `id`      | pateadores         |
+| `asignaId: [id_asent]`             | la local toma el id de la instancia (`getID()`)        | Sinc. 24           |
+| `efecto: {'cajas[id_asent]': 1}` + `variables: {'cajas[0]': 0, …}` | contadores **por índice** para tests `rango` | Sinc. 24 |
+| `cotas: {semaforos, variables}`    | topes propios cuando un contador crece sin límite (≥ valores iniciales) | Sinc. 24 |
+| `bolsas: [pendientes, 'turnos[0]']` + `pone`/`saca` | listas que **llevan datos** (ids) entre procesos: `pone: {pendientes: 'id'}`, `saca: {validados: 'cafe.idCliente'}` (se prueban todos los valores) | Sinc. 29–31 |
+| `aliasId: ['getId()']`             | otros nombres de `id` usables como índice (`id()` ya viene) | Sinc. 28–30 |
+| local llamada `id` / `'cafe.idCliente'` / `'id_agente(pr)'` | una local puede tener cualquier nombre, incluso una expresión del enunciado; la local **gana** sobre el id de la instancia | Sinc. 30, 31 |
 
 - Índice fuera de rango = **error de ejecución** (`ejecucion: true`, UI: "Falla al ejecutar"), no
   de sintaxis.
-- Si el código o los tests usan `id`, se **apaga la simetría** (las instancias ya no son iguales).
+- La simetría se decide **por proceso**: si el código, las acciones (`[id]`, `asignaId`) o un
+  `orden-instancias` de ese proceso usan `id`, sus instancias dejan de ser intercambiables; las de
+  los otros procesos se siguen ordenando.
+- **Bolsas:** resuelven el "¿a quién le aviso?" de los parciales (el barista avisa al cliente del
+  pedido, el bot al agente del PR). Sin ellas, un índice al azar hacía fallar la solución correcta
+  (avisaba a alguien que no había pedido). `saca` de una bolsa vacía no hace nada: el error lo
+  detecta el `rango` del contador de esa lista. Las bolsas entran en la clave del estado y en la cota
+  de `variables`.
+- Cuando un parcial no entra en tiempo (Vault Tec con 2 distribuidores: >10 s), achicá instancias
+  antes que tests, y avisalo en la `nota`. Ahí se perdió el test del túnel "máximo 2" (con 2
+  procesos no se puede superar); queda el "pueden estar 2".
 - `if (...) { … } else { … }` se une en **una** acción atómica (`unirCondicionales`): importa cuándo
   se lee la condición, no qué rama corre. Si el alumno mete `wait`/`signal` adentro del if, no matchea.
 

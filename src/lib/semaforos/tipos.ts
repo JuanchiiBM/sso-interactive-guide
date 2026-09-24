@@ -42,10 +42,16 @@ export interface ErrorParseo {
 export interface AccionSpec {
   /** Recursos que "usa" mientras está en la acción; admite índices con locales: `recurso[id_recurso]`. */
   recursos?: string[]
-  /** Suma a variables globales al ejecutarse. */
+  /** Suma a variables globales al ejecutarse; admite índices: `cajas[id_asent]` → `cajas[1]`. */
   efecto?: Record<string, number>
   /** Asignación no determinista a variables locales (se prueban todos los valores 0..valores-1). */
   asigna?: { variables: string[]; valores: number; distintos?: boolean }
+  /** Locales que toman el id de la instancia, ej. `id_asent = getID()`. */
+  asignaId?: string[]
+  /** Agrega a una bolsa el valor de una expresión: `{ pendientes: 'id' }` (el pedido lleva el id). */
+  pone?: Record<string, string>
+  /** Saca de una bolsa un valor cualquiera (se prueban todos) y lo guarda en una local. */
+  saca?: Record<string, string>
   /** Recurso implícito que la acción toma (bloquea si no hay) o devuelve, ej. syscall_pedir(). */
   adquiere?: string[]
   libera?: string[]
@@ -72,12 +78,17 @@ export interface EjercicioSemaforos {
   soloInicializar?: boolean
   /** Constantes que el alumno puede usar al inicializar o como tamaño (ej. M = 3). */
   constantes?: Record<string, number>
+  /** Listas compartidas que llevan datos (ids) de un proceso a otro; ver `pone`/`saca`. */
+  bolsas?: string[]
+  /** Otros nombres para `id` que el alumno puede usar como índice, ej. `getId()`. */
+  aliasId?: string[]
+  /** Topes de exploración propios (por defecto 12 y 8) cuando un contador puede crecer sin límite. */
+  cotas?: { semaforos?: number; variables?: number }
   tests: TestSemaforos[]
 }
 
 /** Todo test acepta `nombre` y `motivo` (explicación propia cuando falla). */
 export type TestSemaforos = (
-
   | { tipo: 'exclusion'; recurso: string; nombre?: string }
   | { tipo: 'concurrencia-max'; accion: string; max: number; nombre?: string }
   | { tipo: 'capacidad'; recurso: string; max: number; nombre?: string }

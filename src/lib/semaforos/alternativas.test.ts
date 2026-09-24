@@ -145,7 +145,11 @@ describe('afirmaciones de las justificaciones de parcial', () => {
 describe('trazas del 1R 1C2025 TM Ej. 3 (el MC dice que hay deadlock y carrera sobre ultValor)', () => {
   const ej: EjercicioSemaforos = {
     procesos: [
-      { nombre: 'A', instancias: 1, codigo: 'while(true){\n  acum += ultValor;\n  ultValor = 0;\n}' },
+      {
+        nombre: 'A',
+        instancias: 1,
+        codigo: 'while(true){\n  acum += ultValor;\n  ultValor = 0;\n}',
+      },
       { nombre: 'B', instancias: 1, codigo: 'while(true){\n  ultValor = generarValor();\n}' },
       { nombre: 'C', instancias: 1, codigo: 'while(true){\n  printf(Acumulado: %d, acum);\n}' },
     ],
@@ -196,21 +200,192 @@ void C() {
   })
 })
 
-describe('LyL impresión 3D: el test de turnos detecta errores de turno', { timeout: 30_000 }, () => {
-  const d = desafio('sincronizacion/ej-23.md')
+describe(
+  'LyL impresión 3D: el test de turnos detecta errores de turno',
+  { timeout: 30_000 },
+  () => {
+    const d = desafio('sincronizacion/ej-23.md')
+    const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+    it('Leonardo con un solo wait(turnoLeonardo) rompe el 3 a 1', () => {
+      const mal = solucion.replace('wait(turnoLeonardo) x3;', 'wait(turnoLeonardo);')
+      expect(fallidos(mal, d)).toContain('Se turnan: 3 diseños Luciano, 1 Leonardo, y así')
+    })
+    it('sin semáforos de turno imprimen los dos a la vez', () => {
+      const mal = solucion
+        .replace(/ *wait\(turno\w+\)( x3)?;\n/g, '')
+        .replace(/ *signal\(turno\w+\)( x3)?;\n/g, '')
+      expect(fallidos(mal, d)).toContain('Hay una sola impresora: nunca imprimen los dos a la vez')
+    })
+    it('sin el límite de pedidos se superan los pendientes', () => {
+      const mal = solucion.replace(/ *(wait|signal)\(limitePedidos\);\n/g, '')
+      expect(fallidos(mal, d)).toContain(
+        'Nunca hay más de LIMITE pedidos pendientes ni se retira de la lista vacía',
+      )
+    })
+  },
+)
+
+describe('Vault Tec Ammo: cada semáforo tiene un test que lo exige', { timeout: 30_000 }, () => {
+  const d = desafio('sincronizacion/ej-24.md')
   const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
-  it('Leonardo con un solo wait(turnoLeonardo) rompe el 3 a 1', () => {
-    const mal = solucion.replace('wait(turnoLeonardo) x3;', 'wait(turnoLeonardo);')
-    expect(fallidos(mal, d)).toContain('Se turnan: 3 diseños Luciano, 1 Leonardo, y así')
+  it('el túnel como mutex restringe de más', () => {
+    const mal = solucion.replace('accesoAlmacen = 2', 'accesoAlmacen = 1')
+    expect(fallidos(mal, d)).toEqual(['Pueden estar 2 en el almacén a la vez'])
   })
-  it('sin semáforos de turno imprimen los dos a la vez', () => {
+  it('sin entrega[id] el asentamiento recibe cajas que no le llegaron', () => {
+    const mal = solucion.replace(/ *(wait|signal)\(entrega\[id_asent\]\);\n/g, '')
+    expect(fallidos(mal, d)).toContain('El asentamiento 0 solo recibe cajas que le entregaron')
+  })
+  it('sin mutexEntrega en el asentamiento se cruzan en el líder', () => {
+    const mal = solucion.replace(
+      '    wait(mutexEntrega[id_asent]);\n    caja = recibir(lider[id_asent]);\n    signal(mutexEntrega[id_asent]);\n',
+      '    caja = recibir(lider[id_asent]);\n',
+    )
+    expect(fallidos(mal, d)).toEqual(['Nadie se cruza en el líder de un mismo asentamiento'])
+  })
+})
+
+describe('Laboratorio de bioquímica: un aviso por analista', { timeout: 30_000 }, () => {
+  const d = desafio('sincronizacion/ej-26.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('un solo semáforo con tres signal deja que un analista se lleve dos avisos', () => {
     const mal = solucion
-      .replace(/ *wait\(turno\w+\)( x3)?;\n/g, '')
-      .replace(/ *signal\(turno\w+\)( x3)?;\n/g, '')
-    expect(fallidos(mal, d)).toContain('Hay una sola impresora: nunca imprimen los dos a la vez')
+      .replace('semaphore reporte_publicado[3] = 0;', 'semaphore reporte_publicado = 0;')
+      .replace('wait(reporte_publicado[id_especialidad]);', 'wait(reporte_publicado);')
+      .replace(/signal\(reporte_publicado\[\d\]\);/g, 'signal(reporte_publicado);')
+    expect(fallidos(mal, d)).toContain('El analista 0 solo revisa reportes publicados')
   })
-  it('sin el límite de pedidos se superan los pendientes', () => {
-    const mal = solucion.replace(/ *(wait|signal)\(limitePedidos\);\n/g, '')
-    expect(fallidos(mal, d)).toContain('Nunca hay más de LIMITE pedidos pendientes ni se retira de la lista vacía')
+  it('avisar antes de publicar el reporte falla', () => {
+    const mal = solucion.replace(
+      '    publicar_reporte();\n    signal(reporte_publicado[0]);',
+      '    signal(reporte_publicado[0]);\n    publicar_reporte();',
+    )
+    expect(fallidos(mal, d)).toEqual(['El analista 0 solo revisa reportes publicados'])
+  })
+})
+
+describe('Parranui: stock por sabor y rendezvous', { timeout: 30_000 }, () => {
+  const d = desafio('sincronizacion/ej-27.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('un solo contador (signal x3) deja entregar un sabor que no hay', () => {
+    const mal = solucion
+      .replace('contadorSabores[3] = 0', 'stock = 0')
+      .replace('wait(contadorSabores[idSabor]);', 'wait(stock);')
+      .replace(
+        '    signal(contadorSabores[0]);\n    signal(contadorSabores[1]);\n    signal(contadorSabores[2]);\n',
+        '    signal(stock) x3;\n',
+      )
+    expect(fallidos(mal, d)).toContain('Nunca se entrega frutilla sin stock')
+  })
+  it('sin esperar el llamado el cliente pide antes de tiempo', () => {
+    const mal = solucion.replace('    wait(atendido);\n', '')
+    expect(fallidos(mal, d)).toContain('El cliente pide recién cuando lo llaman')
+  })
+})
+
+describe('Concurren CIA: cada semáforo tiene un test que lo exige', { timeout: 30_000 }, () => {
+  const d = desafio('sincronizacion/ej-28.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('la solución no queda acotada', () => {
+    expect(verificarSemaforos(solucion, d).acotada).toBe(false)
+  })
+  it('sin cajeros_disponibles se asignan más cajas que cajeros libres', () => {
+    const mal = solucion.replace('    wait(cajeros_disponibles);\n', '')
+    expect(fallidos(mal, d)).toContain('Solo se asigna caja si hay un cajero desocupado')
+  })
+  it('un solo semáforo de productos deja que un cajero escanee una caja ajena', () => {
+    const mal = solucion
+      .replace('productos_depositados[CAJEROS] = 0', 'productos_depositados = 0')
+      .replace('signal(productos_depositados[id_cajero]);', 'signal(productos_depositados);')
+      .replace('wait(productos_depositados[getId()]);', 'wait(productos_depositados);')
+    expect(fallidos(mal, d)).toContain('El cajero 0 escanea solo productos depositados')
+  })
+  it('el mutex alrededor de todo el cajero restringe de más', () => {
+    const mal = solucion.replace(
+      '    escanear_productos();\n    wait(mutex_sistema_externo);\n',
+      '    wait(mutex_sistema_externo);\n    escanear_productos();\n',
+    )
+    expect(fallidos(mal, d)).toEqual(['Dos cajeros pueden escanear a la vez'])
+  })
+})
+
+describe('Cafetería de robots: el café llega a quien lo pidió', { timeout: 30_000 }, () => {
+  const d = desafio('sincronizacion/ej-29.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('la solución no queda acotada', () => {
+    expect(verificarSemaforos(solucion, d).acotada).toBe(false)
+  })
+  it('un solo semáforo de aviso deja que un cliente se lleve el café de otro', () => {
+    const mal = solucion
+      .replace('tomarCafe[CLIENTES] = 0', 'listo = 0')
+      .replace('wait(tomarCafe[getId()]);', 'wait(listo);')
+      .replace('signal(tomarCafe[cafe.idCliente]);', 'signal(listo);')
+    expect(fallidos(mal, d)).toContain('El cliente 0 toma solo el café que le sirvieron a él')
+  })
+  it('sin el límite de pendientes se supera la capacidad', () => {
+    const mal = solucion.replace(/ *(wait|signal)\(capacidadPreparador\);\n/g, '')
+    expect(fallidos(mal, d)).toContain('Nunca hay más de LIMITE pendientes ni se retira de la lista vacía')
+  })
+})
+
+describe('Maratón: cada semáforo tiene un test que lo exige', { timeout: 30_000 }, () => {
+  const d = desafio('sincronizacion/ej-30.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('la solución no queda acotada', () => {
+    expect(verificarSemaforos(solucion, d).acotada).toBe(false)
+  })
+  it('soltar la terminal al escribir deja entrar a otro corredor', () => {
+    const mal = solucion
+      .replace('    signal(inputEscrito);\n', '    signal(terminalLibre);\n    signal(inputEscrito);\n')
+      .replace('    ticket_t ticket = recibirTicket();\n    signal(terminalLibre);\n', '    ticket_t ticket = recibirTicket();\n')
+    expect(fallidos(mal, d)).toEqual(['Un solo corredor a la vez usa la terminal'])
+  })
+  it('un solo semáforo de llamado deja posicionarse a quien no llamaron', () => {
+    const mal = solucion
+      .replace('llamado[CORREDORES] = 0', 'llamado = 0')
+      .replace('wait(llamado[ticket.número]);', 'wait(llamado);')
+      .replace('signal(llamado[numLlamar]);', 'signal(llamado);')
+    expect(fallidos(mal, d)).toContain('El corredor 0 se posiciona cuando llaman a su número')
+  })
+})
+
+describe('Claudio Code: el issue llega al agente dueño del PR', { timeout: 30_000 }, () => {
+  const d = desafio('sincronizacion/ej-31.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('un solo semáforo de issues deja que otro agente se lleve el aviso', () => {
+    const mal = solucion
+      .replace('sem_issues[AGENTES] = 0', 'sem_issues = 0')
+      .replace('wait(sem_issues[id()]);', 'wait(sem_issues);')
+      .replace('signal(sem_issues[id_agente(pr)]);', 'signal(sem_issues);')
+    expect(fallidos(mal, d)).toContain('El agente 0 solo toma issues de su PR')
+  })
+  it('generar el PR con el mutex de prompts tomado restringe de más', () => {
+    const mal = solucion.replace(
+      '    signal(mutex_prompts);\n    pr = generar_pr(prompt);\n',
+      '    pr = generar_pr(prompt);\n    signal(mutex_prompts);\n',
+    )
+    expect(fallidos(mal, d)).toEqual(['Dos agentes pueden generar PRs a la vez'])
+  })
+})
+
+describe('La Nonna: el código del dueño', { timeout: 30_000 }, () => {
+  const d = desafio('sincronizacion/ej-32.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('bien inicializado pero sin corregir, hay deadlock', () => {
+    const mal = solucion
+      .replace('    wait(hayLugarEnMostrador);\n    wait(mutexMostrador);\n', '    wait(mutexMostrador);\n    wait(hayLugarEnMostrador);\n')
+      .replace('    wait(hayPizzas);\n    wait(mutexMostrador);\n', '    wait(mutexMostrador);\n    wait(hayPizzas);\n')
+    expect(fallidos(mal, d)).toContain('Nunca quedan todos bloqueados (sin deadlock)')
+  })
+  it('corrigiendo solo la moto sigue el deadlock del pizzero', () => {
+    const mal = solucion.replace(
+      '    wait(hayLugarEnMostrador);\n    wait(mutexMostrador);\n',
+      '    wait(mutexMostrador);\n    wait(hayLugarEnMostrador);\n',
+    )
+    expect(fallidos(mal, d)).toContain('Nunca quedan todos bloqueados (sin deadlock)')
+  })
+  it('hayPizzas inicializado en CAPACIDAD deja sacar del mostrador vacío', () => {
+    const mal = solucion.replace('hayPizzas = 0', 'hayPizzas = CAPACIDAD')
+    expect(fallidos(mal, d)).toContain('El mostrador no se desborda ni se saca del vacío')
   })
 })

@@ -17,7 +17,13 @@ import type {
 const MAX_ESTADOS = 250_000
 const TOPE_SEMAFORO = 12
 const TOPE_VARIABLE = 8
-const ALCANZABILIDAD = new Set(['concurrencia-alcanzable', 'capacidad-alcanzable', 'simultaneas', 'valor-alcanzable', 'todas-ejecutan'])
+const ALCANZABILIDAD = new Set([
+  'concurrencia-alcanzable',
+  'capacidad-alcanzable',
+  'simultaneas',
+  'valor-alcanzable',
+  'todas-ejecutan',
+])
 /** pc de un proceso que terminó (función sin while(TRUE)). */
 const FIN = -1
 
@@ -41,6 +47,8 @@ interface Estado {
   impl: number[]
   seq: number
   orden: number[]
+  /** Contenido (ordenado) de cada bolsa de datos. */
+  bolsas: number[][]
 }
 
 class ErrorEjecucion extends Error {
@@ -96,7 +104,12 @@ export function verificarSemaforos(fuente: string, ej: EjercicioSemaforos): Resu
     return { errores, ...explorar(programa, ej) }
   } catch (e) {
     if (!(e instanceof ErrorEjecucion)) throw e
-    return { errores: [{ linea: e.linea, mensaje: e.message, ejecucion: true }], tests: [], ok: false, acotada: false }
+    return {
+      errores: [{ linea: e.linea, mensaje: e.message, ejecucion: true }],
+      tests: [],
+      ok: false,
+      acotada: false,
+    }
   }
 }
 
@@ -144,7 +157,9 @@ export function explorar(
     for (let id = 0; id < def.instancias; id++) instancias.push({ ...p, grupo, id })
   })
 
-  const tests = ej.tests.some((t) => t.tipo === 'sin-inanicion') ? ej.tests : [...ej.tests, INANICION]
+  const tests = ej.tests.some((t) => t.tipo === 'sin-inanicion')
+    ? ej.tests
+    : [...ej.tests, INANICION]
   const motivo: (string | undefined)[] = tests.map(() => undefined)
   const fallar = (k: number, m: string) => (motivo[k] ??= tests[k].motivo ?? m)
   const maximo = tests.map(() => 0)
@@ -154,24 +169,31 @@ export function explorar(
   const enSecuencia = new Set(secuencia ?? [])
   const ordenes = tests
     .map((t, k) => ({ t, k }))
-    .filter((x): x is { t: Extract<TestSemaforos, { tipo: 'orden-instancias' }>; k: number } => x.t.tipo === 'orden-instancias')
-    .map(({ t, k }) => ({ k, accion: t.accion, grupo: ej.procesos.findIndex((p) => p.nombre === t.proceso) }))
-
-  // si el código usa `id`, las instancias dejan de ser intercambiables
-  const usaId =
-    ordenes.length > 0 ||
-    instancias.some((i) => i.instrucciones.some((x) => x.tipo !== 'accion' && x.sem.indice === 'id')) ||
-    Object.values(ej.acciones).some((a) =>
-      [...(a.recursos ?? []), ...(a.adquiere ?? []), ...(a.libera ?? [])].some((r) => r.includes('[id]')),
+    .filter(
+      (x): x is { t: Extract<TestSemaforos, { tipo: 'orden-instancias' }>; k: number } =>
+        x.t.tipo === 'orden-instancias',
     )
+    .map(({ t, k }) => ({
+      k,
+      accion: t.accion,
+      grupo: ej.procesos.findIndex((p) => p.nombre === t.proceso),
+    }))
 
   // ── resolución de índices y nombres con índice ──
+  const bolsas = ej.bolsas ?? []
+  const idxBolsa = (b: string, linea: number) => {
+    const k = bolsas.indexOf(b)
+    if (k < 0) throw new ErrorEjecucion(`En ejecución: la lista ${b} no existe`, linea)
+    return k
+  }
+  const esId = (x: string) => x === 'id' || x === 'id()' || (ej.aliasId ?? []).includes(x)
   const valorIndice = (expr: string, j: number, e: Estado, linea: number): number => {
     const x = expr.trim()
     if (/^\d+$/.test(x)) return Number(x)
-    if (x === 'id') return instancias[j].id
+    // una local puede llamarse `id` (la terminal de Maratón): gana sobre el id de la instancia
     const kl = idxLocal.get(x)
     if (kl != null) return e.locs[j * locales.length + kl]
+    if (esId(x)) return instancias[j].id
     const kv = idxVar.get(x)
     if (kv != null) return e.vars[kv]
     if (ej.constantes?.[x] != null) return ej.constantes[x]
@@ -183,7 +205,10 @@ export function explorar(
     throw new ErrorEjecucion(`En ejecución: no se puede evaluar el índice "${x}"`, linea)
   }
   const resolver = (plantilla: string, j: number, e: Estado, linea: number) =>
-    plantilla.replace(/\[((?:[^[\]]|\[[^\]]*\])+)\]/g, (_, expr: string) => `[${valorIndice(expr, j, e, linea)}]`)
+    plantilla.replace(
+      /\[((?:[^[\]]|\[[^\]]*\])+)\]/g,
+      (_, expr: string) => `[${valorIndice(expr, j, e, linea)}]`,
+    )
 
   const slotSem = (ref: RefSemaforo, j: number, e: Estado, linea: number) => {
     const base = baseSem.get(ref.nombre)!
@@ -212,21 +237,42 @@ export function explorar(
   }
   // una acción puede tener spec propia por proceso: "Jugador::posicionarse()"
   const spec = (ins: Instruccion, inst: Instancia): AccionSpec =>
-    ins.tipo === 'accion' ? (ej.acciones[`${inst.nombre}::${ins.accion}`] ?? ej.acciones[ins.accion] ?? {}) : {}
+    ins.tipo === 'accion'
+      ? (ej.acciones[`${inst.nombre}::${ins.accion}`] ?? ej.acciones[ins.accion] ?? {})
+      : {}
+
+  // un proceso cuyo código o acciones usan `id` deja de tener instancias intercambiables
+  const usaIdAccion = (a: AccionSpec) =>
+    a.asignaId != null ||
+    Object.values(a.pone ?? {}).some((x) => esId(x)) ||
+    [
+      ...(a.recursos ?? []),
+      ...(a.adquiere ?? []),
+      ...(a.libera ?? []),
+      ...Object.keys(a.efecto ?? {}),
+    ].some((r) => r.includes('[id]'))
+  const conId = ej.procesos.map(
+    (_, g) =>
+      ordenes.some((o) => o.grupo === g) ||
+      instancias.some(
+        (i) =>
+          i.grupo === g &&
+          i.instrucciones.some((x) =>
+            x.tipo === 'accion'
+              ? usaIdAccion(spec(x, i))
+              : x.sem.indice != null && esId(x.sem.indice),
+          ),
+      ),
+  )
 
   const clave = (e: Estado) => {
     const tupla = (j: number) =>
       [e.pcs[j], ...e.locs.slice(j * locales.length, (j + 1) * locales.length)].join('.')
-    let pcs: string
-    if (usaId) {
-      pcs = instancias.map((_, j) => tupla(j)).join(',')
-    } else {
-      // instancias del mismo proceso son intercambiables: ordenar sus tuplas reduce estados sin perder casos
-      const porGrupo: string[][] = []
-      instancias.forEach((inst, j) => (porGrupo[inst.grupo] ??= []).push(tupla(j)))
-      pcs = porGrupo.map((g) => g.sort().join(',')).join('/')
-    }
-    return `${pcs}|${e.sems}|${e.vars}|${e.impl}|${e.seq}|${e.orden}`
+    // instancias intercambiables: ordenar sus tuplas reduce estados sin perder casos
+    const porGrupo: string[][] = []
+    instancias.forEach((inst, j) => (porGrupo[inst.grupo] ??= []).push(tupla(j)))
+    const pcs = porGrupo.map((g, n) => (conId[n] ? g : g.sort()).join(',')).join('/')
+    return `${pcs}|${e.sems}|${e.vars}|${e.impl}|${e.seq}|${e.orden}|${e.bolsas.join('/')}`
   }
 
   const coincide = (patron: string, nombre: string) =>
@@ -237,8 +283,12 @@ export function explorar(
     // recursos en uso por instancia (resueltos con sus locales)
     const enUso = instancias.map((inst, j) => {
       const ins = instrEn(inst, e.pcs[j])
-      if (ins?.tipo !== 'accion') return [] as { nombre: string; ins: Extract<Instruccion, { tipo: 'accion' }> }[]
-      return (spec(ins, inst).recursos ?? []).map((r) => ({ nombre: resolver(r, j, e, ins.linea), ins }))
+      if (ins?.tipo !== 'accion')
+        return [] as { nombre: string; ins: Extract<Instruccion, { tipo: 'accion' }> }[]
+      return (spec(ins, inst).recursos ?? []).map((r) => ({
+        nombre: resolver(r, j, e, ins.linea),
+        ins,
+      }))
     })
     tests.forEach((t, k) => {
       if (t.tipo === 'exclusion' || t.tipo === 'capacidad' || t.tipo === 'capacidad-alcanzable') {
@@ -272,7 +322,9 @@ export function explorar(
           violado = true
         }
       } else if (t.tipo === 'simultaneas') {
-        const en = instancias.map((i, j) => instrEn(i, e.pcs[j])).map((x) => (x?.tipo === 'accion' ? x.accion : null))
+        const en = instancias
+          .map((i, j) => instrEn(i, e.pcs[j]))
+          .map((x) => (x?.tipo === 'accion' ? x.accion : null))
         const a = en.indexOf(t.acciones[0])
         if (a >= 0 && en.some((x, j) => j !== a && x === t.acciones[1])) maximo[k] = 1
       } else if (t.tipo === 'valor-alcanzable') {
@@ -296,6 +348,7 @@ export function explorar(
     impl: implIniciales,
     seq: 0,
     orden: ordenes.map(() => 0),
+    bolsas: bolsas.map(() => []),
   }
 
   // grafo para inanición: etiqueta "grupo:pc" = alguna instancia de ese grupo avanzó desde ese pc
@@ -305,7 +358,8 @@ export function explorar(
   const avancesEn: Set<string>[] = []
   const optimista = new Set<number>()
   const bloqueados = new Set<number>()
-  const etiqueta = (j: number, pc: number) => (usaId ? `${j}:${pc}` : `${instancias[j].grupo}:${pc}`)
+  const etiqueta = (j: number, pc: number) =>
+    conId[instancias[j].grupo] ? `i${j}:${pc}` : `g${instancias[j].grupo}:${pc}`
 
   const registrar = (e: Estado) => {
     const k = clave(e)
@@ -342,8 +396,11 @@ export function explorar(
     }
     for (const r of a.libera ?? []) impl[slotImpl(resolver(r, j, e, ins.linea), ins.linea)] += 1
     const vars = [...e.vars]
-    for (const [v, d] of Object.entries(a.efecto ?? {})) {
-      const k = idxVar.get(v)!
+    for (const [plantilla, d] of Object.entries(a.efecto ?? {})) {
+      const v = resolver(plantilla, j, e, ins.linea)
+      const k = idxVar.get(v)
+      if (k == null)
+        throw new ErrorEjecucion(`En ejecución: ${plantilla} vale ${v}, que no existe`, ins.linea)
       vars[k] += d
       const m = ej.modulos?.[v]
       if (m) vars[k] = ((vars[k] % m) + m) % m
@@ -351,7 +408,10 @@ export function explorar(
     let seq = e.seq
     if (secuencia && enSecuencia.has(ins.accion)) {
       if (secuencia[seq] !== ins.accion) {
-        fallar(kSecuencia, `Hay una intercalación en la que se ejecuta ${ins.accion} cuando le tocaba a ${secuencia[seq]}.`)
+        fallar(
+          kSecuencia,
+          `Hay una intercalación en la que se ejecuta ${ins.accion} cuando le tocaba a ${secuencia[seq]}.`,
+        )
       }
       seq = (seq + 1) % secuencia.length
     }
@@ -359,19 +419,53 @@ export function explorar(
     ordenes.forEach((o, n) => {
       if (o.accion !== ins.accion || o.grupo !== inst.grupo) return
       if (orden[n] !== inst.id) {
-        fallar(o.k, `Hay una intercalación en la que el ${inst.nombre} con id ${inst.id} hace ${ins.accion} cuando le tocaba al de id ${orden[n]}.`)
+        fallar(
+          o.k,
+          `Hay una intercalación en la que el ${inst.nombre} con id ${inst.id} hace ${ins.accion} cuando le tocaba al de id ${orden[n]}.`,
+        )
       }
       orden[n] = (orden[n] + 1) % ej.procesos[o.grupo].instancias
     })
     ejecutadas.add(ins.accion)
-    const base = { ...e, pcs, vars, impl, seq, orden }
-    if (!a.asigna) return [base]
-    const { variables, valores, distintos = false } = a.asigna
-    return combinaciones(variables.length, valores, distintos).map((vals) => {
+    let base = { ...e, pcs, vars, impl, seq, orden }
+    if (a.asignaId) {
       const locs = [...e.locs]
-      variables.forEach((v, n) => (locs[j * locales.length + idxLocal.get(v)!] = vals[n]))
-      return { ...base, locs }
-    })
+      for (const v of a.asignaId) locs[j * locales.length + idxLocal.get(v)!] = inst.id
+      base = { ...base, locs }
+    }
+    for (const [b, expr] of Object.entries(a.pone ?? {})) {
+      const k = idxBolsa(resolver(b, j, base, ins.linea), ins.linea)
+      const v = valorIndice(expr, j, base, ins.linea)
+      base = {
+        ...base,
+        bolsas: base.bolsas.map((x, n) => (n === k ? [...x, v].sort((p, q) => p - q) : x)),
+      }
+    }
+    let salida = [base]
+    // sacar de una bolsa vacía no cambia nada: lo detectan los tests de rango de su contador
+    for (const [b, local] of Object.entries(a.saca ?? {})) {
+      const k = idxBolsa(resolver(b, j, base, ins.linea), ins.linea)
+      salida = salida.flatMap((s) =>
+        s.bolsas[k].length === 0
+          ? [s]
+          : [...new Set(s.bolsas[k])].map((v) => {
+              const locs = [...s.locs]
+              locs[j * locales.length + idxLocal.get(local)!] = v
+              const resto = [...s.bolsas[k]]
+              resto.splice(resto.indexOf(v), 1)
+              return { ...s, locs, bolsas: s.bolsas.map((x, n) => (n === k ? resto : x)) }
+            }),
+      )
+    }
+    if (!a.asigna) return salida
+    const { variables, valores, distintos = false } = a.asigna
+    return salida.flatMap((s) =>
+      combinaciones(variables.length, valores, distintos).map((vals) => {
+        const locs = [...s.locs]
+        variables.forEach((v, n) => (locs[j * locales.length + idxLocal.get(v)!] = vals[n]))
+        return { ...s, locs }
+      }),
+    )
   }
 
   const kDeadlock = tests.findIndex((t) => t.tipo === 'sin-deadlock')
@@ -401,7 +495,11 @@ export function explorar(
       habilitadas++
       avancesEn[id].add(etiqueta(j, e.pcs[j]))
       for (const nuevo of siguientes) {
-        if (nuevo.sems.some((v) => v > TOPE_SEMAFORO) || nuevo.vars.some((v) => Math.abs(v) > TOPE_VARIABLE)) {
+        if (
+          nuevo.sems.some((v) => v > (ej.cotas?.semaforos ?? TOPE_SEMAFORO)) ||
+          nuevo.vars.some((v) => Math.abs(v) > (ej.cotas?.variables ?? TOPE_VARIABLE)) ||
+          nuevo.bolsas.some((b) => b.length > (ej.cotas?.variables ?? TOPE_VARIABLE))
+        ) {
           acotada = true
           optimista.add(id)
           continue
@@ -423,7 +521,10 @@ export function explorar(
               .map(({ inst, ins }) => `${inst.nombre} en ${texto(ins!)} (línea ${ins!.linea})`),
           ),
         ]
-        fallar(kDeadlock, `Hay una intercalación en la que todos quedan bloqueados: ${donde.join(', ')}.`)
+        fallar(
+          kDeadlock,
+          `Hay una intercalación en la que todos quedan bloqueados: ${donde.join(', ')}.`,
+        )
       }
     }
   }
@@ -462,7 +563,8 @@ export function explorar(
       if (pc === FIN || alcanzan(etiqueta(j, pc)).has(id)) continue
       const ins = inst.instrucciones[pc]
       let m = `Hay una ejecución en la que un ${inst.nombre} queda esperando en ${texto(ins)} (línea ${ins.linea}) para siempre`
-      if (ins.tipo === 'wait') m += `: después de ese punto nadie vuelve a hacer signal(${refTexto(ins.sem)}).`
+      if (ins.tipo === 'wait')
+        m += `: después de ese punto nadie vuelve a hacer signal(${refTexto(ins.sem)}).`
       else m += ': el recurso que pide nunca se libera.'
       if (ins.tipo === 'wait' && inst.tieneCiclo && pc < inst.inicioCiclo) {
         m += ` Ese wait está antes del while(TRUE), así que cada ${inst.nombre} lo ejecuta una sola vez: el que pasa primero se queda en el ciclo y los demás quedan bloqueados.`
@@ -482,13 +584,19 @@ export function explorar(
       m = `Nunca llegan a estar ${t.valor} usando ${t.recurso.replace('[*]', '')} a la vez (como mucho ${maximo[k]}): la sincronización restringe más de lo necesario.`
     }
     if (t.tipo === 'simultaneas' && maximo[k] === 0) {
-      m = t.motivo ?? `Nunca pueden estar a la vez en ${t.acciones[0]} y ${t.acciones[1]}: la sección crítica abarca más de lo necesario.`
+      m =
+        t.motivo ??
+        `Nunca pueden estar a la vez en ${t.acciones[0]} y ${t.acciones[1]}: la sección crítica abarca más de lo necesario.`
     }
     if (t.tipo === 'valor-alcanzable' && maximo[k] < t.valor) {
-      m = t.motivo ?? `${t.variable} nunca llega a ${t.valor}: la sincronización restringe más de lo necesario.`
+      m =
+        t.motivo ??
+        `${t.variable} nunca llega a ${t.valor}: la sincronización restringe más de lo necesario.`
     }
     if (t.tipo === 'todas-ejecutan') {
-      const faltan = [...new Set(Object.keys(ej.acciones).map(textoAccion))].filter((a) => !ejecutadas.has(a))
+      const faltan = [...new Set(Object.keys(ej.acciones).map(textoAccion))].filter(
+        (a) => !ejecutadas.has(a),
+      )
       m = faltan.length ? `Nunca llega a ejecutarse: ${faltan.join(', ')}.` : undefined
     }
     if (t.tipo === 'max-semaforos' && nSemaforos > t.max) {

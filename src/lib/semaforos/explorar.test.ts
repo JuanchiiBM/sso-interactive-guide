@@ -6,7 +6,11 @@ import type { EjercicioSemaforos } from './tipos'
 const contador: EjercicioSemaforos = {
   procesos: [{ nombre: 'Hilo', instancias: 3, codigo: 'while(TRUE){\n  contador++;\n}' }],
   acciones: { 'contador++': { recursos: ['contador'] } },
-  tests: [{ tipo: 'exclusion', recurso: 'contador' }, { tipo: 'sin-deadlock' }, { tipo: 'todas-ejecutan' }],
+  tests: [
+    { tipo: 'exclusion', recurso: 'contador' },
+    { tipo: 'sin-deadlock' },
+    { tipo: 'todas-ejecutan' },
+  ],
 }
 
 const impresoras: EjercicioSemaforos = {
@@ -14,7 +18,8 @@ const impresoras: EjercicioSemaforos = {
     {
       nombre: 'Proceso',
       instancias: 4,
-      codigo: 'while(TRUE){\n  preparar_documento();\n  usar_impresora();\n  continuar_trabajando();\n}',
+      codigo:
+        'while(TRUE){\n  preparar_documento();\n  usar_impresora();\n  continuar_trabajando();\n}',
     },
   ],
   acciones: { 'preparar_documento()': {}, 'usar_impresora()': {}, 'continuar_trabajando()': {} },
@@ -36,8 +41,16 @@ const alternancia: EjercicioSemaforos = {
 
 const productorConsumidor: EjercicioSemaforos = {
   procesos: [
-    { nombre: 'Compilador', instancias: 2, codigo: 'while(TRUE){\n  depositar_resultado(r, lista);\n}' },
-    { nombre: 'Notificador', instancias: 1, codigo: 'while(TRUE){\n  retirar_resultado(lista);\n}' },
+    {
+      nombre: 'Compilador',
+      instancias: 2,
+      codigo: 'while(TRUE){\n  depositar_resultado(r, lista);\n}',
+    },
+    {
+      nombre: 'Notificador',
+      instancias: 1,
+      codigo: 'while(TRUE){\n  retirar_resultado(lista);\n}',
+    },
   ],
   acciones: {
     'depositar_resultado(r, lista)': { recursos: ['lista'], efecto: { items: 1 } },
@@ -54,13 +67,16 @@ const productorConsumidor: EjercicioSemaforos = {
 /** Arma un programa con la sintaxis del editor: `void Nombre() { while(TRUE){ ... } }`. */
 function prog(declaraciones: string, funciones: Record<string, string[]>): string {
   const cuerpo = Object.entries(funciones).map(
-    ([f, lineas]) => `void ${f}() {\n  while(TRUE){\n${lineas.map((l) => `    ${l}`).join('\n')}\n  }\n}`,
+    ([f, lineas]) =>
+      `void ${f}() {\n  while(TRUE){\n${lineas.map((l) => `    ${l}`).join('\n')}\n  }\n}`,
   )
   return [declaraciones, '', ...cuerpo].join('\n')
 }
 
 const fallidos = (fuente: string, ej: EjercicioSemaforos) =>
-  verificarSemaforos(fuente, ej).tests.filter((t) => !t.ok).map((t) => t.nombre)
+  verificarSemaforos(fuente, ej)
+    .tests.filter((t) => !t.ok)
+    .map((t) => t.nombre)
 const mensajes = (fuente: string, ej: EjercicioSemaforos) =>
   parsear(fuente, ej).errores.map((e) => e.mensaje)
 
@@ -84,24 +100,34 @@ describe('parser y linter', () => {
   })
 
   it('no permite modificar el código original', () => {
-    expect(mensajes(prog('', { Hilo: ['contador--;'] }), contador).some((m) => /no reconocida/.test(m))).toBe(true)
+    expect(
+      mensajes(prog('', { Hilo: ['contador--;'] }), contador).some((m) => /no reconocida/.test(m)),
+    ).toBe(true)
   })
 
   it('marca los ";" que faltan', () => {
-    const m = mensajes(prog('semaphore m = 1', { Hilo: ['wait(m)', 'contador++', 'signal(m);'] }), contador)
+    const m = mensajes(
+      prog('semaphore m = 1', { Hilo: ['wait(m)', 'contador++', 'signal(m);'] }),
+      contador,
+    )
     expect(m.filter((x) => /Falta ";"/.test(x))).toHaveLength(3)
   })
 
   it('marca llaves sin cerrar y que sobran', () => {
     const sinCerrar = 'semaphore m = 1;\nvoid Hilo() {\n  while(TRUE){\n    contador++;\n  }\n'
     expect(mensajes(sinCerrar, contador)).toContain('Falta cerrar la llave "{" abierta acá')
-    expect(mensajes(`${prog('semaphore m = 1;', { Hilo: MUTEX })}\n}`, contador)).toContain('Sobra una llave "}"')
+    expect(mensajes(`${prog('semaphore m = 1;', { Hilo: MUTEX })}\n}`, contador)).toContain(
+      'Sobra una llave "}"',
+    )
   })
 
   it('wait y signal van en minúscula', () => {
-    expect(mensajes(prog('semaphore m = 1;', { Hilo: ['Wait(m);', 'contador++;', 'signal(m);'] }), contador)).toContain(
-      'Se escribe "wait" en minúscula',
-    )
+    expect(
+      mensajes(
+        prog('semaphore m = 1;', { Hilo: ['Wait(m);', 'contador++;', 'signal(m);'] }),
+        contador,
+      ),
+    ).toContain('Se escribe "wait" en minúscula')
   })
 
   it('el nombre del semáforo no importa', () => {
@@ -130,11 +156,19 @@ describe('verificarSemaforos', () => {
   it('Ej. 3: contador en 3 pasa; un mutex es demasiado restrictivo', () => {
     const conValor = (n: number) =>
       prog(`semaphore imp = ${n};`, {
-        Proceso: ['preparar_documento();', 'wait(imp);', 'usar_impresora();', 'signal(imp);', 'continuar_trabajando();'],
+        Proceso: [
+          'preparar_documento();',
+          'wait(imp);',
+          'usar_impresora();',
+          'signal(imp);',
+          'continuar_trabajando();',
+        ],
       })
     expect(verificarSemaforos(conValor(3), impresoras).ok).toBe(true)
     expect(fallidos(conValor(1), impresoras)).toEqual(['Permite 3 a la vez en usar_impresora()'])
-    expect(fallidos(conValor(4), impresoras)).toEqual(['Nunca hay más de 3 a la vez en usar_impresora()'])
+    expect(fallidos(conValor(4), impresoras)).toEqual([
+      'Nunca hay más de 3 a la vez en usar_impresora()',
+    ])
   })
 
   it('Ej. 6: alternancia A-B con dos semáforos', () => {
@@ -144,22 +178,47 @@ describe('verificarSemaforos', () => {
         B: ['wait(sb);', 'print("B");', 'signal(sa);'],
       })
     expect(verificarSemaforos(conValores(1, 0), alternancia).ok).toBe(true)
-    expect(fallidos(conValores(0, 1), alternancia)).toEqual(['Respeta la secuencia print("A") → print("B") → …'])
+    expect(fallidos(conValores(0, 1), alternancia)).toEqual([
+      'Respeta la secuencia print("A") → print("B") → …',
+    ])
   })
 
   it('Ej. 10b: productor-consumidor con buffer acotado', () => {
-    const compilador = ['wait(vacios);', 'wait(mutex);', 'depositar_resultado(r, lista);', 'signal(mutex);', 'signal(llenos);']
-    const notificador = ['wait(llenos);', 'wait(mutex);', 'retirar_resultado(lista);', 'signal(mutex);', 'signal(vacios);']
+    const compilador = [
+      'wait(vacios);',
+      'wait(mutex);',
+      'depositar_resultado(r, lista);',
+      'signal(mutex);',
+      'signal(llenos);',
+    ]
+    const notificador = [
+      'wait(llenos);',
+      'wait(mutex);',
+      'retirar_resultado(lista);',
+      'signal(mutex);',
+      'signal(vacios);',
+    ]
     const decl = 'semaphore mutex = 1, llenos = 0, vacios = 2;'
-    expect(verificarSemaforos(prog(decl, { Compilador: compilador, Notificador: notificador }), productorConsumidor).ok).toBe(true)
+    expect(
+      verificarSemaforos(
+        prog(decl, { Compilador: compilador, Notificador: notificador }),
+        productorConsumidor,
+      ).ok,
+    ).toBe(true)
     // el orden de los wait importa: mutex antes que vacios puede trabar todo
     const invertido = ['wait(mutex);', 'wait(vacios);', ...compilador.slice(2)]
-    expect(fallidos(prog(decl, { Compilador: invertido, Notificador: notificador }), productorConsumidor)).toContain(
-      'Nunca quedan todos bloqueados (sin deadlock)',
-    )
-    expect(fallidos(prog(decl, { Compilador: compilador, Notificador: notificador.slice(1) }), productorConsumidor)).toContain(
-      'items se mantiene entre 0 y 2',
-    )
+    expect(
+      fallidos(
+        prog(decl, { Compilador: invertido, Notificador: notificador }),
+        productorConsumidor,
+      ),
+    ).toContain('Nunca quedan todos bloqueados (sin deadlock)')
+    expect(
+      fallidos(
+        prog(decl, { Compilador: compilador, Notificador: notificador.slice(1) }),
+        productorConsumidor,
+      ),
+    ).toContain('items se mantiene entre 0 y 2')
   })
 })
 
@@ -194,7 +253,11 @@ describe('motivos de falla', () => {
 describe('motor v2: arrays, locales al azar y recursos implícitos', () => {
   const recursos: EjercicioSemaforos = {
     procesos: [
-      { nombre: 'Proceso', instancias: 3, codigo: 'while(TRUE){\n  id_recurso = pedir_recurso();\n  usar_recurso(id_recurso);\n}' },
+      {
+        nombre: 'Proceso',
+        instancias: 3,
+        codigo: 'while(TRUE){\n  id_recurso = pedir_recurso();\n  usar_recurso(id_recurso);\n}',
+      },
     ],
     locales: ['id_recurso'],
     constantes: { M: 2 },
@@ -209,12 +272,21 @@ describe('motor v2: arrays, locales al azar y recursos implícitos', () => {
   }
   const conSem = (decl: string, ref: string) =>
     prog(decl, {
-      Proceso: ['id_recurso = pedir_recurso();', `wait(${ref});`, 'usar_recurso(id_recurso);', `signal(${ref});`],
+      Proceso: [
+        'id_recurso = pedir_recurso();',
+        `wait(${ref});`,
+        'usar_recurso(id_recurso);',
+        `signal(${ref});`,
+      ],
     })
 
   it('array de contadores indexado por el id al azar pasa', () => {
-    expect(verificarSemaforos(conSem('semaphore r[3] = M;', 'r[id_recurso]'), recursos).ok).toBe(true)
-    expect(verificarSemaforos(conSem('semaphore r[3] = {2, 2, 2};', 'r[id_recurso]'), recursos).ok).toBe(true)
+    expect(verificarSemaforos(conSem('semaphore r[3] = M;', 'r[id_recurso]'), recursos).ok).toBe(
+      true,
+    )
+    expect(
+      verificarSemaforos(conSem('semaphore r[3] = {2, 2, 2};', 'r[id_recurso]'), recursos).ok,
+    ).toBe(true)
   })
 
   it('un contador global no respeta el límite por recurso', () => {
@@ -232,12 +304,21 @@ describe('motor v2: arrays, locales al azar y recursos implícitos', () => {
   })
 
   it('indexar un semáforo que no es array es error de compilación', () => {
-    expect(mensajes(conSem('semaphore r = 2;', 'r[id_recurso]'), recursos)).toContain('r no es un array: no lleva [ ]')
+    expect(mensajes(conSem('semaphore r = 2;', 'r[id_recurso]'), recursos)).toContain(
+      'r no es un array: no lleva [ ]',
+    )
   })
 
   it('recursos implícitos: pedir de a uno en orden al azar puede trabar', () => {
     const ej: EjercicioSemaforos = {
-      procesos: [{ nombre: 'P', instancias: 2, codigo: 'while(TRUE){\n  elegir();\n  pedir(a);\n  pedir(b);\n  devolver(a);\n  devolver(b);\n}' }],
+      procesos: [
+        {
+          nombre: 'P',
+          instancias: 2,
+          codigo:
+            'while(TRUE){\n  elegir();\n  pedir(a);\n  pedir(b);\n  devolver(a);\n  devolver(b);\n}',
+        },
+      ],
       locales: ['a', 'b'],
       recursosImplicitos: { r: { cantidad: 2, instancias: 1 } },
       acciones: {
@@ -258,11 +339,22 @@ describe('soloInicializar y huecos', () => {
   const ej: EjercicioSemaforos = {
     soloInicializar: true,
     procesos: [
-      { nombre: 'A', instancias: 1, codigo: 'while(TRUE){\n  wait(______);\n  print("A");\n  signal(sb);\n}' },
-      { nombre: 'B', instancias: 1, codigo: 'while(TRUE){\n  wait(sb);\n  print("B");\n  signal(sa);\n}' },
+      {
+        nombre: 'A',
+        instancias: 1,
+        codigo: 'while(TRUE){\n  wait(______);\n  print("A");\n  signal(sb);\n}',
+      },
+      {
+        nombre: 'B',
+        instancias: 1,
+        codigo: 'while(TRUE){\n  wait(sb);\n  print("B");\n  signal(sa);\n}',
+      },
     ],
     acciones: { 'print("A")': {}, 'print("B")': {} },
-    tests: [{ tipo: 'secuencia', acciones: ['print("A")', 'print("B")'] }, { tipo: 'sin-deadlock' }],
+    tests: [
+      { tipo: 'secuencia', acciones: ['print("A")', 'print("B")'] },
+      { tipo: 'sin-deadlock' },
+    ],
   }
   const cod = (hueco: string, extra = '') =>
     `semaphore sa = 1, sb = 0;\nvoid A() {\n  while(TRUE){\n    wait(${hueco});\n    print("A");\n    signal(sb);${extra}\n  }\n}\nvoid B() {\n  while(TRUE){\n    wait(sb);\n    print("B");\n    signal(sa);\n  }\n}`
@@ -276,7 +368,11 @@ describe('soloInicializar y huecos', () => {
   })
 
   it('no se pueden agregar wait/signal', () => {
-    expect(mensajes(cod('sa', '\n    signal(sa);'), ej).some((m) => /solo se completan los huecos/.test(m))).toBe(true)
+    expect(
+      mensajes(cod('sa', '\n    signal(sa);'), ej).some((m) =>
+        /solo se completan los huecos/.test(m),
+      ),
+    ).toBe(true)
   })
 })
 

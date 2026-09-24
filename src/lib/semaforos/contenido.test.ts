@@ -16,17 +16,25 @@ const desafios = readdirSync(DIR, { recursive: true, encoding: 'utf8' })
   .filter((f: string) => f.endsWith('.md'))
   .flatMap((f: string) => {
     const fm = parse(readFileSync(join(DIR, f), 'utf8').match(FRONTMATTER)![1])
-    const lista = (fm.semaforos ?? []) as (EjercicioSemaforos & { solucion: string; etiqueta?: string })[]
-    return lista.map((d, i) => ({ id: `${f.replace(/\\/g, '/')}${d.etiqueta ? ` (${d.etiqueta})` : ` #${i}`}`, d }))
+    const lista = (fm.semaforos ?? []) as (EjercicioSemaforos & {
+      solucion: string
+      etiqueta?: string
+    })[]
+    return lista.map((d, i) => ({
+      id: `${f.replace(/\\/g, '/')}${d.etiqueta ? ` (${d.etiqueta})` : ` #${i}`}`,
+      d,
+    }))
   })
 
-describe('desafíos de semáforos del contenido', () => {
+describe('desafíos de semáforos del contenido', { timeout: 30_000 }, () => {
   it('hay desafíos cargados', () => {
     expect(desafios.length).toBeGreaterThan(0)
   })
 
   it('las soluciones usan la sintaxis actual (void función)', () => {
-    const viejas = desafios.filter(({ d }) => /^\s*proceso\s+.+:\s*$/m.test(d.solucion)).map((x) => x.id)
+    const viejas = desafios
+      .filter(({ d }) => /^\s*proceso\s+.+:\s*$/m.test(d.solucion))
+      .map((x) => x.id)
     expect(viejas).toEqual([])
   })
 
@@ -48,7 +56,9 @@ describe('multiple choice del contenido', () => {
     .filter((f: string) => f.endsWith('.md'))
     .flatMap((f: string) => {
       const fm = parse(readFileSync(join(DIR, f), 'utf8').match(FRONTMATTER)![1])
-      return ((fm.preguntas ?? []) as { opciones: { texto: string }[]; correcta: number }[]).map((p) => ({ f, p }))
+      return ((fm.preguntas ?? []) as { opciones: { texto: string }[]; correcta: number }[]).map(
+        (p) => ({ f, p }),
+      )
     })
 
   it('la opción correcta no suele ser la más larga (regalaría la respuesta)', () => {
