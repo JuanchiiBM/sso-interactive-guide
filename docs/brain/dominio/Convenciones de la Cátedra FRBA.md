@@ -25,6 +25,9 @@ mismos criterios. Implementado en `DESEMPATE_DEFAULT` de `simular.ts`.
 - Prioridad: menor número = mayor prioridad (inferido, ver [[Simulador de Planificación]]).
 - Estimación SJF: la guía usa `T_i = T_{i-1}·α + R_{i-1}·(1−α)` y el resumen
   `EST(n+1) = α·TE(n) + (1−α)·EST(n)`; con α = 0,5 dan lo mismo. Con otro α, confirmar cuál aplica.
+  El simulador usa la de la guía (α pondera la estimación anterior).
+- Casos que la guía no define (VRR auxiliar vs principal, desalojo entre colas en el Ej. 10,
+  afinidad dura): decisiones listadas en [[Simulador de Planificación]].
 
 ## Sincronización (Guía v.2C2026, "Tips")
 

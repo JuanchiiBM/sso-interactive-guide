@@ -2,6 +2,7 @@
 import Layout from '@layouts/Layout.astro'
 import SimuladorStage from '@components/SimuladorStage.astro'
 import MultipleChoice from '@components/MultipleChoice.astro'
+import SemaforosDesafio from '@components/SemaforosDesafio.astro'
 import { getEntry, render } from 'astro:content'
 import { getEjercicios, ejercicioHref, temaHref } from '@lib/catalogo'
 import { algoritmoUI, dificultadUI, tipoUI } from '@lib/presentacion'
@@ -19,7 +20,8 @@ export async function getStaticPaths() {
 }
 
 const { ejercicio, anterior, siguiente } = Astro.props
-const { titulo, fuente, dificultad, tipo, tags, simulaciones, preguntas } = ejercicio.data
+const { titulo, fuente, dificultad, tipo, tags, simulaciones, preguntas, semaforos } = ejercicio.data
+const interactivos = simulaciones.length + preguntas.length + semaforos.length
 const tema = await getEntry(ejercicio.data.tema)
 const { Content } = await render(ejercicio)
 const dif = dificultadUI[dificultad]
@@ -28,7 +30,9 @@ const ayuda = [
     'Armá el Gantt: en cada instante marcá quién usa la CPU (click) y quién usa el dispositivo de E/S (click derecho). Dejá vacío lo que está en listos o esperando.',
   preguntas.length > 0 &&
     'Elegí una opción por pregunta y verificá. Si fallás, te decimos por qué esa opción no es.',
-  simulaciones.length + preguntas.length > 0 &&
+  semaforos.length > 0 &&
+    'Declará los semáforos arriba (semaphore nombre = valor;) y agregá wait(nombre); / signal(nombre); dentro de cada función, sin tocar el resto del código. El editor marca en rojo los errores de sintaxis mientras escribís. Los tests prueban todas las intercalaciones posibles; los nombres de los semáforos no importan.',
+  interactivos > 0 &&
     'La resolución se desbloquea cuando acertás. Si ya la resolviste, "Ver resolución" la muestra directo; si no, "Me rindo" pide confirmar.',
 ].filter((t): t is string => Boolean(t))
 const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
@@ -100,10 +104,13 @@ const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
           </>
         )}
       </div>
-      {simulaciones.length + preguntas.length > 0 ? (
+      {interactivos > 0 ? (
         <div class="flex flex-col gap-4">
           {preguntas.map((p, i) => (
             <MultipleChoice pregunta={p} clave={String(i)} />
+          ))}
+          {semaforos.map((d, i) => (
+            <SemaforosDesafio desafio={d} clave={String(i)} />
           ))}
           {simulaciones.map((sim) => (
             <SimuladorStage simulacion={sim} titulo={etiquetaSim(sim)} />

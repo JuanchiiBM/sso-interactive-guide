@@ -40,6 +40,14 @@
   --p6: #fb923c;
   --p7: #22d3ee;
   --p8: #f87171;
+  /* sintaxis de código (editor de semáforos) */
+  --code-kw: #ff7b72;
+  --code-type: #ffa657;
+  --code-fn: #d2a8ff;
+  --code-str: #a5d6ff;
+  --code-num: #79c0ff;
+  --code-com: #8b949e;
+  --code-so: #7ee787;
 }
 
 [data-theme='light'] {
@@ -66,6 +74,13 @@
   --p6: #ea580c;
   --p7: #0891b2;
   --p8: #dc2626;
+  --code-kw: #cf222e;
+  --code-type: #953800;
+  --code-fn: #8250df;
+  --code-str: #0a3069;
+  --code-num: #0550ae;
+  --code-com: #6e7781;
+  --code-so: #116329;
 }
 
 @theme inline {

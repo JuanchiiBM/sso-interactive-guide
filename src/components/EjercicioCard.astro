@@ -8,9 +8,15 @@ interface Props {
 }
 
 const { ejercicio } = Astro.props
-const { titulo, fuente, dificultad, tipo, simulaciones, preguntas } = ejercicio.data
+const { titulo, fuente, dificultad, tipo, simulaciones, preguntas, semaforos } = ejercicio.data
 const interactivo =
-  simulaciones.length > 0 ? 'Gantt interactivo' : preguntas.length > 0 ? 'Multiple choice' : null
+  simulaciones.length > 0
+    ? 'Gantt interactivo'
+    : semaforos.length > 0
+      ? 'Código con tests'
+      : preguntas.length > 0
+        ? 'Multiple choice'
+        : null
 const dif = dificultadUI[dificultad]
 ---
 

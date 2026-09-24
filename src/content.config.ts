@@ -1,6 +1,7 @@
 import { defineCollection, reference } from 'astro:content'
 import { glob } from 'astro/loaders'
 import { z } from 'astro/zod'
+import { desafioSemaforosSchema } from './lib/semaforos/schema'
 
 const temas = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/temas' }),
@@ -26,11 +27,60 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
     kind: z.literal('planificacion'),
     /** Inciso que resuelve, ej. "a. Con desalojo". */
     etiqueta: z.string().optional(),
-    algoritmo: z.enum(['fifo', 'sjf', 'srt', 'rr', 'prioridades', 'prioridades-desalojo', 'hrrn']),
+    algoritmo: z.enum([
+      'fifo',
+      'sjf',
+      'srt',
+      'rr',
+      'prioridades',
+      'prioridades-desalojo',
+      'hrrn',
+      'vrr',
+      'multinivel',
+      'feedback',
+    ]),
     quantum: z.number().positive().optional(),
     /** Default true: un único dispositivo de E/S con cola FIFO (convención de la cátedra). */
     ioUnica: z.boolean().optional(),
-    procesos: z.array(procesoSchema).min(1),
+    /** Máximo de procesos admitidos (listos + ejecutando + bloqueados); el resto espera en New. */
+    multiprogramacion: z.number().int().positive().optional(),
+    /** SJF/SRT con estimación: T_i = α·T_{i-1} + (1−α)·R_{i-1}. */
+    alfa: z.number().min(0).max(1).optional(),
+    /** Multinivel / feedback: colas de mayor a menor prioridad. */
+    colas: z
+      .array(
+        z.object({
+          algoritmo: z.enum([
+            'fifo',
+            'sjf',
+            'srt',
+            'rr',
+            'prioridades',
+            'prioridades-desalojo',
+            'hrrn',
+          ]),
+          quantum: z.number().positive().optional(),
+        }),
+      )
+      .optional(),
+    desalojoEntreColas: z.boolean().optional(),
+    /** Feedback: al volver de E/S va a la primera cola o a la misma (default). */
+    trasIO: z.enum(['primera', 'misma']).optional(),
+    procesadores: z.number().int().min(1).max(2).optional(),
+    afinidad: z.boolean().optional(),
+    procesos: z
+      .array(
+        procesoSchema.extend({
+          /** Dispositivo de cada ráfaga de E/S, en orden. */
+          dispositivos: z.array(z.string()).optional(),
+          /** Multinivel: cola fija (1 = mayor prioridad). */
+          cola: z.number().int().positive().optional(),
+          estimacionInicial: z.number().nonnegative().optional(),
+          estimacionAnterior: z.number().nonnegative().optional(),
+          rafagaAnterior: z.number().nonnegative().optional(),
+        }),
+      )
+      .min(1),
   }),
 ])
 
@@ -48,6 +98,8 @@ const ejercicios = defineCollection({
     tags: z.array(z.string()).default([]),
     /** Resoluciones paso a paso generadas por simulador (una por inciso). */
     simulaciones: z.array(simulacionSchema).default([]),
+    /** Desafíos de código con semáforos (uno por inciso). */
+    semaforos: z.array(desafioSemaforosSchema).default([]),
     /** Multiple choice por inciso; la justificación (markdown) se ve recién al acertar. */
     preguntas: z
       .array(

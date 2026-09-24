@@ -1,0 +1,78 @@
+---
+/** Desafío de código con semáforos, verificado con tests. Comportamiento: src/lib/desafios/semaforos.ts */
+import { Code } from 'astro:components'
+import { markdownAHtml } from '@lib/markdown/marked'
+import { plantilla } from '@lib/semaforos/parser'
+import type { DesafioSemaforos } from '@lib/semaforos/schema'
+
+interface Props {
+  desafio: DesafioSemaforos
+  clave: string
+}
+
+const { desafio, clave } = Astro.props
+const inicial = plantilla(desafio)
+const nota = desafio.nota ? await markdownAHtml(desafio.nota) : ''
+const justificacion = await markdownAHtml(desafio.justificacion)
+const { solucion, justificacion: _j, nota: _n, etiqueta, ...especificacion } = desafio
+const specJson = JSON.stringify(especificacion).replace(/</g, '\\u003c')
+const lineas = Math.min(Math.max(inicial.split('\n').length + 4, 12), 36)
+---
+
+<section
+  class="rounded-xl border border-line bg-surface-2 overflow-hidden"
+  data-sem
+  data-sem-clave={clave}
+  aria-label={etiqueta ?? 'Desafío de semáforos'}
+>
+  <script type="application/json" data-sem-spec set:html={specJson} />
+  <header class="flex items-center gap-2 px-4 py-2.5 border-b border-line">
+    <h3 class="font-heading text-sm text-fg">{etiqueta ?? 'Sincronizá el código'}</h3>
+    <span class="ml-auto font-mono text-xs text-muted">semaphore · wait() · signal()</span>
+  </header>
+
+  <div class="p-4 flex flex-col gap-3">
+    {nota && <div class="prose max-w-none text-sm" set:html={nota} />}
+    <textarea
+      class="sem-editor"
+      rows={lineas}
+      spellcheck="false"
+      autocomplete="off"
+      autocapitalize="off"
+      aria-label="Código"
+      data-sem-editor
+      data-sem-plantilla={inicial}>{inicial}</textarea
+    >
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        class="rounded-lg bg-fg text-surface px-3 py-1.5 text-sm font-medium hover:opacity-90"
+        data-sem-accion="verificar"
+      >
+        Correr tests
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border border-line px-3 py-1.5 text-sm text-fg-soft hover:bg-hover"
+        data-sem-accion="restablecer"
+      >
+        Restablecer
+      </button>
+      <button type="button" class="ml-auto rounded-lg px-3 py-1.5 text-sm boton-rendirse" data-sem-accion="resolucion">
+        Me rindo
+      </button>
+    </div>
+    <div class="sem-resultados" aria-live="polite" data-sem-resultados></div>
+  </div>
+
+  <div class="border-t border-line p-4 flex flex-col gap-3" data-sem-resolucion hidden>
+    <h4 class="font-heading text-sm text-ok">Solución de referencia</h4>
+    <Code
+      class="sem-solucion"
+      code={solucion.trim()}
+      lang="c"
+      themes={{ light: 'github-light', dark: 'github-dark' }}
+    />
+    <div class="prose max-w-none" set:html={justificacion} />
+  </div>
+</section>

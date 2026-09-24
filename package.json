@@ -23,14 +23,22 @@
   "packageManager": "pnpm@11.20.0",
   "dependencies": {
     "@astrojs/markdown-satteri": "0.3.4",
+    "@codemirror/lang-cpp": "^6.0.3",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.13",
+    "@lezer/highlight": "^1.2.3",
     "@tailwindcss/vite": "4.3.3",
     "astro": "7.1.1",
+    "codemirror": "^6.0.2",
     "marked": "^18.0.14",
     "tailwindcss": "4.3.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@stylistic/eslint-plugin": "5.10.0",
+    "@types/node": "^22.20.4",
     "eslint": "10.7.0",
     "eslint-plugin-n": "18.2.2",
     "eslint-plugin-promise": "7.3.0",
@@ -40,6 +48,7 @@
     "prettier": "3.9.5",
     "prettier-plugin-astro": "^1.0.1",
     "typescript": "^5.9.3",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.1",
+    "yaml": "^2.9.1"
   }
 }

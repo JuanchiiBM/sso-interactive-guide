@@ -7,7 +7,7 @@ const catalogo = await getCatalogo(1)
 const totalEjercicios = catalogo.reduce((n, c) => n + c.ejercicios.length, 0)
 const conSimulador = catalogo.reduce(
   (n, c) =>
-    n + c.ejercicios.filter((e) => e.data.simulaciones.length + e.data.preguntas.length > 0).length,
+    n + c.ejercicios.filter((e) => e.data.simulaciones.length + e.data.preguntas.length + e.data.semaforos.length > 0).length,
   0,
 )
 ---

@@ -40,3 +40,17 @@ describe('verificarGantt', () => {
     expect(verificarGantt(esperada, {}).correctos).toBe(2)
   })
 })
+
+describe('grillaEsperada con dos procesadores', () => {
+  it('distingue CPU 1 de CPU 2', () => {
+    const r2 = simularPlanificacion({
+      algoritmo: 'fifo',
+      procesadores: 2,
+      procesos: [
+        { id: 'A', llegada: 0, rafagas: [1] },
+        { id: 'B', llegada: 0, rafagas: [2] },
+      ],
+    })
+    expect(grillaEsperada(r2, ['A', 'B'])).toEqual({ A: ['cpu', null], B: ['cpu2', 'cpu2'] })
+  })
+})

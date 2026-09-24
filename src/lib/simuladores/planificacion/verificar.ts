@@ -1,7 +1,7 @@
 import type { ResultadoPlanificacion } from './tipos'
 
-/** Lo que el alumno marca en cada celda (proceso, t). */
-export type Marca = 'cpu' | 'io' | null
+/** Lo que el alumno marca en cada celda (proceso, t). 'cpu' = CPU 1 (o el único), 'cpu2' = CPU 2. */
+export type Marca = 'cpu' | 'cpu2' | 'io' | null
 /** marcas[proceso][t] */
 export type GrillaGantt = Record<string, Marca[]>
 
@@ -26,7 +26,8 @@ export function grillaEsperada(r: ResultadoPlanificacion, procesos: string[]): G
     procesos.map((id) => [
       id,
       r.ticks.map((tick): Marca => {
-        if (tick.cpu === id) return 'cpu'
+        const k = tick.cpus.indexOf(id)
+        if (k >= 0) return k === 0 ? 'cpu' : 'cpu2'
         return tick.io.includes(id) ? 'io' : null
       }),
     ]),

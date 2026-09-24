@@ -15,7 +15,7 @@ export function pasosPlanificacion(config: ConfigPlanificacion): Step<EstadoGant
 
   const pasos: Step<EstadoGantt>[] = resultado.ticks.map((tick) => ({
     state: { resultado, procesos, hasta: tick.t },
-    descripcion: `t=${tick.t}: ${tick.eventos.join(' ') || `${tick.cpu ?? 'Nadie'} sigue en CPU.`}`,
+    descripcion: `t=${tick.t}: ${tick.eventos.join(' ') || sigue(tick.cpus)}`,
   }))
 
   pasos.push({
@@ -23,6 +23,11 @@ export function pasosPlanificacion(config: ConfigPlanificacion): Step<EstadoGant
     descripcion: `Fin en t=${resultado.fin}. Retorno promedio ${fmt(resultado.promedioRetorno)} · Espera promedio ${fmt(resultado.promedioEspera)}.`,
   })
   return pasos
+}
+
+function sigue(cpus: (string | null)[]): string {
+  if (cpus.length === 1) return `${cpus[0] ?? 'Nadie'} sigue en CPU.`
+  return cpus.map((id, k) => `CPU ${k + 1}: ${id ?? 'ociosa'}.`).join(' ')
 }
 
 const fmt = (n: number) => n.toLocaleString('es-AR', { maximumFractionDigits: 2 })

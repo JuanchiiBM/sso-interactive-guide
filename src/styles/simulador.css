@@ -14,6 +14,11 @@
 .gantt-cell {
   height: 1.6rem;
   border-radius: 3px;
+  /* número de CPU cuando hay varios procesadores */
+  display: grid;
+  place-items: center;
+  font: 600 0.65rem var(--font-mono);
+  color: var(--surface);
   background: var(--surface-3);
   transition: background-color 160ms ease;
 }
@@ -31,6 +36,10 @@
     transparent 3px 6px
   );
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.gantt-admision {
+  outline: 1px dashed color-mix(in srgb, var(--c) 55%, transparent);
+  outline-offset: -3px;
 }
 .gantt-espera-io {
   background: radial-gradient(color-mix(in srgb, var(--c) 60%, transparent) 1px, transparent 1.5px)
@@ -75,7 +84,7 @@
 .gantt-input:hover {
   background: color-mix(in srgb, var(--c) 30%, var(--surface-3));
 }
-.gantt-input[data-marca='cpu'] {
+.gantt-input:is([data-marca='cpu'], [data-marca='cpu2']) {
   background: var(--c);
 }
 .gantt-input[data-marca='io'] {
@@ -174,4 +183,91 @@
 }
 .boton-ocultar:hover {
   background: var(--hover);
+}
+
+/* Editor de semáforos */
+.sem-editor {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  tab-size: 2;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg);
+  resize: vertical;
+  white-space: pre;
+}
+.sem-editor:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.sem-tests,
+.sem-errores {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+.sem-tests li {
+  color: var(--fg-soft);
+}
+.sem-tests li::before {
+  display: inline-block;
+  width: 1.2rem;
+  font-weight: 700;
+}
+.sem-tests li[data-ok='true']::before {
+  content: '✓';
+  color: var(--ok);
+}
+.sem-tests li[data-ok='false']::before {
+  content: '✗';
+  color: var(--bad);
+}
+.sem-errores li {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--bad);
+}
+.sem-solucion {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+/* CodeMirror: host y palabras del dialecto de la cátedra */
+.sem-editor-host {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.sem-editor-host:focus-within {
+  border-color: var(--accent);
+}
+.sem-editor-host .cm-editor {
+  max-height: 34rem;
+}
+.sem-editor-host .cm-scroller {
+  overflow: auto;
+}
+.cm-so-kw {
+  color: var(--code-so);
+  font-weight: 600;
+}
+.cm-so-const {
+  color: var(--code-num);
+}
+.sem-motivo {
+  margin: 0.15rem 0 0.35rem 1.2rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid color-mix(in srgb, var(--bad) 50%, transparent);
+  font-size: 0.8rem;
+  color: var(--muted);
 }

@@ -3,6 +3,7 @@ import { toggleTheme } from '@lib/theme'
 import { initSidebar } from '@lib/sidebar'
 import { initAllSimuladores } from '@lib/simulador-page'
 import { initMultipleChoice } from '@lib/desafios/multiple-choice'
+import { initSemaforos } from '@lib/desafios/semaforos'
 
 document.addEventListener('click', (event) => {
   const target = event.target
@@ -14,3 +15,4 @@ document.addEventListener('click', (event) => {
 initSidebar()
 initAllSimuladores()
 initMultipleChoice()
+initSemaforos()

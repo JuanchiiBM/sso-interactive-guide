@@ -18,6 +18,9 @@ export const algoritmoUI: Record<string, string> = {
   prioridades: 'Prioridades sin desalojo',
   'prioridades-desalojo': 'Prioridades con desalojo',
   hrrn: 'HRRN',
+  vrr: 'Virtual Round Robin',
+  multinivel: 'Colas multinivel',
+  feedback: 'Feedback multinivel',
 }
 
 export const tipoUI: Record<Tipo, string> = {

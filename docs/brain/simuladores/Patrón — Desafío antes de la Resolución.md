@@ -23,7 +23,8 @@ Progreso por navegador en `src/lib/progreso.ts` (`so:resuelto:<path>#<id>`).
 
 ## Gantt (planificación)
 - Click = CPU (una por instante; marcar otra la saca), click derecho = E/S. En celular, selector de
-  "pincel" CPU/E/S.
+  "pincel" CPU/E/S. Con 2 procesadores los pinceles son CPU 1 / CPU 2 / E/S (una marca por CPU e
+  instante; la celda muestra el número). Con varios dispositivos se marca solo "E/S".
 - Verifica **CPU y uso efectivo del dispositivo** por proceso y tick (`verificar.ts`,
   `grillaEsperada`). Esperar el dispositivo o estar en listos = celda vacía.
 - Feedback: **solo correcto / incorrecto**, sin decir dónde ni cuántas celdas fallan (pedido

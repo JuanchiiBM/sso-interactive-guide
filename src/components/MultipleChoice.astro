@@ -1,16 +1,6 @@
 ---
 /** Pregunta multiple choice con la respuesta bloqueada. Comportamiento: src/lib/desafios/multiple-choice.ts */
-import { Marked } from 'marked'
-import { bloqueSVG } from '@lib/markdown/bloques-svg'
-
-// mismos bloques ```grafo / ```diagrama que el markdown de las colecciones
-const md = new Marked({
-  renderer: {
-    code({ text, lang }) {
-      return bloqueSVG(lang, text) ?? false
-    },
-  },
-})
+import { markdownAHtml } from '@lib/markdown/marked'
 
 interface Props {
   pregunta: {
@@ -24,7 +14,7 @@ interface Props {
 }
 
 const { pregunta, clave } = Astro.props
-const justificacion = await md.parse(pregunta.justificacion)
+const justificacion = await markdownAHtml(pregunta.justificacion)
 const nombre = `mc-${clave}`
 ---
 

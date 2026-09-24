@@ -17,5 +17,7 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    // CodeMirror (~165 KB gzip) se carga lazy solo en páginas con editor de semáforos
+    build: { chunkSizeWarningLimit: 600 },
   },
 })
