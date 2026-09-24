@@ -11,7 +11,7 @@ import { crearDesafioGantt } from '@lib/desafios/gantt'
 import { pasosCodigo } from '@lib/simuladores/codigo/pasos'
 import type { ConfigCodigo } from '@lib/simuladores/codigo/tipos'
 import type { Desafio } from '@lib/desafios/tipos'
-import { estaResuelto } from '@lib/progreso'
+import { estaResuelto, rutaActual } from '@lib/progreso'
 import { controlarResolucion } from '@lib/desafios/boton-resolucion'
 
 type Registro = {
@@ -100,7 +100,7 @@ function initSimulador(host: HTMLElement, indice: number): void {
   const resolucion = $<HTMLElement>('[data-sim-resolucion]', host)
   if (sim.desafio) {
     const crear = sim.desafio
-    initDesafio(host, `${location.pathname}#${indice}`, (root) => crear(root, pasos as never))
+    initDesafio(host, `${rutaActual()}#${indice}`, (root) => crear(root, pasos as never))
   } else {
     $('[data-desafio]', host)?.remove()
     if (resolucion) resolucion.hidden = false

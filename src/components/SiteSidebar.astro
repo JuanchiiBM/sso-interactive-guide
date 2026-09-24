@@ -1,6 +1,7 @@
 ---
 /** Sidebar estático: temas del parcial con sus ejercicios. JS solo para el drawer mobile. */
 import { getCatalogo, temaHref, ejercicioHref, rotuloEjercicio } from '@lib/catalogo'
+import { clavesEjercicio } from '@lib/progreso'
 
 interface Props {
   activeId?: string
@@ -81,10 +82,11 @@ const catalogo = await getCatalogo(1)
                 <a
                   href={ejercicioHref(e.id)}
                   class:list={[
-                    'block px-2 py-1 rounded text-[13px] truncate',
+                    'ej-link block px-2 py-1 rounded text-[13px] truncate data-resuelto:text-ok',
                     activeId === e.id ? 'text-accent bg-accent-soft' : 'text-muted hover:text-fg',
                   ]}
                   aria-current={activeId === e.id ? 'page' : undefined}
+                  data-claves={clavesEjercicio(ejercicioHref(e.id), e.data).join('|')}
                 >
                   {rotuloEjercicio(e.data.fuente.numero)} · {e.data.titulo}
                 </a>

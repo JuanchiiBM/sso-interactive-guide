@@ -5,7 +5,7 @@ export function initFiltrosEjercicios(): void {
   const barra = $<HTMLElement>('[data-filtros]')
   if (!barra) return
 
-  const estado = { tema: '', simulador: '', dificultad: '' }
+  const estado = { tema: '', simulador: '', dificultad: '', pendiente: '' }
 
   const aplicar = () => {
     let visibles = 0
@@ -15,7 +15,8 @@ export function initFiltrosEjercicios(): void {
         const ok =
           (!estado.tema || card.dataset.tema === estado.tema) &&
           (!estado.simulador || card.dataset.simulador === estado.simulador) &&
-          (!estado.dificultad || card.dataset.dificultad === estado.dificultad)
+          (!estado.dificultad || card.dataset.dificultad === estado.dificultad) &&
+          (!estado.pendiente || !card.hasAttribute('data-resuelto'))
         card.parentElement!.hidden = !ok
         if (ok) enGrupo++
       }
@@ -41,4 +42,6 @@ export function initFiltrosEjercicios(): void {
     }
     aplicar()
   })
+  // el progreso se pinta en el cliente: reaplicar cuando cambian los resueltos
+  document.addEventListener('so:progreso:pintado', aplicar)
 }

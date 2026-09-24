@@ -283,3 +283,15 @@
   font-size: 0.8rem;
   color: var(--muted);
 }
+
+/* ── Ejercicio resuelto (todas sus partes): punto verde en el sidebar ── */
+.ej-link[data-resuelto]::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 9999px;
+  background: var(--ok);
+  vertical-align: middle;
+}

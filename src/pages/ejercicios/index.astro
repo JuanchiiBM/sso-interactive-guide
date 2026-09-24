@@ -39,6 +39,9 @@ const chip =
     <button type="button" class={chip} data-filtro="dificultad" data-valor="parcial" aria-pressed="false">
       Solo de parcial
     </button>
+    <button type="button" class={chip} data-filtro="pendiente" data-valor="si" aria-pressed="false">
+      Solo no resueltos
+    </button>
   </div>
 
   {catalogo.map(({ tema, ejercicios }) => (

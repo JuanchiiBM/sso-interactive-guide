@@ -1,6 +1,6 @@
 /** Multiple choice: la justificación queda oculta hasta acertar (o pedir verla). */
 import { $, $$ } from '@lib/dom'
-import { estaResuelto } from '@lib/progreso'
+import { estaResuelto, rutaActual } from '@lib/progreso'
 import { controlarResolucion } from '@lib/desafios/boton-resolucion'
 
 export function initMultipleChoice(): void {
@@ -9,7 +9,7 @@ export function initMultipleChoice(): void {
 
 function init(box: HTMLElement): void {
   const correcta = Number(box.dataset.mcCorrecta)
-  const clave = `${location.pathname}#mc-${box.dataset.mcClave}`
+  const clave = `${rutaActual()}#mc-${box.dataset.mcClave}`
   const feedback = $<HTMLElement>('[data-mc-feedback]', box)!
   const respuesta = $<HTMLElement>('[data-mc-respuesta]', box)!
   const boton = $<HTMLButtonElement>('[data-mc-accion="resolucion"]', box)
