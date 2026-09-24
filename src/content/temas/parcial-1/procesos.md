@@ -183,4 +183,4 @@ No hay que confundirlo con el **cambio de contexto** en sí, que es más general
 
 > Porque cuando termina el evento esperado, el proceso solo queda en condiciones de ejecutar. Pasa a Ready, y es el planificador de corto plazo el que decide cuándo le toca la CPU.
 
-_Fuente: Resumen SO (págs. 15–23)._
+_Fuente: Sistemas Operativos for Dummies (págs. 15–23)._

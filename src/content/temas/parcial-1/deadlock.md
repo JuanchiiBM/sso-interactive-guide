@@ -233,4 +233,4 @@ Se asume que el deadlock es raro y que el costo de prevenirlo, evitarlo o detect
 
 > En un deadlock los procesos están **bloqueados** y no consumen CPU. En un livelock están **ejecutando**, cambiando de estado sin progresar, y consumen CPU. Es la pista del ejercicio 9 de la guía: un livelock afecta a otros procesos que compiten por la CPU, aunque usen recursos distintos. Un deadlock, en cambio, no los afecta.
 
-_Fuente: Resumen SO (págs. 63–70) y Guía de Ejercicios de Deadlock v.2C2026._
+_Fuente: Sistemas Operativos for Dummies (págs. 63–70) y Guía de Ejercicios de Deadlock v.2C2026._

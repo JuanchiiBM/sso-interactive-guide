@@ -146,4 +146,4 @@ Es el paso de modo usuario a kernel o al revés. Reglas clave:
 
 > Verdadero. Como la mayoría de los servicios corren como procesos de usuario, se comunican con mensajes que pasan por el kernel. Eso agrega cambios de modo y overhead que un kernel monolítico no tiene.
 
-_Fuente: Resumen SO (págs. 9–14 y 45–47)._
+_Fuente: Sistemas Operativos for Dummies (págs. 9–14 y 45–47)._

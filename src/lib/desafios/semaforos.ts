@@ -105,7 +105,7 @@ function init(box: HTMLElement): void {
       }
       const titulo = document.createElement('p')
       titulo.className = 'text-sm font-medium text-bad'
-      titulo.textContent = 'No compila'
+      titulo.textContent = r.errores.every((e) => e.ejecucion) ? 'Falla al ejecutar' : 'No compila'
       salida.replaceChildren(titulo, lista)
       return
     }

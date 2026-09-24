@@ -31,6 +31,7 @@
   --ok: #34d399;
   --warn: #fbbf24;
   --bad: #f87171;
+  --parcial: #a78bfa;
   /* Paleta de procesos (Gantt, tablas). Índice = orden del proceso. */
   --p1: #60a5fa;
   --p2: #f472b6;
@@ -66,6 +67,7 @@
   --ok: #047857;
   --warn: #b45309;
   --bad: #b91c1c;
+  --parcial: #7c3aed;
   --p1: #2563eb;
   --p2: #db2777;
   --p3: #059669;
@@ -99,6 +101,7 @@
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
+  --color-parcial: var(--parcial);
 }
 
 @theme {

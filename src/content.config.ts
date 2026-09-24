@@ -94,7 +94,8 @@ const ejercicios = defineCollection({
       numero: z.union([z.string(), z.number()]),
     }),
     tipo: z.enum(['teorico', 'practico', 'codigo', 'verdadero-falso', 'multiple-choice']),
-    dificultad: z.enum(['facil', 'media', 'dificil']).default('media'),
+    /** 'parcial' = ejercicio tomado de un examen (más exigente que los de guía). */
+    dificultad: z.enum(['facil', 'media', 'dificil', 'parcial']).default('media'),
     tags: z.array(z.string()).default([]),
     /** Resoluciones paso a paso generadas por simulador (una por inciso). */
     simulaciones: z.array(simulacionSchema).default([]),

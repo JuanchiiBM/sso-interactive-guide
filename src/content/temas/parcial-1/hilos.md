@@ -132,4 +132,4 @@ Un proceso puede tener varios KLT y, sobre cada uno, varios ULT. Así se busca l
 
 > Convienen cuando se quiere una planificación propia, cuando se crean y alternan muchos hilos (porque es barato), cuando importa la portabilidad o cuando los hilos hacen poca E/S bloqueante. Dos atributos del TCB son el TID y el estado del hilo; también la prioridad y el contexto (PC y registros).
 
-_Fuente: Resumen SO (págs. 39–44)._
+_Fuente: Sistemas Operativos for Dummies (págs. 39–44)._

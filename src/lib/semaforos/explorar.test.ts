@@ -190,3 +190,66 @@ describe('motivos de falla', () => {
     expect(r.tests.find((t) => /deadlock/.test(t.nombre))!.motivo).toMatch(/Hilo en wait\(m\)/)
   })
 })
+
+describe('motor v2: arrays, locales al azar y recursos implícitos', () => {
+  const recursos: EjercicioSemaforos = {
+    procesos: [
+      { nombre: 'Proceso', instancias: 3, codigo: 'while(TRUE){\n  id_recurso = pedir_recurso();\n  usar_recurso(id_recurso);\n}' },
+    ],
+    locales: ['id_recurso'],
+    constantes: { M: 2 },
+    acciones: {
+      'id_recurso = pedir_recurso()': { asigna: { variables: ['id_recurso'], valores: 3 } },
+      'usar_recurso(id_recurso)': { recursos: ['recurso[id_recurso]'] },
+    },
+    tests: [
+      { tipo: 'capacidad', recurso: 'recurso[*]', max: 2 },
+      { tipo: 'capacidad-alcanzable', recurso: 'recurso[*]', valor: 2 },
+    ],
+  }
+  const conSem = (decl: string, ref: string) =>
+    prog(decl, {
+      Proceso: ['id_recurso = pedir_recurso();', `wait(${ref});`, 'usar_recurso(id_recurso);', `signal(${ref});`],
+    })
+
+  it('array de contadores indexado por el id al azar pasa', () => {
+    expect(verificarSemaforos(conSem('semaphore r[3] = M;', 'r[id_recurso]'), recursos).ok).toBe(true)
+    expect(verificarSemaforos(conSem('semaphore r[3] = {2, 2, 2};', 'r[id_recurso]'), recursos).ok).toBe(true)
+  })
+
+  it('un contador global no respeta el límite por recurso', () => {
+    const r = verificarSemaforos(conSem('semaphore r = 3;', 'r'), recursos)
+    expect(r.tests[0].ok).toBe(false)
+    expect(r.tests[0].motivo).toMatch(/recurso\[\d\]/)
+  })
+
+  it('un índice fijo fuera de rango es un error de ejecución, no de sintaxis', () => {
+    const f = conSem('semaphore r[3] = M;', 'r[5]')
+    expect(parsear(f, recursos).errores).toEqual([])
+    const r = verificarSemaforos(f, recursos)
+    expect(r.errores[0]).toMatchObject({ ejecucion: true })
+    expect(r.errores[0].mensaje).toMatch(/3 posiciones/)
+  })
+
+  it('indexar un semáforo que no es array es error de compilación', () => {
+    expect(mensajes(conSem('semaphore r = 2;', 'r[id_recurso]'), recursos)).toContain('r no es un array: no lleva [ ]')
+  })
+
+  it('recursos implícitos: pedir de a uno en orden al azar puede trabar', () => {
+    const ej: EjercicioSemaforos = {
+      procesos: [{ nombre: 'P', instancias: 2, codigo: 'while(TRUE){\n  elegir();\n  pedir(a);\n  pedir(b);\n  devolver(a);\n  devolver(b);\n}' }],
+      locales: ['a', 'b'],
+      recursosImplicitos: { r: { cantidad: 2, instancias: 1 } },
+      acciones: {
+        'elegir()': { asigna: { variables: ['a', 'b'], valores: 2, distintos: true } },
+        'pedir(a)': { adquiere: ['r[a]'] },
+        'pedir(b)': { adquiere: ['r[b]'] },
+        'devolver(a)': { libera: ['r[a]'] },
+        'devolver(b)': { libera: ['r[b]'] },
+      },
+      tests: [{ tipo: 'sin-deadlock' }],
+    }
+    const r = verificarSemaforos(plantilla(ej), ej)
+    expect(r.tests[0].motivo).toMatch(/P en pedir\(b\)/)
+  })
+})

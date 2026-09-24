@@ -28,5 +28,5 @@ Estructura del cuerpo:
 - Fórmulas en `código inline` (no hay KaTeX).
 - Cierre: `## Preguntas de parcial` (pregunta en negrita + respuesta en `>`) y una línea de fuente.
 
-**Redacción:** con palabras propias sobre el Resumen SO; el repo es público.
+**Redacción:** con palabras propias sobre el Resumen SO (Sistemas Operativos for Dummies); el repo es público.
 **Conectado con:** [[Contenido]], [[Fuentes y Derechos del Material]]

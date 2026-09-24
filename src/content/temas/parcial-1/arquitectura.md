@@ -151,4 +151,4 @@ Las memorias forman una pirámide. Arriba están las más rápidas, chicas y car
 
 > No. Fetch, decode y execute forman una unidad. La CPU recién revisa si hay interrupciones pendientes cuando termina la instrucción en curso.
 
-_Fuente: Resumen SO (págs. 3–8)._
+_Fuente: Sistemas Operativos for Dummies (págs. 3–8)._

@@ -308,4 +308,4 @@ Un **monitor** es una construcción del lenguaje, parecida a una clase, que enca
 
 > Que, en lugar de bloquear al proceso, `wait` lo deja en un bucle consultando el valor (por ejemplo, implementado con test-and-set). La ventaja es que funciona: da mutua exclusión y progreso, y para esperas muy cortas se evita el costo de bloquear y desbloquear. La desventaja es que desperdicia CPU mientras espera.
 
-_Fuente: Resumen SO (págs. 48–62) y Guía de Ejercicios de Sincronización v.2C2026._
+_Fuente: Sistemas Operativos for Dummies (págs. 48–62) y Guía de Ejercicios de Sincronización v.2C2026._

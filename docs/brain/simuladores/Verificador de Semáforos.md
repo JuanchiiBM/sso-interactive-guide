@@ -72,16 +72,39 @@ avanzar), para no dar falsos positivos. Sin este test, un `wait` antes del while
 hilo trabajando para siempre no es deadlock).
 Los "alcanzable" evitan que un mutex pase por solución de un contador.
 
+Todo test acepta `motivo:` propio. **Usalo en los `rango`**: el genérico ("posA llega a valer -1")
+expone contadores internos que el alumno no conoce.
+
+## Motor v2 (arrays, locales, azar, recursos implícitos)
+| Spec del ejercicio                 | Para qué                                               | Ejemplo            |
+| ---------------------------------- | ------------------------------------------------------ | ------------------ |
+| `semaphore r[N] = v;` / `= {a,b}`  | arrays; `N` puede ser constante; `wait(r[i]);`         | Sinc. 9            |
+| `locales: [id_recurso]`            | variables por instancia (arrancan en 0); `id` siempre existe (0..n-1) | Sinc. 9, 13 |
+| `asigna: {variables, valores, distintos}` | asignación **no determinista**: se exploran todas | `pedir_recurso()` |
+| `recursos: ['recurso[id_recurso]']` + test `recurso[*]` | capacidad/exclusión **por índice**   | Sinc. 9            |
+| `recursosImplicitos` + `adquiere`/`libera` | acciones que bloquean como un semáforo oculto  | `syscall_pedir()` (Deadlock 7) |
+| `funciones: {actual(): {variable}}` + `modulos` | funciones del enunciado usables como índice | Sinc. 13      |
+| `Proceso::accion` en `acciones`    | misma línea con spec distinta según el proceso         | `posicionarse()`   |
+| test `orden-instancias`            | las instancias hacen una acción en orden de `id`      | pateadores         |
+
+- Índice fuera de rango = **error de ejecución** (`ejecucion: true`, UI: "Falla al ejecutar"), no
+  de sintaxis.
+- Si el código o los tests usan `id`, se **apaga la simetría** (las instancias ya no son iguales).
+- `if (...) { … } else { … }` se une en **una** acción atómica (`unirCondicionales`): importa cuándo
+  se lee la condición, no qué rama corre. Si el alumno mete `wait`/`signal` adentro del if, no matchea.
+
 ## Contenido y garantías
-- `contenido.test.ts` recorre **todos** los `.md`: la `solucion` de referencia tiene que pasar todo y
-  la plantilla sin sincronizar tiene que fallar algo. Si agregás un ejercicio y falla, el test está mal
-  planteado o la solución está mal.
+- `contenido.test.ts` recorre **todos** los `.md`: la `solucion` de referencia tiene que pasar todo,
+  la plantilla sin sincronizar tiene que fallar algo y ninguna solución puede usar la sintaxis vieja.
 - `inicial:` precarga declaraciones (ejercicios de "corregí este código", ej. Deadlock Ej. 6).
+- ⚠️ **Frontmatter: separarlo por líneas `---` completas** (`/^---\n([\s\S]*?)\n---\n/`), nunca con
+  `split('---')`: las tablas markdown de las justificaciones tienen `---` adentro. Ese bug dejó el
+  Ej. 10b sin validar y con la sintaxis vieja. Al generar YAML con PyYAML, sin anclas
+  (`ignore_aliases`) y con `newline='\n'`.
 
 ## Límites conocidos / pendiente
-- Sin arrays de semáforos ni valores no deterministas por iteración (`id = pedir_recurso()`):
-  bloquea Sinc. Ej. 9 y Deadlock Ej. 7.
-- Sin creación dinámica de procesos (`fork`, Sinc. Ej. 12) ni handshakes con variables de control
-  (`actual()/siguiente()`, Ej. 13; controladores del Ej. 11).
+- Sin creación dinámica de procesos: `fork()` (Sinc. Ej. 12) divide el mismo código en padre e hijo
+  por `if (pid == 0)`; modelarlo exige crear instancias en ejecución.
+- Escala reducida en los tests (2 aviones/1 pista, 3 jugadores): la `nota` del desafío lo aclara.
 
 **Conectado con:** [[Simuladores]], [[Patrón — Desafío antes de la Resolución]], [[Convenciones de la Cátedra FRBA]]

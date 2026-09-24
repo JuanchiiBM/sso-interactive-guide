@@ -17,7 +17,7 @@ actualizado: 2026-09-23
   materia (OneDrive), fuera del repo.
 - **Enunciados:** se transcriben citando guía, versión y número (`fuente` en el frontmatter). Autores
   de las guías v.2C2026: Carrillo, Franco; Salteño Giordano, Daiana; Audino, Siomara (UTN.BA).
-- **Teoría:** redactada con palabras propias a partir del _Resumen SO_; se cita el rango de páginas.
+- **Teoría:** redactada con palabras propias a partir del _Resumen SO_ como _Sistemas Operativos for Dummies_; se cita el rango de páginas.
 - README aclara que el sitio es **no oficial**.
 
 **Descartado:** subir los PDFs para "tener todo junto" — redistribuye material ajeno.

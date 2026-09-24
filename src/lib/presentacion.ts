@@ -8,6 +8,7 @@ export const dificultadUI: Record<Dificultad, { label: string; color: string }> 
   facil: { label: 'Fácil', color: 'var(--ok)' },
   media: { label: 'Media', color: 'var(--warn)' },
   dificil: { label: 'Difícil', color: 'var(--bad)' },
+  parcial: { label: 'Parcial', color: 'var(--parcial)' },
 }
 
 export const algoritmoUI: Record<string, string> = {

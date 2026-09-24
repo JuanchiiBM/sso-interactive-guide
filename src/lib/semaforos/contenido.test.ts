@@ -9,10 +9,13 @@ import type { EjercicioSemaforos } from './tipos'
 
 const DIR = join(process.cwd(), 'src/content/ejercicios')
 
+// frontmatter = entre dos líneas que son exactamente '---' (las tablas markdown también tienen ---)
+const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/
+
 const desafios = readdirSync(DIR, { recursive: true, encoding: 'utf8' })
   .filter((f: string) => f.endsWith('.md'))
   .flatMap((f: string) => {
-    const fm = parse(readFileSync(join(DIR, f), 'utf8').split('---')[1])
+    const fm = parse(readFileSync(join(DIR, f), 'utf8').match(FRONTMATTER)![1])
     const lista = (fm.semaforos ?? []) as (EjercicioSemaforos & { solucion: string; etiqueta?: string })[]
     return lista.map((d, i) => ({ id: `${f.replace(/\\/g, '/')}${d.etiqueta ? ` (${d.etiqueta})` : ` #${i}`}`, d }))
   })
@@ -20,6 +23,11 @@ const desafios = readdirSync(DIR, { recursive: true, encoding: 'utf8' })
 describe('desafíos de semáforos del contenido', () => {
   it('hay desafíos cargados', () => {
     expect(desafios.length).toBeGreaterThan(0)
+  })
+
+  it('las soluciones usan la sintaxis actual (void función)', () => {
+    const viejas = desafios.filter(({ d }) => /^\s*proceso\s+.+:\s*$/m.test(d.solucion)).map((x) => x.id)
+    expect(viejas).toEqual([])
   })
 
   for (const { id, d } of desafios) {

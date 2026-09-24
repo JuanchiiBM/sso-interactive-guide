@@ -31,7 +31,7 @@ const ayuda = [
   preguntas.length > 0 &&
     'Elegí una opción por pregunta y verificá. Si fallás, te decimos por qué esa opción no es.',
   semaforos.length > 0 &&
-    'Declará los semáforos arriba (semaphore nombre = valor;) y agregá wait(nombre); / signal(nombre); dentro de cada función, sin tocar el resto del código. El editor marca en rojo los errores de sintaxis mientras escribís. Los tests prueban todas las intercalaciones posibles; los nombres de los semáforos no importan.',
+    'Declará los semáforos arriba (semaphore nombre = valor; o un array: semaphore nombre[N] = valor;) y agregá wait(nombre); / signal(nombre); en cada función, sin tocar el resto del código. El editor marca en rojo los errores de sintaxis mientras escribís. Los tests prueban todas las intercalaciones posibles; los nombres de los semáforos no importan.',
   interactivos > 0 &&
     'La resolución se desbloquea cuando acertás. Si ya la resolviste, "Ver resolución" la muestra directo; si no, "Me rindo" pide confirmar.',
 ].filter((t): t is string => Boolean(t))

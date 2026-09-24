@@ -265,4 +265,4 @@ Con **α = 0,5**, que es el valor que usa la guía, las dos dan exactamente lo m
 
 > Es aumentar la prioridad de un proceso a medida que espera. Sirve para evitar la inanición: tarde o temprano, el proceso que espera supera en prioridad a los recién llegados. El ejemplo típico es HRRN, donde el término `w` del ratio crece con la espera.
 
-_Fuente: Resumen SO (págs. 24–38) y Guía de Ejercicios de Planificación v.2C2026._
+_Fuente: Sistemas Operativos for Dummies (págs. 24–38) y Guía de Ejercicios de Planificación v.2C2026._
