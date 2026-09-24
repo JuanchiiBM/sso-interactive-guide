@@ -60,3 +60,10 @@ no se dibuja en el enunciado.
 **Gotchas:** la carga inicial se generó con un script desde la extracción de los PDFs; los 38
 archivos ya se editan a mano, el script no es parte del repo.
 **Conectado con:** [[Contenido]], [[Content Collections Temas y Ejercicios]]
+
+## `nota`: conceptos que la teoría no explica
+Si el enunciado usa un término que **no aparece en la teoría del sitio** (p. ej. "afinidad de
+procesador" en Planificación Ej. 3), el ejercicio lleva `nota:` (markdown) con la explicación.
+Se muestra como bloque **Nota** entre el enunciado y "Resolución". Regla del dueño: vale para
+los ejercicios de **guía**; explicar el concepto sin resolver el ejercicio.
+

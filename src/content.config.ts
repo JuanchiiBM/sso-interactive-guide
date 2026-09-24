@@ -156,6 +156,8 @@ const ejercicios = defineCollection({
     simulaciones: z.array(simulacionSchema).default([]),
     /** Desafíos de código con semáforos (uno por inciso). */
     semaforos: z.array(desafioSemaforosSchema).default([]),
+    /** Aclaración (markdown) de un concepto del enunciado que la teoría no explica; va arriba de "Resolución". */
+    nota: z.string().optional(),
     /** Multiple choice por inciso; la justificación (markdown) se ve recién al acertar. */
     preguntas: z
       .array(

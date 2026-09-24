@@ -6,6 +6,7 @@ import SemaforosDesafio from '@components/SemaforosDesafio.astro'
 import { getEntry, render } from 'astro:content'
 import { getEjercicios, ejercicioHref, temaHref, rotuloEjercicio } from '@lib/catalogo'
 import { algoritmoUI, dificultadUI, tipoUI } from '@lib/presentacion'
+import { markdownAHtml } from '@lib/markdown/marked'
 
 export async function getStaticPaths() {
   const ejercicios = await getEjercicios()
@@ -20,7 +21,8 @@ export async function getStaticPaths() {
 }
 
 const { ejercicio, anterior, siguiente } = Astro.props
-const { titulo, fuente, dificultad, tipo, tags, simulaciones, preguntas, semaforos } = ejercicio.data
+const { titulo, fuente, dificultad, tipo, tags, simulaciones, preguntas, semaforos, nota } = ejercicio.data
+const notaHtml = nota ? await markdownAHtml(`**Nota:** ${nota.trim()}`) : null
 const interactivos = simulaciones.length + preguntas.length + semaforos.length
 const tema = await getEntry(ejercicio.data.tema)
 const { Content } = await render(ejercicio)
@@ -72,6 +74,12 @@ const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
     <section class="prose mt-8 max-w-none" aria-label="Enunciado">
       <Content />
     </section>
+
+    {notaHtml && (
+      <aside class="prose mt-8 max-w-none" aria-label="Nota">
+        <blockquote set:html={notaHtml} />
+      </aside>
+    )}
 
     <section class="mt-12" aria-labelledby="resolucion">
       <div class="mb-4 flex items-center gap-2">
