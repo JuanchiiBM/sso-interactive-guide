@@ -411,3 +411,16 @@ describe('Deadlock Ej. 15: reescribir waits y signals', { timeout: 30_000 }, () 
     expect(fallidos(mal, d)).toEqual(['Sin semáforos de más'])
   })
 })
+
+describe('Sincronización Ej. 36: inicializar productor-consumidor', () => {
+  const d = desafio('sincronizacion/ej-36.md')
+  const solucion = (d as EjercicioSemaforos & { solucion: string }).solucion
+  it('A y C invertidos: se recibe de la lista vacía', () => {
+    const mal = solucion.replace('semaphore A = 0, B = 1, C = MAX;', 'semaphore A = MAX, B = 1, C = 0;')
+    expect(fallidos(mal, d)).toContain('La lista no se desborda ni se recibe de la vacía')
+  })
+  it('C en 1: la lista nunca se llena', () => {
+    const mal = solucion.replace('C = MAX;', 'C = 1;')
+    expect(fallidos(mal, d)).toContain('La lista puede llenarse')
+  })
+})
