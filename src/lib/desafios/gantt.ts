@@ -1,4 +1,4 @@
-/** Entrada del alumno para un Gantt: click = CPU (una por instante y CPU), click derecho = E/S. */
+/** Entrada del alumno para un Gantt: click = CPU (una por instante y CPU), click derecho = E/S. Fila "SO": solo CPU. */
 import type { Step } from '@lib/playback'
 import {
   columnaEtiquetas,
@@ -12,17 +12,22 @@ import {
   type Marca,
 } from '@lib/simuladores/planificacion/verificar'
 import type { Desafio } from '@lib/desafios/tipos'
+import { FILA_SO } from '@lib/simuladores/planificacion/tipos'
 
 type Pincel = Exclude<Marca, null>
 
 export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[]): Desafio {
-  const { resultado, procesos } = pasos[0].state
-  const esperada = grillaEsperada(resultado, procesos)
+  const { resultado } = pasos[0].state
+  const esperada = grillaEsperada(resultado, pasos[0].state.procesos)
+  const procesos = Object.keys(esperada)
+  const etiqueta = (id: string) => (id === FILA_SO ? 'SO' : etiquetaHilo(resultado, id))
   const total = resultado.ticks.length
   const multi = resultado.procesadores > 1
+  // en el Gantt de código el click derecho marca bloqueado (semáforo, recurso o sleep)
+  const io = resultado.bloqueoSincro ? 'Bloqueado' : 'E/S'
   const nombre: Record<Pincel, string> = multi
-    ? { cpu: 'CPU 1', cpu2: 'CPU 2', io: 'E/S' }
-    : { cpu: 'CPU', cpu2: 'CPU 2', io: 'E/S' }
+    ? { cpu: 'CPU 1', cpu2: 'CPU 2', io }
+    : { cpu: 'CPU', cpu2: 'CPU 2', io }
   const tipos: Pincel[] = multi ? ['cpu', 'cpu2', 'io'] : ['cpu', 'io']
   const respuesta: GrillaGantt = Object.fromEntries(
     procesos.map((p) => [p, Array(total).fill(null)]),
@@ -51,7 +56,7 @@ export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[])
   }
   const ayuda = document.createElement('span')
   ayuda.className = 'ml-2 text-muted'
-  ayuda.textContent = 'Click derecho siempre marca E/S.'
+  ayuda.textContent = `Click derecho siempre marca ${io}.${resultado.so ? ' En la fila SO marcá la CPU que usa el SO para atender cada interrupción.' : ''}`
   pinceles.append(ayuda)
 
   const grid = document.createElement('div')
@@ -61,18 +66,21 @@ export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[])
   procesos.forEach((id, i) => {
     const label = document.createElement('div')
     label.className = 'gantt-label pr-2'
-    label.textContent = etiquetaHilo(resultado, id)
+    label.textContent = etiqueta(id)
     grid.append(label)
     for (let t = 0; t < total; t++) {
       const celda = document.createElement('button')
       celda.type = 'button'
       celda.className = 'gantt-cell gantt-input'
-      celda.style.setProperty('--c', `var(--p${(i % 8) + 1})`)
-      celda.setAttribute('aria-label', `${etiquetaHilo(resultado, id)}, t=${t}`)
-      celda.addEventListener('click', () => alternar(id, t, pincel))
+      celda.style.setProperty('--c', id === FILA_SO ? 'var(--fg-soft)' : `var(--p${(i % 8) + 1})`)
+      celda.setAttribute('aria-label', `${etiqueta(id)}, t=${t}`)
+      // el SO no hace E/S: en su fila solo cuentan los pinceles de CPU
+      celda.addEventListener('click', () => {
+        if (id !== FILA_SO || pincel !== 'io') alternar(id, t, pincel)
+      })
       celda.addEventListener('contextmenu', (e) => {
         e.preventDefault()
-        alternar(id, t, 'io')
+        if (id !== FILA_SO) alternar(id, t, 'io')
       })
       celdas.set(`${id}:${t}`, celda)
       grid.append(celda)
@@ -103,7 +111,7 @@ export function crearDesafioGantt(root: HTMLElement, pasos: Step<EstadoGantt>[])
     celda.textContent = multi && marca === 'cpu' ? '1' : multi && marca === 'cpu2' ? '2' : ''
     celda.setAttribute(
       'aria-label',
-      `${etiquetaHilo(resultado, id)}, t=${t}${marca ? `: ${nombre[marca]}` : ''}`,
+      `${etiqueta(id)}, t=${t}${marca ? `: ${nombre[marca]}` : ''}`,
     )
   }
 

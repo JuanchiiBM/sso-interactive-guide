@@ -8,6 +8,8 @@ import { pasosPlanificacion, type EstadoGantt } from '@lib/simuladores/planifica
 import { renderGantt } from '@lib/visualizers/gantt'
 import type { ConfigPlanificacion } from '@lib/simuladores/planificacion/tipos'
 import { crearDesafioGantt } from '@lib/desafios/gantt'
+import { pasosCodigo } from '@lib/simuladores/codigo/pasos'
+import type { ConfigCodigo } from '@lib/simuladores/codigo/tipos'
 import type { Desafio } from '@lib/desafios/tipos'
 import { estaResuelto } from '@lib/progreso'
 import { controlarResolucion } from '@lib/desafios/boton-resolucion'
@@ -23,6 +25,11 @@ type Registro = {
 const SIMULADORES: Record<string, Registro> = {
   planificacion: {
     pasos: (c: ConfigPlanificacion) => pasosPlanificacion(c),
+    render: (root, s: EstadoGantt) => renderGantt(root, s),
+    desafio: (root, pasos: Step<EstadoGantt>[]) => crearDesafioGantt(root, pasos),
+  },
+  codigo: {
+    pasos: (c: ConfigCodigo) => pasosCodigo(c),
     render: (root, s: EstadoGantt) => renderGantt(root, s),
     desafio: (root, pasos: Step<EstadoGantt>[]) => crearDesafioGantt(root, pasos),
   },

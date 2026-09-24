@@ -1,8 +1,8 @@
 ---
 tipo: servicio
-aliases: [planificación, planificacion, scheduler, hilos, ult, klt, jacketing, wrapper, biblioteca de hilos, scheduling, gantt, simularPlanificacion, fifo, sjf, srt, rr, round robin, hrrn, prioridades, vrr, virtual round robin, multinivel, feedback, afinidad, multiprocesador, multiprogramación, estimación, dispositivos]
+aliases: [planificación, planificacion, scheduler, hilos, ult, klt, jacketing, wrapper, biblioteca de hilos, scheduling, gantt, simularPlanificacion, fifo, sjf, srt, rr, round robin, hrrn, prioridades, vrr, virtual round robin, multinivel, feedback, afinidad, multiprocesador, multiprogramación, estimación, dispositivos, suspensión, mediano plazo, overhead, interrupción, fila SO]
 tags: [simulador, planificacion]
-actualizado: 2026-09-23
+actualizado: 2026-09-24
 ---
 
 # Simulador de Planificación
@@ -22,7 +22,9 @@ simulaciones:
     algoritmo: srt # fifo | sjf | srt | rr | prioridades | prioridades-desalojo | hrrn | vrr | multinivel | feedback
     quantum: 3 # rr y vrr
     ioUnica: true # default: un único dispositivo FIFO; false = E/S en paralelo
-    multiprogramacion: 2 # opcional: máximo de admitidos; el resto espera en New
+    multiprogramacion: 2 # opcional: máximo de admitidos (procesos); el resto espera en New
+    suspensionPorPrioridad: true # opcional: ver "Suspensión por prioridad"
+    overheadInterrupcion: 2 # opcional: u.t. de CPU del SO por fin de E/S (fila "SO")
     alfa: 0.5 # opcional (sjf/srt): el criterio pasa a ser la estimación
     procesadores: 2 # opcional, 1 o 2
     afinidad: true # con 2 procesadores
@@ -40,6 +42,7 @@ simulaciones:
         cola: 1 # multinivel: cola fija, 1 = mayor prioridad
         estimacionAnterior: 4 # con alfa: T_1 = α·4 + (1−α)·5
         rafagaAnterior: 5 # (o estimacionInicial: 4.5 directo)
+        proceso: PA # opcional: agrupa KLTs en un proceso para el grado (default: su id)
 ```
 
 ## Modelo de un tick
@@ -147,19 +150,62 @@ procesos:
 - Quantum de biblioteca RR: corre solo mientras el ULT ejecuta y **sobrevive** al desalojo del KLT.
 - Un ULT que llega con el KLT bloqueado por E/S (directa/wrapper) espera en la cola de la biblioteca.
 - Métricas por hilo: "espera" de un ULT = instantes listo en su biblioteca (esté o no su KLT en listos).
-- KLT "termina" cuando terminaron todos sus ULTs; admisión (`multiprogramacion`) cuenta KLTs.
-- No soportado con ULTs: estimación con `alfa`, HRRN en la biblioteca, overhead del SO, suspensión
-  por mediano plazo.
+- KLT "termina" cuando terminaron todos sus ULTs; admisión (`multiprogramacion`) cuenta **procesos**:
+  cada KLT es su propio proceso salvo que se agrupen con `proceso` (ver abajo).
+- ULTs listos de un KLT en New o suspendido se muestran en ese estado (no suman espera).
+- No soportado con ULTs: estimación con `alfa`, HRRN en la biblioteca.
 
-**Validación:** `hilos.test.ts` compara 8 Gantt oficiales (instante por instante, más los fines) y
-las 4 preguntas "¿desde qué instante cambia si…?" de esas resoluciones (todas coinciden). Saltados:
-1P 1C2025 TT Ej. 3 (suspensión por prioridad en multiprogramación), 1P 1C2026 TT Ej. 3 (2 u.t. de
-SO por interrupción), 1R 1C2026 TM Ej. 4 (Gantt de un estudiante con error a propósito).
+**Validación:** `hilos.test.ts` compara 10 Gantt oficiales (instante por instante, más los fines) y
+las 4 preguntas "¿desde qué instante cambia si…?" de esas resoluciones (todas coinciden); en P-12 y
+P-15 también las suspensiones, la E/S y el uso de CPU del SO. Saltado: 1R 1C2026 TM Ej. 4 (Gantt de
+un estudiante con error a propósito).
 
 **Erratas de resoluciones** (se testea lo correcto, con comentario):
 
 - 1P 2C2025 TM Ej. 2, t9: la biblioteca SRT de P2 corre ULT2.1 (restan 3) con ULT2.2 lista (ráfaga
   2, volvió de E/S por jacketing en t7). Oficial `aaaacdcbbcccbaadd`; correcto `aaaacdcbbddcbaacc`.
+
+## Suspensión por prioridad (1P 1C2025 TT Ej. 3, `hilos/ej-15`)
+
+`multiprogramacion` + `suspensionPorPrioridad: true` + `proceso` en cada KLT. Un **proceso** (grupo
+de KLTs, prioridad = la de su primer KLT) ocupa un lugar; un KLT nuevo de un proceso ya admitido
+entra sin ocupar otro. Semántica, deducida del Gantt oficial:
+
+- Un proceso que llega con el grado completo va a New. **Cada vez que cambia Ready** se reevalúa New
+  (FIFO): si hay en Ready un proceso de prioridad **estrictamente peor**, se suspende al **peor** y el
+  nuevo entra en ese momento (origen `nuevo`, a la cola en ese punto).
+- "Cambia Ready" = al empezar el instante y después de **cada** entrada, procesadas en el orden del
+  desempate (clock > E/S > nuevo). Por eso en t7 se suspende PB y no PA: entra primero KLT3 (clock),
+  PC lo suspende, y recién después entra KLT1 (fin de E/S); la cola queda KLT4, KLT1 (como la oficial).
+  Con "entran todos y después se evalúa" el suspendido sería PA (prioridad 3) y el Gantt no coincide.
+- Solo es candidato un proceso con **todos** sus KLTs vivos en Ready (ni ejecutando ni bloqueados).
+  En t9 PA recién es candidato cuando KLT2 vuelve de E/S; en t6 Ready está vacío y PC espera.
+- Suspender saca de Ready a sus KLTs (estado `suspendido`, no suman espera) y libera su lugar.
+- Al liberarse un lugar (termina un proceso) vuelven **primero los suspendidos** (mejor prioridad;
+  empate: el primero suspendido) y después los de New (FIFO). El que vuelve entra con origen `nuevo`.
+  En P-12 PB vuelve en t14 y PA en t22 (las dos lecturas de orden coinciden acá).
+- Suspender no es una syscall (lo decide el SO); el panel muestra `Suspendidos`.
+
+## Tiempo del SO por interrupción (1P 1C2026 TT Ej. 3, `hilos/ej-16`)
+
+`overheadInterrupcion: n`: cada **fin de E/S** es una interrupción que el SO atiende durante `n` u.t.
+de CPU. Solo fin de E/S: el quantum de una biblioteca no usa HW y el del SO no se modela como
+interrupción con costo.
+
+- El hilo que terminó la E/S queda en `espera-so` (celda vacía con borde) y recién al terminar el SO
+  vuelve a listos / a la cola de su biblioteca (en P-15 ULT1 termina la E/S en t5, SO t5–6, PA en t7).
+- **CPU de la interrupción:** la del proceso afectado (afinidad) si está libre; si no, otra libre (la
+  de menor número); si no, la del proceso (o la CPU 1): el que ejecuta ahí queda **pausado** (se
+  muestra listo, no consume quantum) y sigue después. La resolución oficial solo tiene el primer caso.
+- Varias interrupciones en la misma CPU se atienden en fila.
+- `Tick.so[k]` y `ResultadoPlanificacion.so`: el visualizador pinta "SO" en la fila de la CPU y agrega
+  una **fila "SO"** (`FILA_SO`, reservado como id); `grillaEsperada` la incluye y el desafío la marca
+  con el pincel de CPU (click derecho/E/S no aplica). Limitación: si el SO usa las dos CPUs en el mismo
+  instante, la fila guarda solo la CPU 1.
+- P-15 reproduce el oficial con `fifo` + `afinidad` (el algoritmo del SO no se da). El inciso b) de la
+  resolución lista intervenciones de la biblioteca en 2, 3, 6, 9, 12 y 16; el t16 es discutible (en
+  t15 termina ULT1 y pasa a ULT2) y omite t7/t13 (PA vuelve y la biblioteca replanifica): se discute en
+  el MC, el simulador no modela "intervenciones".
 
 ## Decisiones de interpretación (la guía no las fija)
 

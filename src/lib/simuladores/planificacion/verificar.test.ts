@@ -54,3 +54,17 @@ describe('grillaEsperada con dos procesadores', () => {
     expect(grillaEsperada(r2, ['A', 'B'])).toEqual({ A: ['cpu', null], B: ['cpu2', 'cpu2'] })
   })
 })
+
+describe('grillaEsperada con overhead de interrupciones', () => {
+  it('agrega la fila SO con la CPU que usa el SO', () => {
+    const r3 = simularPlanificacion({
+      algoritmo: 'fifo',
+      overheadInterrupcion: 2,
+      procesos: [{ id: 'A', llegada: 0, rafagas: [1, 1, 1] }],
+    })
+    expect(grillaEsperada(r3, ['A'])).toEqual({
+      A: ['cpu', 'io', null, null, 'cpu'],
+      SO: [null, null, 'cpu', 'cpu', null],
+    })
+  })
+})

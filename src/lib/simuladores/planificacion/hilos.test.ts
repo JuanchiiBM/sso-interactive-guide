@@ -6,12 +6,12 @@ import { describe, expect, it } from 'vitest'
 import { simularPlanificacion } from './simular'
 import type { ConfigPlanificacion } from './tipos'
 
-/** Gantt de cada CPU, con los caracteres de la leyenda del examen. */
+/** Gantt de cada CPU, con los caracteres de la leyenda del examen ('S' = el SO atiende una interrupción). */
 const gantt = (c: ConfigPlanificacion, leyenda: Record<string, string>) => {
   const car = Object.fromEntries(Object.entries(leyenda).map(([k, v]) => [v, k]))
   const r = simularPlanificacion(c)
   return Array.from({ length: r.procesadores }, (_, k) =>
-    r.ticks.map((t) => (t.cpus[k] ? car[t.cpus[k]!] : '-')).join(''),
+    r.ticks.map((t) => (t.so?.[k] ? 'S' : t.cpus[k] ? car[t.cpus[k]!] : '-')).join(''),
   )
 }
 const fines = (c: ConfigPlanificacion) =>
@@ -25,7 +25,85 @@ interface Caso {
   fin?: Record<string, number>
 }
 
+const rango = (desde: number, hasta: number) =>
+  Array.from({ length: hasta - desde }, (_, i) => desde + i)
+
+// Multiprogramación por proceso (2) con suspensión por prioridad (0 = máxima)
+const p12: ConfigPlanificacion = {
+  algoritmo: 'rr',
+  quantum: 3,
+  multiprogramacion: 2,
+  suspensionPorPrioridad: true,
+  procesos: [
+    { id: 'KLT1', proceso: 'PA', prioridad: 3, llegada: 0, rafagas: [2, 5, 1] },
+    {
+      id: 'KLT2',
+      proceso: 'PA',
+      prioridad: 3,
+      biblioteca: 'sjf',
+      hilos: [
+        { id: 'ULT1', llegada: 0, rafagas: [2, 2, 2] },
+        { id: 'ULT2', llegada: 3, rafagas: [1, 1, 1] },
+      ],
+    },
+    { id: 'KLT3', proceso: 'PB', prioridad: 2, llegada: 2, rafagas: [4, 1, 1] },
+    {
+      id: 'KLT4',
+      proceso: 'PC',
+      prioridad: 0,
+      biblioteca: 'sjf',
+      hilos: [
+        { id: 'ULT3', llegada: 6, rafagas: [2, 3, 4] },
+        { id: 'ULT4', llegada: 6, rafagas: [3, 1, 1] },
+      ],
+    },
+    { id: 'KLT5', proceso: 'PD', prioridad: 1, llegada: 9, rafagas: [5] },
+  ],
+}
+
+// 2 CPUs con afinidad; el SO usa 2 u.t. de CPU por cada interrupción de fin de E/S
+const p15: ConfigPlanificacion = {
+  algoritmo: 'fifo',
+  procesadores: 2,
+  afinidad: true,
+  overheadInterrupcion: 2,
+  procesos: [
+    {
+      id: 'PA',
+      biblioteca: 'rr',
+      quantumBiblioteca: 3,
+      hilos: [
+        { id: 'ULT1', llegada: 0, rafagas: [2, 3, 2] },
+        { id: 'ULT2', llegada: 1, rafagas: [2, 2, 3] },
+      ],
+    },
+    {
+      id: 'PB',
+      biblioteca: 'rr',
+      quantumBiblioteca: 3,
+      hilos: [
+        { id: 'ULT3', llegada: 0, rafagas: [6] },
+        { id: 'ULT4', llegada: 2, rafagas: [7] },
+      ],
+    },
+  ],
+}
+
 const casos: Caso[] = [
+  {
+    examen: '1P 1C2025 TT · Ej. 3 (RR Q=3, SJF sin desalojo; grado 2 por proceso con suspensión)',
+    config: p12,
+    leyenda: { a: 'KLT1', '1': 'ULT1', '2': 'ULT2', b: 'KLT3', '3': 'ULT3', '4': 'ULT4', d: 'KLT5' },
+    oficial: ['aa11bbb33ddddd444b433b33a2-211'],
+    fin: { KLT5: 14, ULT4: 19, KLT3: 22, ULT3: 24, KLT1: 25, ULT2: 28, ULT1: 30 },
+  },
+  {
+    examen: '1P 1C2026 TT · Ej. 3 (2 CPUs, biblioteca RR Q=3, SO 2 u.t. por interrupción)',
+    config: p15,
+    leyenda: { '1': 'ULT1', '2': 'ULT2', '3': 'ULT3', '4': 'ULT4' },
+    oficial: ['11---SS22--SS11222', '3334443334444-----'],
+    fin: { ULT3: 9, ULT4: 13, ULT1: 15, ULT2: 18 },
+  },
   {
     examen: '1P 1C2024 TM · Ej. 1 (VRR Q=3, FIFO; A wrapper, B jacketing)',
     config: {
@@ -258,8 +336,25 @@ describe('hilos (ULT/KLT) vs. resoluciones oficiales de la cátedra', () => {
     if (fin) expect(fines(config)).toMatchObject(fin)
   })
 
-  it.skip('1P 1C2025 TT · Ej. 3: suspende por prioridad al llegar al grado de multiprogramación (mediano plazo, no modelado)', () => {})
-  it.skip('1P 1C2026 TT · Ej. 3: el SO ocupa 2 u.t. de CPU por interrupción (overhead del SO, no modelado)', () => {})
+  it('1P 1C2025 TT · Ej. 3: suspensiones (PB en t7, PA en t9), vueltas (t14, t22) y E/S', () => {
+    const r = simularPlanificacion(p12)
+    const tramo = (id: string, estado: string) =>
+      r.ticks.filter((t) => t.estados[id] === estado).map((t) => t.t)
+    expect(tramo('KLT3', 'suspendido')).toEqual([7, 8, 9, 10, 11, 12, 13])
+    expect(tramo('KLT1', 'suspendido')).toEqual(rango(9, 22))
+    expect(tramo('ULT1', 'suspendido')).toEqual(rango(9, 22))
+    expect(r.ticks.map((t) => t.io.join('') || '-')).toEqual(
+      ['-', '-', ...Array(5).fill('KLT1'), 'ULT1', 'ULT1', 'ULT3', 'ULT3', 'ULT3', '-', '-', '-', '-', '-',
+        'ULT4', 'KLT3', ...Array(7).fill('-'), 'ULT2', '-', '-', '-'],
+    )
+  })
+  it('1P 1C2026 TT · Ej. 3: el SO ocupa CPU 1 en t5–6 y t11–12; E/S de ULT1 (t2–4) y ULT2 (t9–10)', () => {
+    const r = simularPlanificacion(p15)
+    expect(r.ticks.map((t) => t.io.join('') || '-').join(',')).toBe(
+      '-,-,ULT1,ULT1,ULT1,-,-,-,-,ULT2,ULT2,-,-,-,-,-,-,-',
+    )
+    expect(r.ticks.filter((t) => t.estados.ULT1 === 'espera-so').map((t) => t.t)).toEqual([5, 6])
+  })
   it.skip('1R 1C2026 TM · Ej. 4: el Gantt dado es el de un estudiante, con un error a propósito', () => {})
 })
 
@@ -326,6 +421,31 @@ describe('modos de E/S de un ULT (guía de Hilos, Ej. 1: todo FIFO)', () => {
 })
 
 describe('reglas del modelo', () => {
+  it('grado por proceso: los KLTs de un mismo proceso ocupan un solo lugar', () => {
+    const procesos = (proceso?: string): ConfigPlanificacion['procesos'] => [
+      { id: 'A1', proceso, llegada: 0, rafagas: [2] },
+      { id: 'B', llegada: 0, rafagas: [1] },
+      { id: 'A2', proceso, llegada: 1, rafagas: [1] },
+    ]
+    const cpu = (c: ConfigPlanificacion) => simularPlanificacion(c).ticks.map((t) => t.cpu)
+    const base = { algoritmo: 'fifo' as const, multiprogramacion: 1 }
+    expect(cpu({ ...base, procesos: procesos('P') })).toEqual(['A1', 'A1', 'A2', 'B'])
+    expect(cpu({ ...base, procesos: procesos() })).toEqual(['A1', 'A1', 'B', 'A2'])
+  })
+
+  it('interrupción sin CPU libre: el SO pausa al que ejecuta, que después sigue', () => {
+    const r = simularPlanificacion({
+      algoritmo: 'fifo',
+      overheadInterrupcion: 1,
+      procesos: [
+        { id: 'A', llegada: 0, rafagas: [1, 2, 1] },
+        { id: 'B', llegada: 0, rafagas: [5] },
+      ],
+    })
+    expect(r.ticks.map((t) => (t.so?.[0] ? 'S' : t.cpu)).join('')).toBe('ABBSBBBA')
+    expect(r.ticks[3].estados.B).toBe('listo')
+  })
+
   it('sin ULTs, un KLT se comporta como un proceso', () => {
     const base = { algoritmo: 'rr' as const, quantum: 2 }
     const r1 = simularPlanificacion({ ...base, procesos: [{ id: 'A', llegada: 0, rafagas: [3] }] })

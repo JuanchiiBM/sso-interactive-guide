@@ -1,4 +1,4 @@
-import type { ResultadoPlanificacion } from './tipos'
+import { FILA_SO, type ResultadoPlanificacion } from './tipos'
 
 /** Lo que el alumno marca en cada celda (proceso, t). 'cpu' = CPU 1 (o el único), 'cpu2' = CPU 2. */
 export type Marca = 'cpu' | 'cpu2' | 'io' | null
@@ -21,9 +21,14 @@ export interface Veredicto {
 }
 
 /** Solo cuenta como E/S el uso efectivo del dispositivo (no la espera en su cola). */
+/** Con overhead de interrupciones suma la fila "SO" (una marca por instante: la de menor CPU). */
 export function grillaEsperada(r: ResultadoPlanificacion, procesos: string[]): GrillaGantt {
-  return Object.fromEntries(
-    procesos.map((id) => [
+  const filaSO = r.ticks.map((tick): Marca => {
+    const k = tick.so?.indexOf(true) ?? -1
+    return k < 0 ? null : k === 0 ? 'cpu' : 'cpu2'
+  })
+  return Object.fromEntries([
+    ...procesos.map((id) => [
       id,
       r.ticks.map((tick): Marca => {
         const k = tick.cpus.indexOf(id)
@@ -31,7 +36,8 @@ export function grillaEsperada(r: ResultadoPlanificacion, procesos: string[]): G
         return tick.io.includes(id) ? 'io' : null
       }),
     ]),
-  )
+    ...(r.so ? [[FILA_SO, filaSO]] : []),
+  ])
 }
 
 export function verificarGantt(esperada: GrillaGantt, respuesta: GrillaGantt): Veredicto {

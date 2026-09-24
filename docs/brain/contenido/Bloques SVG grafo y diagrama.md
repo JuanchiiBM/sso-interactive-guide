@@ -34,6 +34,9 @@ Código: `src/lib/diagramas/gantt-estatico.ts`. Se usa en planificación Ej. 17�
 - La config tiene que reproducir el Gantt **oficial**: copiala de un caso ya validado en
   `catedra.test.ts` / `hilos.test.ts`. Antes de escribir el MC, corré los distractores en el
   simulador: ninguno tiene que dar el mismo Gantt.
+- **Filas explícitas** (un Gantt que el simulador no produciría, p. ej. el de un estudiante con un
+  error, Hilos Ej. 14): `filas: { K1: "CCEEE...CC" }`, con `C` = CPU, `E` = E/S, `1`/`2` = CPU n y
+  cualquier otro carácter = nada. Si hay `filas`, se ignora el resto de la config.
 - Imports **relativos** (no `@lib/`): lo importa `bloques-svg.ts`, que también carga vitest sin el alias.
 
 ## Dónde se engancha

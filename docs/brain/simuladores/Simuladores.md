@@ -13,6 +13,7 @@ Resolvedores paso a paso: lógica pura en `src/lib/simuladores/<tipo>/` + visual
   HRRN, multinivel, feedback; varios dispositivos, grado de multiprogramación, 2 CPUs; hilos ULT/KLT
   con biblioteca, syscall directa / wrapper / jacketing).
 - [[Patrón — Desafío antes de la Resolución]] — la respuesta se ve recién al acertar.
+- [[Simulador de Gantt de Código]] — sentencias con duración + semáforos/recursos bajo un planificador (P-19…P-25).
 - [[Verificador de Semáforos]] — ejercicios de código con tests sobre todas las intercalaciones.
 - [[Cómo agregar un simulador]] — receta para un `kind` nuevo.
 

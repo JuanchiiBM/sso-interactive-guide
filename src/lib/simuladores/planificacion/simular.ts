@@ -4,6 +4,7 @@
  */
 import {
   esKlt,
+  FILA_SO,
   type AlgoritmoBase,
   type AlgoritmoBiblioteca,
   type ColaConfig,
@@ -83,6 +84,16 @@ interface Cpu {
   id: string | null
   usado: number
   limite: number | null
+  /** Interrupciones que el SO atiende en esta CPU (la primera se está atendiendo). */
+  so: { h: Hilo; restante: number }[]
+}
+
+/** Proceso para el grado de multiprogramación: agrupa sus KLTs (`proceso` en la config). */
+interface Grupo {
+  id: string
+  prioridad: number
+  klts: Pcb[]
+  estado: 'fuera' | 'new' | 'memoria' | 'suspendido' | 'fin'
 }
 
 interface DatosHilo {
@@ -128,6 +139,8 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
   const multicola = algoritmo === 'multinivel' || algoritmo === 'feedback'
   const desalojoEntreColas = multicola && (config.desalojoEntreColas ?? true)
   const trasIO = config.trasIO ?? 'misma'
+  const suspension = grado != null && (config.suspensionPorPrioridad ?? false)
+  const overhead = config.overheadInterrupcion ?? 0
 
   if ((algoritmo === 'rr' || algoritmo === 'vrr') && !quantum) {
     throw new Error(
@@ -187,16 +200,41 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
   }
   const todos = [...pcbs.values()]
   const get = (id: string) => pcbs.get(id)!
+  const grupos = new Map<string, Grupo>()
+  const grupoDe = new Map<string, Grupo>()
+  for (const p of config.procesos) {
+    const gid = p.proceso ?? p.id
+    if (gid !== p.id && pcbs.has(gid)) throw new Error(`El proceso ${gid} tiene el id de un KLT`)
+    if (!grupos.has(gid)) {
+      grupos.set(gid, { id: gid, prioridad: get(p.id).prioridad, klts: [], estado: 'fuera' })
+    }
+    grupos.get(gid)!.klts.push(get(p.id))
+    grupoDe.set(p.id, grupos.get(gid)!)
+  }
+  // Candidato a suspender: todos sus KLTs vivos (ya llegados) están en Ready
+  const enReady = (g: Grupo) => {
+    const vivos = g.klts.filter((k) => k.fin == null && k.estado !== 'nuevo')
+    return vivos.length > 0 && vivos.every((k) => k.estado === 'listo' && colas[k.cola].includes(k.id))
+  }
+  const unitario = (g: Grupo) => g.klts.length === 1 && g.klts[0].id === g.id
+  if (overhead > 0 && hilos.has(FILA_SO)) throw new Error(`"${FILA_SO}" está reservado para la fila del SO`)
   const getH = (id: string) => hilos.get(id)!
   const hayHilos = todos.some((p) => p.bib)
   const quien = hayHilos ? 'El SO' : 'El planificador'
 
   const colas: string[][] = defColas.map(() => [])
-  const cpus: Cpu[] = Array.from({ length: nCpus }, () => ({ id: null, usado: 0, limite: null }))
+  const cpus: Cpu[] = Array.from({ length: nCpus }, () => ({
+    id: null,
+    usado: 0,
+    limite: null,
+    so: [],
+  }))
   const dispositivos = new Map<string, EstadoDispositivo>()
   const conDispositivos = [...hilos.values()].some((h) => h.dispositivos?.length)
   const enParalelo = new Set<string>()
+  /** Procesos (grupos) esperando admisión, en orden de llegada. */
   const colaNew: string[] = []
+  const suspendidos: Grupo[] = []
   let admitidos = 0
   let pendientes: Entrante[] = []
   let avisos: string[] = []
@@ -404,10 +442,17 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     h.primerCPU ??= t
   }
 
+  // El proceso libera su lugar en memoria cuando terminaron todos sus KLTs
+  const liberar = (p: Pcb) => {
+    const g = grupoDe.get(p.id)!
+    if (g.estado === 'fin' || g.klts.some((k) => k.fin == null)) return
+    g.estado = 'fin'
+    admitidos -= 1
+  }
   const finKLT = (p: Pcb, instante: number) => {
     p.estado = 'fin'
     p.fin = instante
-    admitidos -= 1
+    liberar(p)
   }
 
   const vencerQuantum = (slot: Cpu, p: Pcb) => {
@@ -533,6 +578,41 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     }
   }
 
+  /** Fin de E/S ya atendido por el SO: el hilo vuelve a listos (o termina). */
+  const completarIO = (h: Hilo, instante: number) => {
+    const termino = h.rafaga >= h.rafagas.length
+    if (termino) {
+      h.estado = 'fin'
+      h.fin = instante
+    } else {
+      h.restante = h.rafagas[h.rafaga]
+    }
+    if (h.klt) {
+      finIOUlt(h, termino)
+      return
+    }
+    const p = get(h.id)
+    if (termino) {
+      liberar(p)
+      return
+    }
+    const q = colaTrasIO(p)
+    pendientes.push({ id: h.id, origen: 'io', cola: q, texto: textoTrasIO(p, q) })
+  }
+
+  // CPU de la interrupción: la del proceso si está libre, si no otra libre, si no la suya (la pausa)
+  const atenderInterrupcion = (h: Hilo) => {
+    const p = h.klt ?? get(h.id)
+    const libre = (k: number) => !cpus[k].id && !cpus[k].so.length
+    let k = p.afinidad != null && libre(p.afinidad) ? p.afinidad : cpus.findIndex((_, i) => libre(i))
+    if (k < 0) k = p.afinidad ?? 0
+    const pausa = cpus[k].id && !cpus[k].so.length ? ` (${cpus[k].id} espera sin ejecutar)` : ''
+    cpus[k].so.push({ h, restante: overhead })
+    avisos.push(
+      `Interrupción por fin de E/S de ${h.id}: el SO la atiende${cpuTxt(k)} (${overhead} u.t.)${pausa}.`,
+    )
+  }
+
   for (let t = 0; t < LIMITE_TICKS; t++) {
     if (todos.every((p) => p.fin != null)) break
     const eventos: string[] = avisos
@@ -565,36 +645,60 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
 
     const llegan = todos.filter((p) => p.llegada === t).sort((a, b) => a.id.localeCompare(b.id))
     for (const p of llegan) {
+      const g = grupoDe.get(p.id)!
       if (grado == null) {
         const texto = p.bib
           ? `Llega ${p.id} (ULTs: ${p.bib.listos.map((u) => u.id).join(', ')}) a ${nombreCola(colaNuevo(p))}.`
           : undefined
         pendientes.push({ id: p.id, origen: 'nuevo', cola: colaNuevo(p), texto })
+      } else if (g.estado === 'memoria') {
+        // KLT nuevo de un proceso ya admitido: no ocupa otro lugar
+        pendientes.push({ id: p.id, origen: 'nuevo', cola: colaNuevo(p) })
+      } else if (g.estado === 'suspendido') {
+        p.estado = 'suspendido'
       } else {
-        colaNew.push(p.id)
         p.estado = 'espera-admision'
+        if (g.estado === 'fuera') {
+          g.estado = 'new'
+          colaNew.push(g.id)
+        }
       }
     }
-    while (grado != null && colaNew.length > 0 && admitidos < grado) {
-      const p = get(colaNew.shift()!)
+    // Se liberó lugar: vuelven primero los suspendidos (mejor prioridad), después los de New (FIFO)
+    while (grado != null && admitidos < grado && (suspendidos.length || colaNew.length)) {
+      if (suspendidos.length) {
+        suspendidos.sort((a, b) => a.prioridad - b.prioridad)
+        const g = suspendidos.shift()!
+        g.estado = 'memoria'
+        admitidos += 1
+        eventos.push(`Se liberó un lugar: ${g.id} vuelve a memoria (planificador de mediano plazo).`)
+        for (const k of g.klts) {
+          if (k.estado !== 'suspendido') continue
+          const texto = `${k.id} vuelve a ${nombreCola(colaNuevo(k))}.`
+          pendientes.push({ id: k.id, origen: 'nuevo', cola: colaNuevo(k), texto })
+        }
+        continue
+      }
+      const g = grupos.get(colaNew.shift()!)!
+      g.estado = 'memoria'
       admitidos += 1
-      const texto =
-        p.llegada === t
-          ? undefined
-          : `${p.id} es admitido por el planificador de largo plazo (se liberó un lugar; grado de multiprogramación ${grado}) y entra a ${nombreCola(colaNuevo(p))}.`
-      pendientes.push({ id: p.id, origen: 'nuevo', cola: colaNuevo(p), texto })
-    }
-    for (const id of colaNew) {
-      if (get(id).llegada === t) {
-        eventos.push(
-          `Llega ${id}, pero el grado de multiprogramación (${grado}) está completo: queda en New.`,
-        )
+      for (const k of g.klts) {
+        if (k.estado !== 'espera-admision') continue
+        const unico = unitario(g)
+        const quien = unico ? k.id : `${k.id} (proceso ${g.id})`
+        const texto =
+          k.llegada === t
+            ? unico
+              ? undefined
+              : `Llega ${quien} a ${nombreCola(colaNuevo(k))}.`
+            : `${quien} es admitido por el planificador de largo plazo (se liberó un lugar; grado de multiprogramación ${grado}) y entra a ${nombreCola(colaNuevo(k))}.`
+        pendientes.push({ id: k.id, origen: 'nuevo', cola: colaNuevo(k), texto })
       }
     }
 
     const orden = (e: Entrante) => desempate.indexOf(e.origen)
     pendientes.sort((a, b) => orden(a) - orden(b) || a.id.localeCompare(b.id))
-    for (const e of pendientes) {
+    const entrar = (e: Entrante) => {
       const p = get(e.id)
       p.estado = 'listo'
       p.listoDesde = t
@@ -605,11 +709,52 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
       else if (e.origen === 'nuevo') eventos.push(`Llega ${e.id} a ${nombreCola(e.cola)}.${est}`)
       else if (e.origen === 'io') eventos.push(textoTrasIO(p, e.cola) + est)
     }
+    // Con suspensión, New se reevalúa cada vez que cambia Ready (en el orden del desempate)
+    const reevaluar = () => {
+      if (!suspension) return
+      for (let i = 0; i < colaNew.length; i++) {
+        const g = grupos.get(colaNew[i])!
+        const victima = [...grupos.values()]
+          .filter((v) => v.estado === 'memoria' && v.prioridad > g.prioridad && enReady(v))
+          .sort((a, b) => b.prioridad - a.prioridad)[0]
+        if (!victima) continue
+        victima.estado = 'suspendido'
+        suspendidos.push(victima)
+        for (const k of victima.klts) {
+          if (k.estado !== 'listo') continue
+          colas[k.cola].splice(colas[k.cola].indexOf(k.id), 1)
+          k.estado = 'suspendido'
+        }
+        colaNew.splice(i, 1)
+        g.estado = 'memoria'
+        eventos.push(
+          `${g.id} (prioridad ${g.prioridad}) tiene mayor prioridad que ${victima.id} (prioridad ${victima.prioridad}), el de menor prioridad en Ready: el SO suspende a ${victima.id} (sale de memoria) y admite a ${g.id}.`,
+        )
+        for (const k of g.klts) {
+          if (k.estado === 'espera-admision') entrar({ id: k.id, origen: 'nuevo', cola: colaNuevo(k) })
+        }
+        i = -1
+      }
+    }
+    const lote = pendientes
     pendientes = []
+    reevaluar()
+    for (const e of lote) {
+      entrar(e)
+      reevaluar()
+    }
+    for (const gid of colaNew) {
+      const g = grupos.get(gid)!
+      if (!g.klts.some((k) => k.llegada === t)) continue
+      const extra = suspension ? ' y en Ready no hay ningún proceso de menor prioridad' : ''
+      eventos.push(
+        `Llega ${gid}, pero el grado de multiprogramación (${grado}) está completo${extra}: queda en New.`,
+      )
+    }
 
     // Desalojo: por cola de mayor prioridad (multinivel) o por criterio del algoritmo de la cola
     cpus.forEach((slot, k) => {
-      if (!slot.id) return
+      if (!slot.id || slot.so.length) return
       const cand = buscar(k, t)
       if (!cand) return
       const actual = get(slot.id)
@@ -637,6 +782,10 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     const recien = cpus.map(() => false)
     cpus.forEach((slot, k) => {
       if (slot.id) return
+      if (slot.so.length) {
+        ociosa[k] = null
+        return
+      }
       const sel = buscar(k, t)
       if (!sel) {
         const esperanOtro = colas.some((c) => c.length > 0)
@@ -684,7 +833,7 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     })
 
     cpus.forEach((slot, k) => {
-      const p = slot.id ? get(slot.id) : null
+      const p = slot.id && !slot.so.length ? get(slot.id) : null
       if (p?.bib) elegirULT(p, slot, recien[k], t, eventos)
     })
 
@@ -698,15 +847,25 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
 
     const listos = colas.flat()
     const usandoIO = [...[...dispositivos.values()].flatMap((d) => d.usando ?? []), ...enParalelo]
+    const conSO = cpus.map((c) => c.so.length > 0)
     const enCpu = cpus.map((c) => {
-      if (!c.id) return null
+      if (!c.id || c.so.length) return null
       const p = get(c.id)
       return p.bib ? p.bib.actual!.id : p.id
     })
     const estados: Record<string, EstadoProceso> = {}
     for (const h of hilos.values()) {
-      estados[h.id] = h.klt && enCpu.includes(h.id) ? 'ejecutando' : h.estado
+      const k = h.klt
+      if (k && enCpu.includes(h.id)) estados[h.id] = 'ejecutando'
+      // los ULTs listos de un KLT en New o suspendido muestran el estado de su KLT
+      else if (k && h.estado === 'listo' && (k.estado === 'suspendido' || k.estado === 'espera-admision'))
+        estados[h.id] = k.estado
+      else estados[h.id] = h.estado
     }
+    // el que el SO interrumpió en su CPU espera sin ejecutar
+    cpus.forEach((c) => {
+      if (c.id && c.so.length && !get(c.id).bib) estados[c.id] = 'listo'
+    })
     ticks.push({
       t,
       cpu: enCpu[0],
@@ -724,6 +883,8 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
         dispositivos: [...dispositivos.values()].map((d) => ({ ...d, cola: [...d.cola] })),
       }),
       ...(grado != null && { nuevos: [...colaNew] }),
+      ...(suspension && { suspendidos: suspendidos.map((g) => g.id) }),
+      ...(overhead > 0 && { so: conSO }),
       ...(hayHilos && {
         bibliotecas: todos.flatMap((p) =>
           p.bib
@@ -746,6 +907,10 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     for (const id of listos) if (!get(id).bib) get(id).espera += 1
     for (const h of hilos.values()) if (h.klt && estados[h.id] === 'listo') h.espera += 1
     for (const slot of cpus) {
+      if (slot.so.length) {
+        slot.so[0].restante -= 1
+        continue
+      }
       if (!slot.id) continue
       const p = get(slot.id)
       const h = p.bib ? p.bib.actual! : p
@@ -757,38 +922,32 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     for (const id of usandoIO) getH(id).restante -= 1
 
     // ── Eventos al final del tick (instante t+1) ──
+    const interrupciones: Hilo[] = []
     for (const id of usandoIO) {
       const h = getH(id)
       if (h.restante > 0) continue
       enParalelo.delete(id)
       for (const d of dispositivos.values()) if (d.usando === id) d.usando = null
       h.rafaga += 1
-      const termino = h.rafaga >= h.rafagas.length
-      if (termino) {
-        h.estado = 'fin'
-        h.fin = t + 1
-      } else {
-        h.restante = h.rafagas[h.rafaga]
-      }
-      if (h.klt) {
-        finIOUlt(h, termino)
-        continue
-      }
-      if (termino) {
-        admitidos -= 1
-        continue
-      }
-      const p = get(id)
-      const q = colaTrasIO(p)
-      pendientes.push({ id, origen: 'io', cola: q, texto: textoTrasIO(p, q) })
+      if (overhead > 0) {
+        h.estado = 'espera-so'
+        interrupciones.push(h)
+      } else completarIO(h, t + 1)
     }
+    cpus.forEach((slot, k) => {
+      const i = slot.so[0]
+      if (!conSO[k] || i.restante > 0) return
+      slot.so.shift()
+      avisos.push(`El SO termina de atender la interrupción de ${i.h.id}${cpuTxt(k)}.`)
+      completarIO(i.h, t + 1)
+    })
 
-    for (const slot of cpus) {
-      if (!slot.id) continue
+    cpus.forEach((slot, k) => {
+      if (!slot.id || conSO[k]) return
       const p = get(slot.id)
       if (p.bib) {
         finTickULT(p, slot, t + 1)
-        continue
+        return
       }
       if (p.restante === 0) {
         slot.id = null
@@ -796,7 +955,7 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
         if (p.rafaga >= p.rafagas.length) {
           p.estado = 'fin'
           p.fin = t + 1
-          admitidos -= 1
+          liberar(p)
           avisos.push(`${p.id} finaliza.`)
         } else {
           p.restante = p.rafagas[p.rafaga]
@@ -808,8 +967,9 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
       } else if (slot.limite != null && slot.usado >= slot.limite) {
         vencerQuantum(slot, p)
       }
-    }
+    })
     if (hayHilos) cerrarBibliotecas(t + 1)
+    for (const h of interrupciones) atenderInterrupcion(h)
   }
 
   const metricas: MetricasProceso[] = [...hilos.values()].map((p) => ({
@@ -830,6 +990,7 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     fin: Math.max(...metricas.map((m) => m.finalizacion)),
     procesadores: nCpus,
     hilos: [...hilos.keys()],
+    ...(overhead > 0 && { so: true }),
     ...(hayHilos && {
       kltDe: Object.fromEntries(
         [...hilos.values()].flatMap((h) => (h.klt ? [[h.id, h.klt.id]] : [])),

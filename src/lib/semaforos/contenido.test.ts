@@ -61,13 +61,20 @@ describe('multiple choice del contenido', () => {
       )
     })
 
-  it('la opción correcta no suele ser la más larga (regalaría la respuesta)', () => {
-    const delatoras = preguntas.filter(({ p }) => {
+  // por largo, la correcta tiene que caer parejo en los 4 lugares: si no, "la más larga" o
+  // "la segunda más corta" se vuelven trucos para acertar sin saber
+  it('el largo de la correcta no la delata (lugar por largo repartido)', () => {
+    const cuatro = preguntas.filter(({ p }) => p.opciones.length === 4)
+    const lugares = [0, 0, 0, 0]
+    for (const { p } of cuatro) {
       const largos = p.opciones.map((o) => o.texto.length)
-      return largos[p.correcta] === Math.max(...largos)
-    })
-    // al azar sería ~1 de cada 4: se tolera hasta 30%
-    expect(delatoras.length / preguntas.length).toBeLessThanOrEqual(0.3)
+      lugares[[...largos].sort((a, b) => a - b).indexOf(largos[p.correcta])]++
+    }
+    const proporciones = lugares.map((n) => Math.round((n / cuatro.length) * 100))
+    for (const pct of proporciones) {
+      expect(pct, `lugar por largo de la correcta (%): ${proporciones.join(' / ')}`).toBeGreaterThanOrEqual(15)
+      expect(pct, `lugar por largo de la correcta (%): ${proporciones.join(' / ')}`).toBeLessThanOrEqual(35)
+    }
   })
 
   it('la posición de la correcta varía', () => {

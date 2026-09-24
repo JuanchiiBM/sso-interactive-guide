@@ -35,6 +35,8 @@ const kltSchema = z.object({
   modoIO: z.enum(['directa', 'wrapper', 'jacketing']).optional(),
   prioridad: z.number().optional(),
   cola: z.number().int().positive().optional(),
+  /** Proceso al que pertenece (grado de multiprogramación por proceso). */
+  proceso: z.string().optional(),
   /** ULTs; los que llegan juntos entran a la biblioteca en este orden. */
   hilos: z.array(procesoSchema).min(1),
 })
@@ -61,6 +63,10 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
     ioUnica: z.boolean().optional(),
     /** Máximo de procesos admitidos (listos + ejecutando + bloqueados); el resto espera en New. */
     multiprogramacion: z.number().int().positive().optional(),
+    /** Con grado lleno, un proceso nuevo de mayor prioridad entra suspendiendo al peor en Ready. */
+    suspensionPorPrioridad: z.boolean().optional(),
+    /** u.t. de CPU del SO por cada interrupción de fin de E/S (fila "SO" en el Gantt). */
+    overheadInterrupcion: z.number().int().nonnegative().optional(),
     /** SJF/SRT con estimación: T_i = α·T_{i-1} + (1−α)·R_{i-1}. */
     alfa: z.number().min(0).max(1).optional(),
     /** Qué pondera α: 'estimacion' (fórmula de la guía, default) o 'real' (varios parciales). */
@@ -100,8 +106,34 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
             estimacionInicial: z.number().nonnegative().optional(),
             estimacionAnterior: z.number().nonnegative().optional(),
             rafagaAnterior: z.number().nonnegative().optional(),
+            /** Proceso al que pertenece este KLT (grado de multiprogramación por proceso). */
+            proceso: z.string().optional(),
           }),
         ]),
+      )
+      .min(1),
+  }),
+  /** Gantt de código: sentencias con duración + semáforos/recursos (ver brain). */
+  z.object({
+    kind: z.literal('codigo'),
+    etiqueta: z.string().optional(),
+    algoritmo: z.enum(['fifo', 'rr', 'prioridades', 'prioridades-desalojo']),
+    quantum: z.number().positive().optional(),
+    duracion: z.number().int().nonnegative().optional(),
+    atomicas: z.boolean().optional(),
+    semaforos: z.record(z.string(), z.number().int().nonnegative()).optional(),
+    recursos: z.record(z.string(), z.number().int().positive()).optional(),
+    detector: z.object({ sentencia: z.string() }).optional(),
+    hasta: z.number().int().positive().optional(),
+    hastaQueTerminen: z.array(z.string()).optional(),
+    procesos: z
+      .array(
+        z.object({
+          id: z.string(),
+          llegada: z.number().int().nonnegative(),
+          prioridad: z.number().optional(),
+          codigo: z.string(),
+        }),
       )
       .min(1),
   }),

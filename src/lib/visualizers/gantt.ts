@@ -14,7 +14,12 @@ const CELDA: Partial<Record<EstadoProceso, { clase: string; label: string }>> = 
   bloqueado: { clase: 'gantt-io', label: 'E/S' },
   'espera-io': { clase: 'gantt-espera-io', label: 'Esperando dispositivo' },
   'espera-admision': { clase: 'gantt-admision', label: 'En New (sin admitir)' },
+  suspendido: { clase: 'gantt-suspendido', label: 'Suspendido (fuera de memoria)' },
+  'espera-so': { clase: 'gantt-espera-so', label: 'Esperando que el SO atienda su interrupción' },
 }
+/** Solo aparecen en la leyenda si algún hilo pasó por ese estado. */
+const OPCIONALES: EstadoProceso[] = ['espera-admision', 'suspendido', 'espera-so']
+const COLOR_SO = 'var(--fg-soft)'
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -46,7 +51,12 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
     for (const tick of resultado.ticks) {
       const id = tick.cpus[k]
       const celda = el('div', 'gantt-cell')
-      if (tick.t <= limite && id) {
+      if (tick.t <= limite && tick.so?.[k]) {
+        celda.classList.add('gantt-cpu')
+        celda.style.setProperty('--c', COLOR_SO)
+        celda.textContent = 'SO'
+        celda.title = `CPU ${k + 1} · t=${tick.t}: el SO atiende una interrupción`
+      } else if (tick.t <= limite && id) {
         celda.classList.add('gantt-cpu')
         celda.style.setProperty('--c', color(id))
         celda.textContent = id
@@ -68,7 +78,8 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
           celda.classList.add(meta.clase)
           const k = tick.cpus.indexOf(id)
           if (multi && k >= 0) celda.textContent = String(k + 1)
-          celda.title = `${etiqueta(id)} · t=${tick.t}: ${meta.label}${multi && k >= 0 ? ` ${k + 1}` : ''}`
+          const sentencia = tick.sentencias?.[id] ? ` (${tick.sentencias[id]})` : ''
+          celda.title = `${etiqueta(id)} · t=${tick.t}: ${etiquetaEstado(state, estado)}${multi && k >= 0 ? ` ${k + 1}` : ''}${sentencia}`
         }
         celda.style.setProperty('--c', colorProceso(i))
       }
@@ -77,13 +88,32 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
     }
   })
 
+  // fila del SO: CPU que usa para atender interrupciones
+  if (resultado.so) {
+    grid.append(el('div', 'gantt-label pr-2', 'SO'))
+    for (const tick of resultado.ticks) {
+      const celda = el('div', 'gantt-cell')
+      const k = tick.so?.indexOf(true) ?? -1
+      if (tick.t <= limite && k >= 0) {
+        celda.classList.add('gantt-cpu')
+        celda.style.setProperty('--c', COLOR_SO)
+        if (multi) celda.textContent = String(k + 1)
+        celda.title = `SO · t=${tick.t}: atiende una interrupción${multi ? ` en la CPU ${k + 1}` : ''}`
+      }
+      if (tick.t === hasta) celda.classList.add('gantt-actual')
+      grid.append(celda)
+    }
+  }
+
   grid.append(el('div'))
   for (const tick of resultado.ticks) grid.append(el('div', 'gantt-tiempo', String(tick.t)))
 
   const panel = el('div', 'flex flex-wrap gap-x-6 gap-y-2 text-xs text-fg-soft')
   if (tickActual) {
     tickActual.cpus.forEach((id, k) =>
-      panel.append(chip(multi ? `CPU ${k + 1}` : 'CPU', id ? etiqueta(id) : '—')),
+      panel.append(
+        chip(multi ? `CPU ${k + 1}` : 'CPU', tickActual.so?.[k] ? 'SO (interrupción)' : id ? etiqueta(id) : '—'),
+      ),
     )
     // con ULTs: quantum que le queda a cada KLT en CPU y la decisión de cada biblioteca
     tickActual.quantum?.forEach((q, k) => {
@@ -105,11 +135,23 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
         const cola = d.cola.length ? ` (cola: ${d.cola.join(' → ')})` : ''
         panel.append(chip(d.nombre, `${d.usando ?? '—'}${cola}`))
       }
+    } else if (tickActual.sincro) {
+      const id = tickActual.cpu
+      if (id && tickActual.sentencias?.[id])
+        panel.append(chip('Ejecuta', tickActual.sentencias[id]))
+      panel.append(chip('Bloqueados', tickActual.io.join(', ') || '—'))
+      for (const s of tickActual.sincro) {
+        const duenos = s.duenos?.length ? ` · de ${s.duenos.join(', ')}` : ''
+        const cola = s.cola.length ? ` (cola: ${s.cola.join(' → ')})` : ''
+        panel.append(chip(s.nombre, `${s.valor}${duenos}${cola}`))
+      }
     } else {
       panel.append(chip('E/S', tickActual.io.join(', ') || '—'))
       if (tickActual.colaIO.length) panel.append(chip('Cola E/S', tickActual.colaIO.join(' → ')))
     }
     if (tickActual.nuevos) panel.append(chip('New', tickActual.nuevos.join(' → ') || '∅'))
+    if (tickActual.suspendidos)
+      panel.append(chip('Suspendidos', tickActual.suspendidos.join(', ') || '∅'))
   }
 
   const scroller = el('div', 'overflow-x-auto pb-2')
@@ -124,15 +166,30 @@ function chip(label: string, value: string): HTMLElement {
   return c
 }
 
-function leyenda({ resultado }: EstadoGantt): HTMLElement {
+/** En el Gantt de código "bloqueado" es en un semáforo, recurso o sleep, no E/S. */
+function etiquetaEstado({ resultado }: EstadoGantt, estado: EstadoProceso): string {
+  if (estado === 'bloqueado' && resultado.bloqueoSincro) return 'Bloqueado'
+  return CELDA[estado]?.label ?? estado
+}
+
+function leyenda(state: EstadoGantt): HTMLElement {
+  const { resultado } = state
   const box = el('div', 'flex flex-wrap gap-4 text-[11px] text-muted')
   const usados = new Set(resultado.ticks.flatMap((t) => Object.values(t.estados)))
   for (const [estado, meta] of Object.entries(CELDA)) {
-    if (estado === 'espera-admision' && !usados.has(estado)) continue
+    const opcional = OPCIONALES.includes(estado as EstadoProceso) || resultado.bloqueoSincro
+    if (opcional && !usados.has(estado as EstadoProceso)) continue
     const item = el('span', 'inline-flex items-center gap-1.5')
     const muestra = el('span', `gantt-cell ${meta!.clase} inline-block size-3`)
     muestra.style.setProperty('--c', 'var(--muted)')
-    item.append(muestra, meta!.label)
+    item.append(muestra, etiquetaEstado(state, estado as EstadoProceso))
+    box.append(item)
+  }
+  if (resultado.so) {
+    const item = el('span', 'inline-flex items-center gap-1.5')
+    const muestra = el('span', 'gantt-cell gantt-cpu inline-block size-3')
+    muestra.style.setProperty('--c', COLOR_SO)
+    item.append(muestra, 'SO (atiende interrupciones)')
     box.append(item)
   }
   return box
