@@ -112,8 +112,8 @@ describe('Estimación de ráfagas (SJF/SRT)', () => {
         { id: 'A', llegada: 0, rafagas: [2, 1, 2], estimacionAnterior: 4, rafagaAnterior: 8 },
       ],
     })
-    expect(texto).toContain('T = 0,25·4 + 0,75·8 = 7')
-    expect(texto).toContain('T = 0,25·7 + 0,75·2 = 3,25')
+    expect(texto).toContain('T = 0,25·4 (estimada) + 0,75·8 (real) = 7')
+    expect(texto).toContain('T = 0,25·7 (estimada) + 0,75·2 (real) = 3,25')
   })
 })
 

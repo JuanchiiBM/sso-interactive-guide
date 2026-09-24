@@ -41,8 +41,10 @@ export interface ConfigPlanificacion {
   prioridadMenorEsMejor?: boolean
   /** Máximo de procesos admitidos (listos + ejecutando + bloqueados). Sin valor = sin límite. */
   multiprogramacion?: number
-  /** SJF/SRT con estimación: T_i = α·T_{i-1} + (1−α)·R_{i-1}. */
+  /** SJF/SRT con estimación. Con `alfaSobre: 'estimacion'` (default): T_i = α·T_{i-1} + (1−α)·R_{i-1}. */
   alfa?: number
+  /** Qué término pondera α; la cátedra usa las dos según el examen (con α = 0,5 dan igual). */
+  alfaSobre?: 'estimacion' | 'real'
   /** Multinivel / feedback: colas de mayor a menor prioridad. */
   colas?: ColaConfig[]
   /** Multinivel / feedback: la llegada a una cola superior desaloja (default true). */

@@ -186,8 +186,9 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
       tAnt = p.est[r - 2]
       rAnt = p.rafagas[r - 2]
     }
-    p.est[r] = alfa * tAnt + (1 - alfa) * rAnt
-    return ` Estimación de su ráfaga: T = ${fmt(alfa)}·${fmt(tAnt)} + ${fmt(1 - alfa)}·${fmt(rAnt)} = ${fmt(p.est[r])}.`
+    const pesoEst = config.alfaSobre === 'real' ? 1 - alfa : alfa
+    p.est[r] = pesoEst * tAnt + (1 - pesoEst) * rAnt
+    return ` Estimación de su ráfaga: T = ${fmt(pesoEst)}·${fmt(tAnt)} (estimada) + ${fmt(1 - pesoEst)}·${fmt(rAnt)} (real) = ${fmt(p.est[r])}.`
   }
 
   /** Devuelve el nombre del dispositivo si es uno nombrado (para la descripción). */

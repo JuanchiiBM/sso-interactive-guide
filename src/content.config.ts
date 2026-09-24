@@ -46,6 +46,8 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
     multiprogramacion: z.number().int().positive().optional(),
     /** SJF/SRT con estimación: T_i = α·T_{i-1} + (1−α)·R_{i-1}. */
     alfa: z.number().min(0).max(1).optional(),
+    /** Qué pondera α: 'estimacion' (fórmula de la guía, default) o 'real' (varios parciales). */
+    alfaSobre: z.enum(['estimacion', 'real']).optional(),
     /** Multinivel / feedback: colas de mayor a menor prioridad. */
     colas: z
       .array(

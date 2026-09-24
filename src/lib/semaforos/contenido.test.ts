@@ -42,3 +42,26 @@ describe('desafíos de semáforos del contenido', () => {
     })
   }
 })
+
+describe('multiple choice del contenido', () => {
+  const preguntas = readdirSync(DIR, { recursive: true, encoding: 'utf8' })
+    .filter((f: string) => f.endsWith('.md'))
+    .flatMap((f: string) => {
+      const fm = parse(readFileSync(join(DIR, f), 'utf8').match(FRONTMATTER)![1])
+      return ((fm.preguntas ?? []) as { opciones: { texto: string }[]; correcta: number }[]).map((p) => ({ f, p }))
+    })
+
+  it('la opción correcta no suele ser la más larga (regalaría la respuesta)', () => {
+    const delatoras = preguntas.filter(({ p }) => {
+      const largos = p.opciones.map((o) => o.texto.length)
+      return largos[p.correcta] === Math.max(...largos)
+    })
+    // al azar sería ~1 de cada 4: se tolera hasta 30%
+    expect(delatoras.length / preguntas.length).toBeLessThanOrEqual(0.3)
+  })
+
+  it('la posición de la correcta varía', () => {
+    const posiciones = new Set(preguntas.map(({ p }) => p.correcta))
+    expect(posiciones.size).toBeGreaterThanOrEqual(3)
+  })
+})
