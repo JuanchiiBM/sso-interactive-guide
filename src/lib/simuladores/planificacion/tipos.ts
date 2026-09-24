@@ -22,6 +22,8 @@ export interface ProcesoInput {
   /** Alternativa a `estimacionInicial`: última ráfaga previa (estimada y real). */
   estimacionAnterior?: number
   rafagaAnterior?: number
+  /** Proceso al que pertenece este KLT (grado de multiprogramación por proceso). Default: su id. */
+  proceso?: string
 }
 
 /** Cómo pide E/S un ULT: syscall directa, wrapper de la biblioteca o wrapper con jacketing. */
@@ -49,7 +51,12 @@ export interface KltInput {
   modoIO?: ModoIO
   prioridad?: number
   cola?: number
+  /** Proceso al que pertenece este KLT (grado de multiprogramación por proceso). Default: su id. */
+  proceso?: string
 }
+
+/** Id de la fila del Gantt que muestra el uso de CPU del SO (overhead de interrupciones). */
+export const FILA_SO = 'SO'
 
 export const esKlt = (p: ProcesoInput | KltInput): p is KltInput => 'hilos' in p
 
@@ -71,6 +78,10 @@ export interface ConfigPlanificacion {
   prioridadMenorEsMejor?: boolean
   /** Máximo de procesos admitidos (listos + ejecutando + bloqueados). Sin valor = sin límite. */
   multiprogramacion?: number
+  /** Con grado lleno, un proceso nuevo de mayor prioridad entra suspendiendo al peor en Ready. */
+  suspensionPorPrioridad?: boolean
+  /** u.t. de CPU que usa el SO para atender cada interrupción de fin de E/S (default 0). */
+  overheadInterrupcion?: number
   /** SJF/SRT con estimación. Con `alfaSobre: 'estimacion'` (default): T_i = α·T_{i-1} + (1−α)·R_{i-1}. */
   alfa?: number
   /** Qué término pondera α; la cátedra usa las dos según el examen (con α = 0,5 dan igual). */
@@ -88,7 +99,17 @@ export interface ConfigPlanificacion {
 }
 
 export type EstadoProceso =
-  'nuevo' | 'espera-admision' | 'listo' | 'ejecutando' | 'bloqueado' | 'espera-io' | 'fin'
+  | 'nuevo'
+  | 'espera-admision'
+  | 'listo'
+  | 'ejecutando'
+  | 'bloqueado'
+  | 'espera-io'
+  | 'fin'
+  /** Fuera de memoria (planificador de mediano plazo). */
+  | 'suspendido'
+  /** Terminó su E/S y espera que el SO atienda la interrupción. */
+  | 'espera-so'
 
 export interface EstadoDispositivo {
   nombre: string
@@ -115,6 +136,10 @@ export interface Tick {
   dispositivos?: EstadoDispositivo[]
   /** Solo con grado de multiprogramación: esperan admisión en New. */
   nuevos?: string[]
+  /** Solo con suspensión por prioridad: procesos suspendidos (fuera de memoria). */
+  suspendidos?: string[]
+  /** Solo con overhead de interrupciones: el SO usa cada CPU en este tick. */
+  so?: boolean[]
   /** Solo con ULTs: ULT elegido y cola de cada biblioteca. */
   bibliotecas?: { klt: string; elegido: string | null; listos: string[] }[]
   /** Solo con ULTs: quantum que le queda al KLT de cada CPU (null = sin quantum u ociosa). */
@@ -151,6 +176,8 @@ export interface ResultadoPlanificacion {
   hilos: string[]
   /** Solo con ULTs: KLT de cada ULT. */
   kltDe?: Record<string, string>
+  /** Con overhead de interrupciones: el Gantt agrega la fila "SO". */
+  so?: boolean
   /** Solo Gantt de código: `tick.io` son los bloqueados (semáforo, recurso o sleep), no la E/S. */
   bloqueoSincro?: boolean
 }

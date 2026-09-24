@@ -35,6 +35,8 @@ const kltSchema = z.object({
   modoIO: z.enum(['directa', 'wrapper', 'jacketing']).optional(),
   prioridad: z.number().optional(),
   cola: z.number().int().positive().optional(),
+  /** Proceso al que pertenece (grado de multiprogramación por proceso). */
+  proceso: z.string().optional(),
   /** ULTs; los que llegan juntos entran a la biblioteca en este orden. */
   hilos: z.array(procesoSchema).min(1),
 })
@@ -61,6 +63,10 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
     ioUnica: z.boolean().optional(),
     /** Máximo de procesos admitidos (listos + ejecutando + bloqueados); el resto espera en New. */
     multiprogramacion: z.number().int().positive().optional(),
+    /** Con grado lleno, un proceso nuevo de mayor prioridad entra suspendiendo al peor en Ready. */
+    suspensionPorPrioridad: z.boolean().optional(),
+    /** u.t. de CPU del SO por cada interrupción de fin de E/S (fila "SO" en el Gantt). */
+    overheadInterrupcion: z.number().int().nonnegative().optional(),
     /** SJF/SRT con estimación: T_i = α·T_{i-1} + (1−α)·R_{i-1}. */
     alfa: z.number().min(0).max(1).optional(),
     /** Qué pondera α: 'estimacion' (fórmula de la guía, default) o 'real' (varios parciales). */
@@ -100,6 +106,8 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
             estimacionInicial: z.number().nonnegative().optional(),
             estimacionAnterior: z.number().nonnegative().optional(),
             rafagaAnterior: z.number().nonnegative().optional(),
+            /** Proceso al que pertenece este KLT (grado de multiprogramación por proceso). */
+            proceso: z.string().optional(),
           }),
         ]),
       )

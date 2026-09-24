@@ -1,6 +1,6 @@
 import type { Step } from '@lib/playback'
 import { simularPlanificacion } from './simular'
-import type { ConfigPlanificacion, ResultadoPlanificacion } from './tipos'
+import type { ConfigPlanificacion, ResultadoPlanificacion, Tick } from './tipos'
 
 export interface EstadoGantt {
   resultado: ResultadoPlanificacion
@@ -20,7 +20,7 @@ export function pasosDeResultado(resultado: ResultadoPlanificacion): Step<Estado
 
   const pasos: Step<EstadoGantt>[] = resultado.ticks.map((tick) => ({
     state: { resultado, procesos, hasta: tick.t },
-    descripcion: `t=${tick.t}: ${tick.eventos.join(' ') || sigue(tick.cpus)}`,
+    descripcion: `t=${tick.t}: ${tick.eventos.join(' ') || sigue(tick)}`,
   }))
 
   pasos.push({
@@ -38,9 +38,11 @@ export const etiquetaHilo = (r: ResultadoPlanificacion, id: string): string =>
 export const columnaEtiquetas = (r: ResultadoPlanificacion): string =>
   r.kltDe ? 'max-content' : '3rem'
 
-function sigue(cpus: (string | null)[]): string {
-  if (cpus.length === 1) return `${cpus[0] ?? 'Nadie'} sigue en CPU.`
-  return cpus.map((id, k) => `CPU ${k + 1}: ${id ?? 'ociosa'}.`).join(' ')
+function sigue({ cpus, so }: Tick): string {
+  const quien = (id: string | null, k: number) =>
+    so?.[k] ? 'el SO atiende una interrupción' : (id ?? 'ociosa')
+  if (cpus.length === 1) return so?.[0] ? 'El SO sigue atendiendo la interrupción.' : `${cpus[0] ?? 'Nadie'} sigue en CPU.`
+  return cpus.map((id, k) => `CPU ${k + 1}: ${quien(id, k)}.`).join(' ')
 }
 
 const fmt = (n: number) => n.toLocaleString('es-AR', { maximumFractionDigits: 2 })
