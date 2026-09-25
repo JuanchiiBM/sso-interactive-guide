@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config'
 import tailwindcss from '@tailwindcss/vite'
 import { satteri } from '@astrojs/markdown-satteri'
 import { bloquesSVGPlugin } from './src/lib/markdown/bloques-svg.ts'
+import { celdasACalcularPlugin } from './src/lib/markdown/celdas-a-calcular.ts'
 
 export default defineConfig({
   // TODO: reemplazar por el dominio final de Vercel
@@ -10,9 +11,9 @@ export default defineConfig({
   devToolbar: { enabled: false },
   trailingSlash: 'ignore',
   markdown: {
-    // ```grafo y ```diagrama se convierten en SVG en build (sin JS en el cliente)
+    // ```grafo y ```diagrama → SVG en build; celdas "(a calcular)" de tablas → input
     // @ts-expect-error el tipo del visitor de Sätteri es más estricto que el nuestro
-    processor: satteri({ mdastPlugins: [bloquesSVGPlugin] }),
+    processor: satteri({ mdastPlugins: [bloquesSVGPlugin, celdasACalcularPlugin] }),
     shikiConfig: { themes: { light: 'github-light', dark: 'github-dark' } },
   },
   vite: {

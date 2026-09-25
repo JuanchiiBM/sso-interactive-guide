@@ -96,6 +96,28 @@
   color: var(--fg);
   font-weight: 600;
 }
+/* Celdas "(a calcular)" de los enunciados: campo para anotar el valor (ver celdas-a-calcular.ts) */
+.prose .campo-a-calcular {
+  width: 4.25rem;
+  padding: 0.2em 0.45em;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+}
+.prose .campo-a-calcular::placeholder {
+  color: var(--muted);
+}
+.prose .campo-a-calcular:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.prose .campo-a-calcular:user-invalid {
+  border-color: var(--bad);
+}
 .prose hr {
   border: 0;
   border-top: 1px solid var(--line);

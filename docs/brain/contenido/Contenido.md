@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [contenido, teoría, teoria, ejercicios, markdown, guías]
 tags: [moc, contenido]
-actualizado: 2026-09-23
+actualizado: 2026-09-25
 ---
 
 # Contenido
@@ -12,6 +12,7 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 - [[Formato de un Ejercicio]] — frontmatter, convenciones de markdown y columnas de código.
 - [[Formato de un Tema de Teoría]] — estructura de cada tema del resumen.
 - [[Bloques SVG grafo y diagrama]] — ```grafo y ```diagrama en markdown.
+- [[Celdas a calcular en enunciados]] — celdas `(a calcular)` de tablas → campo para anotar.
 - [[Fuentes y Derechos del Material]] — de dónde sale cada cosa y qué no se sube.
 - [[Content Collections Temas y Ejercicios]] — cómo se cargan y rutean.
 
