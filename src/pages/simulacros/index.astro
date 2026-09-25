@@ -5,41 +5,57 @@ import { getEjercicios, getParciales, getTemas } from '@lib/catalogo'
 
 // el más reciente primero
 const parciales = (await getParciales()).reverse()
-const tituloTema = new Map((await getTemas(1)).map((t) => [t.id, t.data.titulo]))
+const tituloTema = new Map((await getTemas()).map((t) => [t.id, t.data.titulo]))
 const temaDe = new Map((await getEjercicios()).map((e) => [e.id, e.data.tema.id]))
 const temas = (practica: string[]) => [
   ...new Set(practica.map((id) => tituloTema.get(temaDe.get(id)!) ?? '')),
 ]
+const secciones = [
+  { numero: 1, titulo: '1er parcial' },
+  { numero: 2, titulo: '2do parcial' },
+]
+  .map((s) => ({ ...s, parciales: parciales.filter((p) => p.numero === s.numero) }))
+  .filter((s) => s.parciales.length > 0)
 const chip =
   'rounded-full border border-line px-3 py-1 text-xs text-fg-soft hover:bg-hover aria-pressed:border-accent aria-pressed:text-accent aria-pressed:bg-accent-soft'
 ---
 
 <Layout title="Simulacros">
-  <h1 class="font-heading text-2xl text-fg">Simulacros · 1er parcial</h1>
+  <h1 class="font-heading text-2xl text-fg">Simulacros</h1>
   <p class="mt-2 text-fg-soft max-w-2xl">
     Cada simulacro es un parcial real, con su teoría y su práctica. Corre el reloj y no ves las
     respuestas hasta finalizar. Se guarda tu mejor nota en este navegador.
   </p>
 
   <div class="mt-6 flex flex-wrap gap-2" data-filtros role="group" aria-label="Filtrar simulacros">
-    <button type="button" class={chip} data-filtro="" aria-pressed="true">
+    <button type="button" class={chip} data-filtro="parcial" data-valor="" aria-pressed="true">
       Todos
     </button>
+    <button type="button" class={chip} data-filtro="parcial" data-valor="1" aria-pressed="false">
+      De 1er parcial
+    </button>
+    <button type="button" class={chip} data-filtro="parcial" data-valor="2" aria-pressed="false">
+      De 2do parcial
+    </button>
+    <span class="mx-1 w-px bg-line" aria-hidden="true"></span>
     <button type="button" class={chip} data-filtro="pendiente" aria-pressed="false">
       No resueltos
     </button>
   </div>
 
-  <ul class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-    {parciales.map((parcial) => (
-      <li>
-        <SimulacroCard parcial={parcial} temas={temas(parcial.practica)} />
-      </li>
-    ))}
-  </ul>
-  <p class="mt-10 text-sm text-muted" data-sin-resultados hidden>
-    Ya rendiste todos los simulacros.
-  </p>
+  {secciones.map((seccion) => (
+    <section class="mt-10" data-grupo-parcial={seccion.numero}>
+      <h2 class="font-heading text-lg text-fg mb-3">{seccion.titulo}</h2>
+      <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {seccion.parciales.map((parcial) => (
+          <li>
+            <SimulacroCard parcial={parcial} temas={temas(parcial.practica)} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+  <p class="mt-10 text-sm text-muted" data-sin-resultados hidden></p>
 
   <!-- pinta el mejor resultado antes del primer render (misma lógica que lib/parciales/nota.ts, resultados.ts y tiempo.ts) -->
   <script is:inline>

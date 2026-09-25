@@ -12,6 +12,7 @@ const parcial: Parcial = {
   id: '1p-1c2026-tm',
   codigo: '1P 1C2026 TM',
   titulo: '1° Parcial 1C2026 · TM',
+  numero: 1,
   teoria: [{ ejercicioId: 'planificacion/simulacro-1', indice: 3 }],
   practica: ['planificacion/ej-15', 'hilos/ej-11'],
 }

@@ -24,6 +24,8 @@ export interface Parcial {
   codigo: string
   /** `1° Parcial 1C2026 · TM`, como lo citan los ejercicios. */
   titulo: string
+  /** 1er o 2do parcial (el primer carácter del código). */
+  numero: 1 | 2
   teoria: ItemTeoria[]
   /** Ids de los ejercicios de parcial de ese examen (cada uno entra completo). */
   practica: string[]
@@ -86,6 +88,7 @@ export function armarParciales(ejercicios: EjercicioFuente[], ordenTemas: string
         id: codigo.toLowerCase().replace(/ /g, '-'),
         codigo,
         titulo: tituloDe(codigo),
+        numero: codigo.startsWith('2') ? 2 : 1,
         teoria: [],
         practica: [],
       }

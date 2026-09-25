@@ -73,6 +73,10 @@ describe('los 13 parciales del relevamiento', () => {
     ])
   })
 
+  it('por ahora todos son del 1er parcial', () => {
+    expect(parciales.every((p) => p.numero === 1)).toBe(true)
+  })
+
   it('cada uno tiene teoría y práctica', () => {
     for (const p of parciales) {
       expect(p.teoria.length, p.codigo).toBeGreaterThan(0)
