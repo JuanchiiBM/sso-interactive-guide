@@ -6,9 +6,11 @@ import type { simulacionSchema } from '../content.config'
 interface Props {
   simulacion: z.infer<typeof simulacionSchema>
   titulo?: string
+  /** `examen`: sin Verificar ni Me rindo; lo corrige el simulacro al finalizar. */
+  modo?: 'practica' | 'examen'
 }
 
-const { simulacion, titulo = 'Resolución paso a paso' } = Astro.props
+const { simulacion, titulo = 'Resolución paso a paso', modo = 'practica' } = Astro.props
 const configJson = JSON.stringify(simulacion).replace(/</g, '\\u003c')
 const boton =
   'inline-flex size-8 items-center justify-center rounded-md text-fg-soft hover:text-fg hover:bg-hover transition-colors'
@@ -16,6 +18,7 @@ const boton =
 
 <section
   data-simulador
+  data-sim-modo={modo}
   tabindex="0"
   class="rounded-xl border border-line bg-surface-2 overflow-hidden"
   aria-label={titulo}
@@ -29,13 +32,15 @@ const boton =
   <div class="p-4 flex flex-col gap-3" data-desafio>
     <div class="overflow-x-auto pb-2" data-desafio-grid></div>
     <div class="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        class="rounded-lg bg-fg text-surface px-3 py-1.5 text-sm font-medium hover:opacity-90"
-        data-desafio-accion="verificar"
-      >
-        Verificar
-      </button>
+      {modo === 'practica' && (
+        <button
+          type="button"
+          class="rounded-lg bg-fg text-surface px-3 py-1.5 text-sm font-medium hover:opacity-90"
+          data-desafio-accion="verificar"
+        >
+          Verificar
+        </button>
+      )}
       <button
         type="button"
         class="rounded-lg border border-line px-3 py-1.5 text-sm text-fg-soft hover:bg-hover"
@@ -43,13 +48,15 @@ const boton =
       >
         Limpiar
       </button>
-      <button
-        type="button"
-        class="ml-auto rounded-lg px-3 py-1.5 text-sm boton-rendirse"
-        data-desafio-accion="resolucion"
-      >
-        Me rindo
-      </button>
+      {modo === 'practica' && (
+        <button
+          type="button"
+          class="ml-auto rounded-lg px-3 py-1.5 text-sm boton-rendirse"
+          data-desafio-accion="resolucion"
+        >
+          Me rindo
+        </button>
+      )}
     </div>
     <p class="text-sm min-h-5" aria-live="polite" data-desafio-feedback></p>
   </div>

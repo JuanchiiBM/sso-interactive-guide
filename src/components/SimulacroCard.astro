@@ -1,0 +1,36 @@
+---
+/** Card de un simulacro: el resultado lo pinta el script inline de /simulacros/ desde localStorage. */
+import { simulacroHref } from '@lib/catalogo'
+import type { Parcial } from '@lib/parciales/catalogo'
+import { firmaParcial } from '@lib/parciales/resultados'
+
+interface Props {
+  parcial: Parcial
+  /** Títulos de los temas de la práctica, en orden. */
+  temas: string[]
+}
+
+const { parcial, temas } = Astro.props
+const tipo = parcial.codigo.startsWith('1R') ? 'Recuperatorio' : 'Parcial'
+---
+
+<a
+  href={simulacroHref(parcial.id)}
+  class="simulacro-card group flex h-full flex-col rounded-xl border border-line bg-surface-2 p-4 hover:border-line-strong transition-colors"
+  data-simulacro-card={parcial.id}
+  data-firma={firmaParcial(parcial)}
+>
+  <span class="font-mono text-[11px] text-muted">{tipo}</span>
+  <span class="mt-1 font-heading text-fg group-hover:text-accent">{parcial.titulo}</span>
+  <span class="mt-1 text-xs text-fg-soft">
+    {parcial.teoria.length} preguntas · {parcial.practica.length} ejercicios
+  </span>
+  <span class="mt-1 text-xs text-muted">{temas.join(' · ')}</span>
+  <span class="mt-auto pt-3 flex items-baseline gap-2 text-sm">
+    <span class="text-muted" data-card-sin-rendir>
+      Sin rendir
+    </span>
+    <span class="hidden font-heading text-lg" data-card-nota></span>
+    <span class="hidden font-mono text-xs text-muted" data-card-tiempo></span>
+  </span>
+</a>

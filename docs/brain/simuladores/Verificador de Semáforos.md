@@ -2,7 +2,7 @@
 tipo: servicio
 aliases: [semáforos, semaforos, wait, signal, semaphore, sincronización, verificador, model checking, intercalaciones, tests, leetcode, verificarSemaforos]
 tags: [simulador, sincronizacion, deadlock]
-actualizado: 2026-09-24
+actualizado: 2026-09-25
 ---
 # Verificador de Semáforos
 
@@ -67,6 +67,10 @@ sintaxis, subir la versión de la clave.
   OK (no son concluyentes, y el fallo de seguridad ya alcanza). La inanición **sí** se sigue
   buscando: al ser optimistas los podados, la que aparece es real (el test de las trazas del
   1R 1C2025 lo necesita).
+- ⚠️ **Por la poda, la cantidad de tests pasados no significa nada cuando algo falla:** los que
+  dependían de estados podados salen "ok" sin estar comprobados (la plantilla sin semáforos del Ej. 31
+  "pasa" 9 de 10). El resultado confiable es `ok` y los tests que fallan. Por eso la UI muestra solo
+  los que fallan, y en los simulacros semáforos vale todo o nada ([[Simulacros]]).
 - Costo de referencia: LyL (6 instancias, 7 semáforos) ≈ 3 s la solución correcta. Más de eso en
   el navegador ya molesta: al cargar parciales, bajá instancias/constantes antes de agregar tests.
 

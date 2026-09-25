@@ -42,6 +42,7 @@ desktop.ini
 docs/brain/.obsidian/workspace*.json
 docs/brain/.obsidian/cache
 docs/brain/.trash/
+docs/planes/
 
 # ── Claude Code: settings locales por usuario ──
 .claude/settings.local.json

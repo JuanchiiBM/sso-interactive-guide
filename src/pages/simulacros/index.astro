@@ -1,0 +1,90 @@
+---
+import Layout from '@layouts/Layout.astro'
+import SimulacroCard from '@components/SimulacroCard.astro'
+import { getEjercicios, getParciales, getTemas } from '@lib/catalogo'
+
+// el más reciente primero
+const parciales = (await getParciales()).reverse()
+const tituloTema = new Map((await getTemas()).map((t) => [t.id, t.data.titulo]))
+const temaDe = new Map((await getEjercicios()).map((e) => [e.id, e.data.tema.id]))
+const temas = (practica: string[]) => [
+  ...new Set(practica.map((id) => tituloTema.get(temaDe.get(id)!) ?? '')),
+]
+const secciones = [
+  { numero: 1, titulo: '1er parcial' },
+  { numero: 2, titulo: '2do parcial' },
+]
+  .map((s) => ({ ...s, parciales: parciales.filter((p) => p.numero === s.numero) }))
+  .filter((s) => s.parciales.length > 0)
+const chip =
+  'rounded-full border border-line px-3 py-1 text-xs text-fg-soft hover:bg-hover aria-pressed:border-accent aria-pressed:text-accent aria-pressed:bg-accent-soft'
+---
+
+<Layout title="Simulacros">
+  <h1 class="font-heading text-2xl text-fg">Simulacros</h1>
+  <p class="mt-2 text-fg-soft max-w-2xl">
+    Cada simulacro es un parcial real, con su teoría y su práctica. Corre el reloj y no ves las
+    respuestas hasta finalizar. Se guarda tu mejor nota en este navegador.
+  </p>
+
+  <div class="mt-6 flex flex-wrap gap-2" data-filtros role="group" aria-label="Filtrar simulacros">
+    <button type="button" class={chip} data-filtro="parcial" data-valor="" aria-pressed="true">
+      Todos
+    </button>
+    <button type="button" class={chip} data-filtro="parcial" data-valor="1" aria-pressed="false">
+      De 1er parcial
+    </button>
+    <button type="button" class={chip} data-filtro="parcial" data-valor="2" aria-pressed="false">
+      De 2do parcial
+    </button>
+    <span class="mx-1 w-px bg-line" aria-hidden="true"></span>
+    <button type="button" class={chip} data-filtro="pendiente" aria-pressed="false">
+      No resueltos
+    </button>
+  </div>
+
+  {secciones.map((seccion) => (
+    <section class="mt-10" data-grupo-parcial={seccion.numero}>
+      <h2 class="font-heading text-lg text-fg mb-3">{seccion.titulo}</h2>
+      <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {seccion.parciales.map((parcial) => (
+          <li>
+            <SimulacroCard parcial={parcial} temas={temas(parcial.practica)} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+  <p class="mt-10 text-sm text-muted" data-sin-resultados hidden></p>
+
+  <!-- pinta el mejor resultado antes del primer render (misma lógica que lib/parciales/nota.ts, resultados.ts y tiempo.ts) -->
+  <script is:inline>
+    try {
+      const dos = (n) => String(n).padStart(2, '0')
+      const tiempo = (ms) => {
+        const s = Math.floor(ms / 1000)
+        const h = Math.floor(s / 3600)
+        const mmss = dos(Math.floor((s % 3600) / 60)) + ':' + dos(s % 60)
+        return h ? h + ':' + mmss : mmss
+      }
+      const banda = (n) => (n >= 8 ? 'verde' : n >= 6 ? 'amarillo' : n >= 4 ? 'naranja' : 'rojo')
+      for (const card of document.querySelectorAll('[data-simulacro-card]')) {
+        const crudo = localStorage.getItem('so:simulacro:' + card.dataset.simulacroCard)
+        const r = crudo && JSON.parse(crudo)
+        if (!r || r.firma !== card.dataset.firma) continue
+        card.dataset.banda = banda(r.nota)
+        card.querySelector('[data-card-sin-rendir]').hidden = true
+        const nota = card.querySelector('[data-card-nota]')
+        nota.textContent = String(r.nota).replace('.', ',')
+        nota.classList.remove('hidden')
+        const t = card.querySelector('[data-card-tiempo]')
+        t.textContent = tiempo(r.tiempoMs)
+        t.classList.remove('hidden')
+      }
+    } catch {}
+  </script>
+  <script>
+    import { initFiltrosSimulacros } from '@lib/parciales/filtros'
+    initFiltrosSimulacros()
+  </script>
+</Layout>

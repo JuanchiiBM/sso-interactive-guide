@@ -18,12 +18,20 @@ import { FILA_SO } from '@lib/simuladores/planificacion/tipos'
 
 type Pincel = Exclude<Marca, null>
 
+/** Lo que además necesita un simulacro: la grilla marcada, las válidas y poder congelarla. */
+export interface DesafioGantt extends Desafio {
+  respuesta: () => GrillaGantt
+  /** La de la resolución primero, después las otras elecciones de CPU igual de válidas. */
+  esperadas: GrillaGantt[]
+  bloquear: () => void
+}
+
 /** `alternativas`: otros Gantts igual de válidos (elecciones arbitrarias); acierta si coincide con alguno. */
 export function crearDesafioGantt(
   root: HTMLElement,
   pasos: Step<EstadoGantt>[],
   alternativas: ResultadoPlanificacion[] = [],
-): Desafio {
+): DesafioGantt {
   const { resultado } = pasos[0].state
   const esperada = grillaEsperada(resultado, pasos[0].state.procesos)
   const procesos = Object.keys(esperada)
@@ -137,6 +145,12 @@ export function crearDesafioGantt(
     },
     limpiar() {
       for (const p of procesos) for (let t = 0; t < total; t++) set(p, t, null)
+    },
+    respuesta: () => respuesta,
+    esperadas,
+    bloquear() {
+      for (const celda of celdas.values()) celda.disabled = true
+      for (const b of pinceles.querySelectorAll('button')) b.disabled = true
     },
   }
 }
