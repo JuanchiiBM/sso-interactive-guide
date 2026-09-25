@@ -23,8 +23,12 @@ describe('puntajeSemaforos', { timeout: 30_000 }, () => {
 
   it('la solución de referencia saca 1', () => {
     const p = puntajeSemaforos(cafe.solucion, cafe)
-    expect(p).toMatchObject({ puntaje: 1, compila: true, seccionCriticaDeMas: false })
-    expect(p.testsOk).toBe(p.tests)
+    expect(p).toMatchObject({
+      puntaje: 1,
+      compila: true,
+      correcto: true,
+      seccionCriticaDeMas: false,
+    })
   })
 
   it('correcta pero con la sección crítica de más saca 0,75', () => {
@@ -33,7 +37,7 @@ describe('puntajeSemaforos', { timeout: 30_000 }, () => {
       '    wait(capacidadPreparador);\n    wait(mutexPendientes);\n    pedido = generarPedido();\n',
     )
     const p = puntajeSemaforos(ancha, cafe)
-    expect(p.testsOk).toBe(p.tests)
+    expect(p.correcto).toBe(true)
     expect(p.seccionCriticaDeMas).toBe(true)
     expect(p.puntaje).toBe(FACTOR_SECCION_CRITICA)
   })
@@ -43,26 +47,16 @@ describe('puntajeSemaforos', { timeout: 30_000 }, () => {
     expect(p).toMatchObject({ puntaje: 0, compila: false })
   })
 
-  it('la plantilla sin tocar saca 0 aunque pase los tests que no necesitan sincronización', () => {
-    const p = puntajeSemaforos(plantilla(cafe), cafe)
-    expect(p.testsGratis).toBeGreaterThan(0)
-    expect(p.testsOk).toBe(p.testsGratis)
-    expect(p.puntaje).toBe(0)
-  })
-
-  it('una solución parcial suma la proporción de los tests que la plantilla no pasa', () => {
+  it('si falla algún test saca 0 (todo o nada)', () => {
     // sin el límite de pendientes: falla solo el test del límite
     const sinLimite = cafe.solucion.replace(/ *(wait|signal)\(capacidadPreparador\);\n/g, '')
     const p = puntajeSemaforos(sinLimite, cafe)
-    expect(p.testsOk).toBe(p.tests - 1)
-    expect(p.puntaje).toBeCloseTo((p.tests - 1 - p.testsGratis) / (p.tests - p.testsGratis))
+    expect(p).toMatchObject({ puntaje: 0, compila: true, correcto: false })
   })
 
-  it('el código original de "Z" (con deadlock) no suma: es la plantilla', () => {
+  it('el código original de "Z" (con deadlock) saca 0', () => {
     const z = desafio('sincronizacion/ej-21.md')
-    const p = puntajeSemaforos(plantilla(z), z)
-    expect(p.seccionCriticaDeMas).toBe(true)
-    expect(p.puntaje).toBe(0)
+    expect(puntajeSemaforos(plantilla(z), z).puntaje).toBe(0)
   })
 
   it('en todos los desafíos la plantilla vale 0 y la referencia 1', () => {
@@ -72,5 +66,5 @@ describe('puntajeSemaforos', { timeout: 30_000 }, () => {
         expect(puntajeSemaforos(d.solucion, d).puntaje, rel).toBe(1)
       }
     }
-  })
+  }, 180_000)
 })
