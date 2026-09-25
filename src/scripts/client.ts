@@ -5,6 +5,7 @@ import { initAllSimuladores } from '@lib/simulador-page'
 import { initMultipleChoice } from '@lib/desafios/multiple-choice'
 import { initSemaforos } from '@lib/desafios/semaforos'
 import { initProgreso } from '@lib/progreso'
+import { initSimulacro } from '@lib/parciales/examen'
 
 document.addEventListener('click', (event) => {
   const target = event.target
@@ -18,3 +19,4 @@ initAllSimuladores()
 initMultipleChoice()
 initSemaforos()
 initProgreso()
+initSimulacro()
