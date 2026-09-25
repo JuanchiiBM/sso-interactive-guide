@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { banda, calcularNota } from './nota'
+import { banda, calcularNota, formatearNota, notaDeItems } from './nota'
 
 describe('calcularNota', () => {
   it('todo bien da 10 y todo mal da 0', () => {
@@ -52,5 +52,30 @@ describe('banda', () => {
     [0, 'rojo'],
   ] as const)('nota %s → %s', (nota, color) => {
     expect(banda(nota)).toBe(color)
+  })
+})
+
+describe('formatearNota', () => {
+  it('usa coma decimal', () => {
+    expect(formatearNota(7.5)).toBe('7,5')
+    expect(formatearNota(10)).toBe('10')
+    expect(formatearNota(0)).toBe('0')
+  })
+})
+
+describe('notaDeItems', () => {
+  it('reparte el peso de un ejercicio entre sus partes', () => {
+    const r = notaDeItems([
+      { seccion: 'teoria', ejercicio: null, puntaje: 1 },
+      { seccion: 'teoria', ejercicio: null, puntaje: 0 },
+      { seccion: 'practica', ejercicio: 0, puntaje: 1 },
+      { seccion: 'practica', ejercicio: 0, puntaje: 0 },
+      { seccion: 'practica', ejercicio: 0, puntaje: 1 },
+      { seccion: 'practica', ejercicio: 0, puntaje: 0 },
+      { seccion: 'practica', ejercicio: 1, puntaje: 1 },
+    ])
+    // teoría 0,5 · 0,4 + práctica (0,5 + 1) / 2 · 0,6
+    expect(r.exacta).toBeCloseTo(6.5)
+    expect(r).toEqual(calcularNota([1, 0], [[1, 0, 1, 0], [1]]))
   })
 })

@@ -302,3 +302,23 @@
   pointer-events: none;
   opacity: 0.75;
 }
+
+/* banda de nota de un simulacro: la usan el resultado y las cards del listado */
+[data-banda='verde'] {
+  --banda: var(--ok);
+}
+[data-banda='amarillo'] {
+  --banda: var(--banda-amarillo);
+}
+[data-banda='naranja'] {
+  --banda: var(--banda-naranja);
+}
+[data-banda='rojo'] {
+  --banda: var(--bad);
+}
+.simulacro-resultado {
+  border-color: var(--banda, var(--line));
+}
+.simulacro-resultado [data-simulacro-nota] {
+  color: var(--banda, var(--fg));
+}

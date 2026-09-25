@@ -31,6 +31,9 @@
   --ok: #34d399;
   --warn: #fbbf24;
   --bad: #f87171;
+  /* bandas de nota de los simulacros (verde = --ok, rojo = --bad) */
+  --banda-amarillo: #facc15;
+  --banda-naranja: #fb923c;
   --parcial: #a78bfa;
   /* Paleta de procesos (Gantt, tablas). Índice = orden del proceso. */
   --p1: #60a5fa;
@@ -67,6 +70,8 @@
   --ok: #047857;
   --warn: #b45309;
   --bad: #b91c1c;
+  --banda-amarillo: #a16207;
+  --banda-naranja: #c2410c;
   --parcial: #7c3aed;
   --p1: #2563eb;
   --p2: #db2777;

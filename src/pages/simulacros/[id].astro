@@ -60,12 +60,12 @@ const secundario = 'rounded-lg border border-line px-3 py-1.5 text-sm text-fg-so
     </h1>
     <p class="mt-3 max-w-3xl text-sm text-fg-soft">
       {teoria.length} preguntas de teoría y {practica.length} ejercicios de práctica, tal como se
-      tomaron en el examen. La teoría vale el 40&nbsp;% y la práctica el 60&nbsp;%. Las respuestas se ven
-      recién al finalizar. Referencia: el parcial real dura 2&nbsp;horas.
+      tomaron en el examen. La teoría vale el 40&nbsp;% y la práctica el 60&nbsp;%. Las respuestas
+      se ven recién al finalizar. Referencia: el parcial real dura 2&nbsp;horas.
     </p>
 
     <div
-      class="sticky top-0 z-10 mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface-2 px-4 py-3"
+      class="sticky top-[68px] z-30 mt-6 shadow-[0_-12px_0_var(--surface)] flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface-2 px-4 py-3"
       data-simulacro-barra
     >
       <button type="button" class={boton} data-simulacro-accion="empezar">
@@ -77,15 +77,32 @@ const secundario = 'rounded-lg border border-line px-3 py-1.5 text-sm text-fg-so
       <span class="text-sm text-muted" data-simulacro-estado>
         Las preguntas aparecen al empezar.
       </span>
-      <button
-        type="button"
-        class:list={[secundario, 'ml-auto']}
-        data-simulacro-accion="cancelar"
+      <span class="ml-auto flex items-center gap-2" data-simulacro-acciones hidden>
+        <button type="button" class={boton} data-simulacro-accion="finalizar">
+          Finalizar
+        </button>
+        <button type="button" class={secundario} data-simulacro-accion="cancelar">
+          Cancelar
+        </button>
+      </span>
+      <span
+        class="ml-auto flex flex-wrap items-center gap-2 text-sm"
+        data-simulacro-confirmar="finalizar"
         hidden
       >
-        Cancelar
-      </button>
-      <span class="ml-auto flex items-center gap-2 text-sm" data-simulacro-confirmar hidden>
+        <span data-simulacro-confirmar-texto></span>
+        <button type="button" class={boton} data-simulacro-accion="finalizar-si">
+          Sí, finalizar
+        </button>
+        <button type="button" class={secundario} data-simulacro-accion="seguir">
+          Seguir
+        </button>
+      </span>
+      <span
+        class="ml-auto flex flex-wrap items-center gap-2 text-sm"
+        data-simulacro-confirmar="cancelar"
+        hidden
+      >
         ¿Cancelar el simulacro? Se pierde lo respondido.
         <button type="button" class={secundario} data-simulacro-accion="cancelar-si">
           Sí, cancelar
@@ -95,6 +112,21 @@ const secundario = 'rounded-lg border border-line px-3 py-1.5 text-sm text-fg-so
         </button>
       </span>
     </div>
+    <p class="mt-2 text-sm text-muted" data-simulacro-mejor hidden></p>
+
+    <section
+      class="simulacro-resultado mt-6 rounded-xl border-2 bg-surface-2 px-5 py-4"
+      aria-live="polite"
+      data-simulacro-resultado
+      hidden
+    >
+      <p class="text-sm text-muted">Tu nota</p>
+      <p class="font-heading text-4xl" data-simulacro-nota></p>
+      <p class="mt-1 text-sm text-fg-soft" data-simulacro-detalle></p>
+      <button type="button" class:list={[secundario, 'mt-4']} data-simulacro-accion="de-nuevo">
+        Rendir de nuevo
+      </button>
+    </section>
 
     <div data-simulacro-contenido hidden>
       <section class="mt-10" aria-labelledby="teoria">

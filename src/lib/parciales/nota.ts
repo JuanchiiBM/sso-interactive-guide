@@ -39,3 +39,25 @@ export function banda(nota: number): Banda {
   if (nota >= 4) return 'naranja'
   return 'rojo'
 }
+
+/** Con coma decimal: `7,5`, `10`. */
+export const formatearNota = (nota: number) => String(nota).replace('.', ',')
+
+export interface PuntajeItem {
+  seccion: 'teoria' | 'practica'
+  /** Índice del ejercicio de práctica (sus partes se reparten el peso). */
+  ejercicio: number | null
+  puntaje: number
+}
+
+/** Agrupa los puntajes de los ítems por sección y ejercicio, y calcula la nota. */
+export function notaDeItems(items: PuntajeItem[]): { exacta: number; nota: number } {
+  const teoria = items.filter((i) => i.seccion === 'teoria').map((i) => i.puntaje)
+  const porEjercicio = new Map<number, number[]>()
+  for (const i of items)
+    if (i.seccion === 'practica') {
+      const partes = porEjercicio.get(i.ejercicio ?? -1) ?? []
+      porEjercicio.set(i.ejercicio ?? -1, [...partes, i.puntaje])
+    }
+  return calcularNota(teoria, [...porEjercicio.values()])
+}
