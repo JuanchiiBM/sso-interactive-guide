@@ -93,6 +93,11 @@ Cada tick `t` representa el intervalo `[t, t+1)`. Orden dentro del tick:
 - **Feedback (Ej. 11):** nuevos a la cola 1; fin de quantum baja una cola (tope: la última); tras E/S
   `trasIO: primera` (promoción a la cola 1) o `misma`; desalojado por cola superior → final de su cola.
 - **2 procesadores (Ej. 3):** cola de listos global. Sin afinidad, toma el CPU libre de menor número.
+  **Pero esa elección es arbitraria**: con 2+ CPUs libres a la vez, la otra es igual de válida (y con
+  afinidad arrastra todo el Gantt). `variantesPlanificacion(config)` (en `verificar.ts`) corre el
+  simulador invirtiendo el orden en cada decisión (`opts.invertirCpus`, `decisionesCpu`) y devuelve
+  todos los Gantts distintos (tope 64 corridas); el desafío acierta si coincide con **cualquiera**.
+  La resolución muestra la primera (la de menor número) y el mensaje avisa si el alumno eligió otra.
   Con afinidad (**dura**) el proceso queda atado al CPU donde ejecutó por primera vez y lo espera
   aunque el otro esté libre. El Gantt agrega una fila por CPU arriba y el número de CPU en la celda;
   el desafío tiene pinceles CPU 1 / CPU 2 / E/S (`Marca`: `'cpu'` = CPU 1, `'cpu2'` = CPU 2).

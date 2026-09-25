@@ -1,4 +1,5 @@
-import { FILA_SO, type ResultadoPlanificacion } from './tipos'
+import { simularPlanificacion } from './simular'
+import { FILA_SO, type ConfigPlanificacion, type ResultadoPlanificacion } from './tipos'
 
 /** Lo que el alumno marca en cada celda (proceso, t). 'cpu' = CPU 1 (o el único), 'cpu2' = CPU 2. */
 export type Marca = 'cpu' | 'cpu2' | 'io' | null
@@ -39,6 +40,35 @@ export function grillaEsperada(r: ResultadoPlanificacion, procesos: string[]): G
     ...(r.so ? [[FILA_SO, filaSO]] : []),
   ])
 }
+
+/** Todos los Gantts válidos cuando hay 2+ CPUs libres a la vez (cuál toma primero es arbitrario). */
+export function variantesPlanificacion(
+  config: ConfigPlanificacion,
+  max = 64,
+): ResultadoPlanificacion[] {
+  const vistas = new Set<string>()
+  const variantes: ResultadoPlanificacion[] = []
+  const pendientes: boolean[][] = [[]]
+  for (let corridas = 0; pendientes.length && corridas < max; corridas++) {
+    const prefijo = pendientes.shift()!
+    const r = simularPlanificacion(config, { invertirCpus: (d) => prefijo[d] ?? false })
+    const firma = JSON.stringify(grillaEsperada(r, r.hilos))
+    if (!vistas.has(firma)) {
+      vistas.add(firma)
+      variantes.push(r)
+    }
+    for (let d = prefijo.length; d < (r.decisionesCpu ?? 0); d++) {
+      pendientes.push([...prefijo, ...Array<boolean>(d - prefijo.length).fill(false), true])
+    }
+  }
+  return variantes
+}
+
+/** Completa con celdas vacías hasta `total` instantes (las variantes pueden terminar en distinto t). */
+export const extenderGrilla = (g: GrillaGantt, total: number): GrillaGantt =>
+  Object.fromEntries(
+    Object.entries(g).map(([p, m]) => [p, [...m, ...Array<Marca>(total - m.length).fill(null)]]),
+  )
 
 export function verificarGantt(esperada: GrillaGantt, respuesta: GrillaGantt): Veredicto {
   const procesos = Object.keys(esperada)

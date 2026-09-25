@@ -130,7 +130,16 @@ const nuevoHilo = (u: DatosHilo, klt: Pcb | null): Hilo => ({
   klt,
 })
 
-export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlanificacion {
+export interface OpcionesSimulacion {
+  /** Con 2+ CPUs libres a la vez, qué CPU toma primero es arbitrario: `true` invierte el orden en esa decisión. */
+  invertirCpus?: (decision: number) => boolean
+}
+
+export function simularPlanificacion(
+  config: ConfigPlanificacion,
+  opts: OpcionesSimulacion = {},
+): ResultadoPlanificacion {
+  let decisionesCpu = 0
   const { algoritmo, quantum, ioUnica = true, prioridadMenorEsMejor = true, alfa } = config
   const desempate = config.desempate ?? DESEMPATE_DEFAULT
   const grado = config.multiprogramacion
@@ -214,10 +223,13 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
   // Candidato a suspender: todos sus KLTs vivos (ya llegados) están en Ready
   const enReady = (g: Grupo) => {
     const vivos = g.klts.filter((k) => k.fin == null && k.estado !== 'nuevo')
-    return vivos.length > 0 && vivos.every((k) => k.estado === 'listo' && colas[k.cola].includes(k.id))
+    return (
+      vivos.length > 0 && vivos.every((k) => k.estado === 'listo' && colas[k.cola].includes(k.id))
+    )
   }
   const unitario = (g: Grupo) => g.klts.length === 1 && g.klts[0].id === g.id
-  if (overhead > 0 && hilos.has(FILA_SO)) throw new Error(`"${FILA_SO}" está reservado para la fila del SO`)
+  if (overhead > 0 && hilos.has(FILA_SO))
+    throw new Error(`"${FILA_SO}" está reservado para la fila del SO`)
   const getH = (id: string) => hilos.get(id)!
   const hayHilos = todos.some((p) => p.bib)
   const quien = hayHilos ? 'El SO' : 'El planificador'
@@ -604,7 +616,8 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
   const atenderInterrupcion = (h: Hilo) => {
     const p = h.klt ?? get(h.id)
     const libre = (k: number) => !cpus[k].id && !cpus[k].so.length
-    let k = p.afinidad != null && libre(p.afinidad) ? p.afinidad : cpus.findIndex((_, i) => libre(i))
+    let k =
+      p.afinidad != null && libre(p.afinidad) ? p.afinidad : cpus.findIndex((_, i) => libre(i))
     if (k < 0) k = p.afinidad ?? 0
     const pausa = cpus[k].id && !cpus[k].so.length ? ` (${cpus[k].id} espera sin ejecutar)` : ''
     cpus[k].so.push({ h, restante: overhead })
@@ -671,7 +684,9 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
         const g = suspendidos.shift()!
         g.estado = 'memoria'
         admitidos += 1
-        eventos.push(`Se liberó un lugar: ${g.id} vuelve a memoria (planificador de mediano plazo).`)
+        eventos.push(
+          `Se liberó un lugar: ${g.id} vuelve a memoria (planificador de mediano plazo).`,
+        )
         for (const k of g.klts) {
           if (k.estado !== 'suspendido') continue
           const texto = `${k.id} vuelve a ${nombreCola(colaNuevo(k))}.`
@@ -731,7 +746,8 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
           `${g.id} (prioridad ${g.prioridad}) tiene mayor prioridad que ${victima.id} (prioridad ${victima.prioridad}), el de menor prioridad en Ready: el SO suspende a ${victima.id} (sale de memoria) y admite a ${g.id}.`,
         )
         for (const k of g.klts) {
-          if (k.estado === 'espera-admision') entrar({ id: k.id, origen: 'nuevo', cola: colaNuevo(k) })
+          if (k.estado === 'espera-admision')
+            entrar({ id: k.id, origen: 'nuevo', cola: colaNuevo(k) })
         }
         i = -1
       }
@@ -780,7 +796,14 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     })
 
     const recien = cpus.map(() => false)
-    cpus.forEach((slot, k) => {
+    const ordenCpus = cpus.map((_, k) => k)
+    const libres = cpus.filter((s) => !s.id && !s.so.length).length
+    if (libres > 1 && colas.some((c) => c.length > 0)) {
+      if (opts.invertirCpus?.(decisionesCpu)) ordenCpus.reverse()
+      decisionesCpu++
+    }
+    ordenCpus.forEach((k) => {
+      const slot = cpus[k]
       if (slot.id) return
       if (slot.so.length) {
         ociosa[k] = null
@@ -858,7 +881,11 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
       const k = h.klt
       if (k && enCpu.includes(h.id)) estados[h.id] = 'ejecutando'
       // los ULTs listos de un KLT en New o suspendido muestran el estado de su KLT
-      else if (k && h.estado === 'listo' && (k.estado === 'suspendido' || k.estado === 'espera-admision'))
+      else if (
+        k &&
+        h.estado === 'listo' &&
+        (k.estado === 'suspendido' || k.estado === 'espera-admision')
+      )
         estados[h.id] = k.estado
       else estados[h.id] = h.estado
     }
@@ -990,6 +1017,7 @@ export function simularPlanificacion(config: ConfigPlanificacion): ResultadoPlan
     fin: Math.max(...metricas.map((m) => m.finalizacion)),
     procesadores: nCpus,
     hilos: [...hilos.keys()],
+    ...(decisionesCpu > 0 && { decisionesCpu }),
     ...(overhead > 0 && { so: true }),
     ...(hayHilos && {
       kltDe: Object.fromEntries(
