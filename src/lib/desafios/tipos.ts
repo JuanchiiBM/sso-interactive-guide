@@ -8,6 +8,8 @@ export interface Desafio {
 export interface ItemExamen {
   /** De 0 a 1. */
   puntaje: () => Promise<number>
+  /** Resultado en pocas palabras para marcar el ítem al corregir (después de `puntaje`). */
+  detalle: () => string
   /** Muestra la corrección y la resolución, y bloquea la respuesta. */
   revelar: () => void
 }

@@ -59,6 +59,8 @@ export function crearSimuladorExamen(host: HTMLElement): ItemExamen | null {
   conectarPlayback(host, base)
   return {
     puntaje: async () => puntajeGantt(desafio.respuesta(), desafio.esperadas),
+    detalle: () =>
+      `${Math.round(porcentajeGantt(desafio.respuesta(), desafio.esperadas) * 100)} % de celdas`,
     revelar() {
       desafio.bloquear()
       $<HTMLElement>('[data-desafio-accion="limpiar"]', host)?.setAttribute('hidden', '')

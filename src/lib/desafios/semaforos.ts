@@ -137,6 +137,12 @@ export function crearSemaforosExamen(box: HTMLElement): ItemExamen {
       resultado = puntajeSemaforos(codigo.get(), spec)
       return resultado.puntaje
     },
+    detalle() {
+      if (!resultado) return ''
+      if (!resultado.compila) return 'No compila'
+      if (!resultado.correcto) return 'Incorrecto: no pasa todos los tests'
+      return resultado.seccionCriticaDeMas ? 'Correcto, sección crítica de más' : 'Correcto'
+    },
     revelar() {
       box.classList.add('sem-bloqueado')
       $<HTMLElement>('[data-sem-accion="restablecer"]', box)?.setAttribute('hidden', '')

@@ -4,7 +4,7 @@ import type { ItemExamen } from '@lib/desafios/tipos'
 import { crearMCExamen } from '@lib/desafios/multiple-choice'
 import { crearSemaforosExamen } from '@lib/desafios/semaforos'
 import { crearSimuladorExamen } from '@lib/simulador-page'
-import { banda, formatearNota, notaDeItems, type PuntajeItem } from './nota'
+import { banda, formatearNota, notaDeItems, pesosDeItems, type PuntajeItem } from './nota'
 import { guardarSiMejor, leerResultado } from './resultados'
 import { formatearTiempo } from './tiempo'
 
@@ -38,6 +38,34 @@ function crearItem(el: HTMLElement): ItemSimulacro | null {
     puntaje: 0,
     examen,
   }
+}
+
+const puntos = (x: number) => x.toFixed(2).replace('.', ',')
+const estadoPuntaje = (p: number) => (p >= 1 ? 'ok' : p > 0 ? 'parcial' : 'mal')
+const ICONO = { ok: '✓', parcial: '◐', mal: '✗' }
+
+/** Marca el ítem en su lugar: borde del color del resultado y una línea con qué sacó y cuánto suma. */
+function marcar(item: ItemSimulacro, detalle: string, peso: number): void {
+  const estado = estadoPuntaje(item.puntaje)
+  item.el.dataset.estado = estado
+  const marca = document.createElement('p')
+  marca.className = 'simulacro-marca'
+  marca.textContent = `${ICONO[estado]} ${detalle} · ${puntos(peso * item.puntaje)} de ${puntos(peso)} puntos`
+  item.el.prepend(marca)
+}
+
+/** "Teoría 2,86 de 4 · Práctica 3,67 de 6". */
+function subtotales(items: ItemSimulacro[], pesos: number[]): string {
+  return (['teoria', 'practica'] as const)
+    .map((seccion) => {
+      const n = items.flatMap((it, k) => (it.seccion === seccion ? [k] : []))
+      if (!n.length) return ''
+      const obtenido = n.reduce((a, k) => a + pesos[k] * items[k].puntaje, 0)
+      const total = n.reduce((a, k) => a + pesos[k], 0)
+      return `${seccion === 'teoria' ? 'Teoría' : 'Práctica'} ${puntos(obtenido)} de ${formatearNota(Math.round(total * 100) / 100)}`
+    })
+    .filter(Boolean)
+    .join(' · ')
 }
 
 const sinResponder = (items: ItemSimulacro[]) =>
@@ -96,7 +124,12 @@ function init(raiz: HTMLElement): void {
       estado.textContent = `Corrigiendo… ${n + 1}/${items.length}`
       item.puntaje = await item.examen.puntaje()
     }
-    for (const item of items) item.examen.revelar()
+    const pesos = pesosDeItems(items)
+    for (const [n, item] of items.entries()) {
+      marcar(item, item.examen.detalle(), pesos[n])
+      item.examen.revelar()
+    }
+    $<HTMLElement>('[data-simulacro-subtotales]', resultado)!.textContent = subtotales(items, pesos)
     for (const link of $$<HTMLElement>('[data-simulacro-revelar]', contenido)) link.hidden = false
 
     const { nota } = notaDeItems(items)

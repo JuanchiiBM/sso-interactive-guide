@@ -17,6 +17,10 @@ export function crearMCExamen(box: HTMLElement): ItemExamen {
   }
   return {
     puntaje: async () => (elegida() === correcta ? 1 : 0),
+    detalle: () => {
+      const e = elegida()
+      return e == null ? 'Sin responder' : e === correcta ? 'Correcta' : 'Incorrecta'
+    },
     revelar() {
       const e = elegida()
       for (const op of $$<HTMLElement>('[data-mc-opcion]', box)) {

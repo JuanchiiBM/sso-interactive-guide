@@ -61,3 +61,19 @@ export function notaDeItems(items: PuntajeItem[]): { exacta: number; nota: numbe
     }
   return calcularNota(teoria, [...porEjercicio.values()])
 }
+
+/** Cuánto vale cada ítem en puntos de nota (suman 10): la nota exacta es Σ peso · puntaje. */
+export function pesosDeItems(items: Omit<PuntajeItem, 'puntaje'>[]): number[] {
+  const teoria = items.filter((i) => i.seccion === 'teoria').length
+  const partes = new Map<number, number>()
+  for (const i of items)
+    if (i.seccion === 'practica')
+      partes.set(i.ejercicio ?? -1, (partes.get(i.ejercicio ?? -1) ?? 0) + 1)
+  const pesoTeoria = partes.size ? 10 * PESO_TEORIA : 10
+  const pesoPractica = teoria ? 10 * (1 - PESO_TEORIA) : 10
+  return items.map((i) =>
+    i.seccion === 'teoria'
+      ? pesoTeoria / teoria
+      : pesoPractica / partes.size / partes.get(i.ejercicio ?? -1)!,
+  )
+}

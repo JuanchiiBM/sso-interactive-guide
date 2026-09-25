@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { banda, calcularNota, formatearNota, notaDeItems } from './nota'
+import { banda, calcularNota, formatearNota, notaDeItems, pesosDeItems } from './nota'
 
 describe('calcularNota', () => {
   it('todo bien da 10 y todo mal da 0', () => {
@@ -77,5 +77,26 @@ describe('notaDeItems', () => {
     // teoría 0,5 · 0,4 + práctica (0,5 + 1) / 2 · 0,6
     expect(r.exacta).toBeCloseTo(6.5)
     expect(r).toEqual(calcularNota([1, 0], [[1, 0, 1, 0], [1]]))
+  })
+})
+
+describe('pesosDeItems', () => {
+  const items = [
+    { seccion: 'teoria' as const, ejercicio: null, puntaje: 1 },
+    { seccion: 'teoria' as const, ejercicio: null, puntaje: 0 },
+    { seccion: 'practica' as const, ejercicio: 0, puntaje: 1 },
+    { seccion: 'practica' as const, ejercicio: 0, puntaje: 0.5 },
+    { seccion: 'practica' as const, ejercicio: 1, puntaje: 0.25 },
+  ]
+
+  it('suman 10 y la nota exacta es la suma ponderada', () => {
+    const pesos = pesosDeItems(items)
+    expect(pesos).toEqual([2, 2, 1.5, 1.5, 3])
+    const suma = pesos.reduce((a, p, i) => a + p * items[i].puntaje, 0)
+    expect(suma).toBeCloseTo(notaDeItems(items).exacta)
+  })
+
+  it('sin práctica la teoría vale 10', () => {
+    expect(pesosDeItems(items.slice(0, 2))).toEqual([5, 5])
   })
 })
