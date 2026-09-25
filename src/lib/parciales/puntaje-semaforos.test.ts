@@ -1,15 +1,22 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { sep } from 'node:path'
 import { parse } from 'yaml'
 import { plantilla } from '@lib/semaforos/parser'
 import type { EjercicioSemaforos } from '@lib/semaforos/tipos'
 import { FACTOR_SECCION_CRITICA, puntajeSemaforos } from './puntaje-semaforos'
 
 type ConSolucion = EjercicioSemaforos & { solucion: string }
-const desafio = (rel: string): ConSolucion => {
+const desafios = (rel: string): ConSolucion[] => {
   const texto = readFileSync(`src/content/ejercicios/${rel}`, 'utf8')
-  return parse(texto.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)![1]).semaforos[0]
+  return parse(texto.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)![1]).semaforos ?? []
 }
+const desafio = (rel: string) => desafios(rel)[0]
+const desafiosConSemaforos = () =>
+  readdirSync('src/content/ejercicios', { recursive: true, encoding: 'utf8' })
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => f.split(sep).join('/'))
+    .filter((f) => desafios(f).length > 0)
 
 describe('puntajeSemaforos', { timeout: 30_000 }, () => {
   const cafe = desafio('sincronizacion/ej-29.md')
@@ -36,19 +43,34 @@ describe('puntajeSemaforos', { timeout: 30_000 }, () => {
     expect(p).toMatchObject({ puntaje: 0, compila: false })
   })
 
-  it('una solución parcial suma la proporción de tests que pasa', () => {
+  it('la plantilla sin tocar saca 0 aunque pase los tests que no necesitan sincronización', () => {
+    const p = puntajeSemaforos(plantilla(cafe), cafe)
+    expect(p.testsGratis).toBeGreaterThan(0)
+    expect(p.testsOk).toBe(p.testsGratis)
+    expect(p.puntaje).toBe(0)
+  })
+
+  it('una solución parcial suma la proporción de los tests que la plantilla no pasa', () => {
     // sin el límite de pendientes: falla solo el test del límite
     const sinLimite = cafe.solucion.replace(/ *(wait|signal)\(capacidadPreparador\);\n/g, '')
     const p = puntajeSemaforos(sinLimite, cafe)
     expect(p.testsOk).toBe(p.tests - 1)
-    expect(p.puntaje).toBeCloseTo((p.tests - 1) / p.tests)
+    expect(p.puntaje).toBeCloseTo((p.tests - 1 - p.testsGratis) / (p.tests - p.testsGratis))
   })
 
-  it('el código original de "Z" (con deadlock y sección crítica de más) combina los dos descuentos', () => {
+  it('el código original de "Z" (con deadlock) no suma: es la plantilla', () => {
     const z = desafio('sincronizacion/ej-21.md')
     const p = puntajeSemaforos(plantilla(z), z)
     expect(p.seccionCriticaDeMas).toBe(true)
-    expect(p.testsOk).toBeLessThan(p.tests)
-    expect(p.puntaje).toBeCloseTo((p.testsOk / p.tests) * FACTOR_SECCION_CRITICA)
+    expect(p.puntaje).toBe(0)
+  })
+
+  it('en todos los desafíos la plantilla vale 0 y la referencia 1', () => {
+    for (const rel of desafiosConSemaforos()) {
+      for (const d of desafios(rel)) {
+        expect(puntajeSemaforos(plantilla(d), d).puntaje, rel).toBe(0)
+        expect(puntajeSemaforos(d.solucion, d).puntaje, rel).toBe(1)
+      }
+    }
   })
 })
