@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [tema, teoría, teoria, resumen, formato tema, preguntas de parcial]
 tags: [contenido, teoria]
-actualizado: 2026-09-23
+actualizado: 2026-09-25
 ---
 
 # Formato de un Tema de Teoría
@@ -26,6 +26,10 @@ Estructura del cuerpo:
 - Tablas para comparar; ` ```grafo ` o ` ```diagrama <id> ` solo si el diagrama explica algo (estados de un proceso,
   grafo de asignación). **Nunca mermaid en el sitio.**
 - Fórmulas en `código inline` (no hay KaTeX).
+- **Subíndices/superíndices**: no hay renderer de math (ni KaTeX ni MathJax), así que `T_{i-1}`, `$…$` o `lpha`
+  se ven literales. Fuera de código escribí `T<sub>i−1</sub>` / `x<sup>2</sup>` (el HTML pasa tanto en el cuerpo
+  como en los campos de frontmatter que van por `marked`); dentro de `código inline` usá `T(i−1)`. Vale también
+  para ejercicios. Lo vigila `src/lib/markdown/formulas.test.ts` (ignora bloques de código y campos `codigo`/`solucion`).
 - Cierre: `## Preguntas de parcial` (pregunta en negrita + respuesta en `>`) y una línea de fuente.
 
 **Redacción:** con palabras propias sobre el Resumen SO (Sistemas Operativos for Dummies); el repo es público.
