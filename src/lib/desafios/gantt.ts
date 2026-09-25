@@ -6,8 +6,7 @@ import {
   type EstadoGantt,
 } from '@lib/simuladores/planificacion/pasos'
 import {
-  extenderGrilla,
-  grillaEsperada,
+  grillasDesafio,
   verificarGantt,
   type GrillaGantt,
   type Marca,
@@ -33,14 +32,9 @@ export function crearDesafioGantt(
   alternativas: ResultadoPlanificacion[] = [],
 ): DesafioGantt {
   const { resultado } = pasos[0].state
-  const esperada = grillaEsperada(resultado, pasos[0].state.procesos)
-  const procesos = Object.keys(esperada)
+  const { total, esperadas } = grillasDesafio([resultado, ...alternativas], pasos[0].state.procesos)
+  const procesos = Object.keys(esperadas[0])
   const etiqueta = (id: string) => (id === FILA_SO ? 'SO' : etiquetaHilo(resultado, id))
-  const total = Math.max(resultado.ticks.length, ...alternativas.map((r) => r.ticks.length))
-  const esperadas = [
-    esperada,
-    ...alternativas.map((r) => grillaEsperada(r, pasos[0].state.procesos)),
-  ].map((g) => extenderGrilla(g, total))
   const multi = resultado.procesadores > 1
   // en el Gantt de código el click derecho marca bloqueado (semáforo, recurso o sleep)
   const io = resultado.bloqueoSincro ? 'Bloqueado' : 'E/S'

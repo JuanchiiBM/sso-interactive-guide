@@ -30,6 +30,10 @@ Progreso por navegador en `src/lib/progreso.ts` (`so:resuelto:<path>#<id>`).
 - Feedback: **solo correcto / incorrecto**, sin decir dónde ni cuántas celdas fallan (pedido
   explícito: el alumno prefiere buscar el error solo). `verificarGantt` igual calcula `primerError`
   y `correctos` por si se quiere un modo pista más adelante.
+- La grilla tiene **`COLUMNAS_EXTRA` (5) columnas de más** sobre la variante válida más larga
+  (`grillasDesafio` en `verificar.ts`), para que su largo no delate cuándo termina el Gantt (issue #7).
+  Las esperadas se rellenan con vacías: pintar de más da incorrecto, y en simulacros las celdas
+  vacías en ambas no cuentan para `porcentajeGantt`. La resolución paso a paso no cambia de ancho.
 
 ## Multiple choice (teóricos / prácticos no-Gantt)
 - `preguntas:` en el frontmatter (ver [[Formato de un Ejercicio]]), componente `MultipleChoice.astro`.
@@ -40,7 +44,7 @@ Progreso por navegador en `src/lib/progreso.ts` (`so:resuelto:<path>#<id>`).
 
 **Ayuda:** ícono "info" junto a "Resolución" con popover nativo (`popover` + CSS anchor positioning).
 
-**Abierto:** la grilla revela la duración total; faltan desafíos para ejercicios de código (semáforos).
+**Abierto:** faltan desafíos para ejercicios de código (semáforos).
 **Conectado con:** [[Simuladores]], [[Patrón — Steps y Playback]], [[Cómo agregar un simulador]]
 
 ## Ejercicio resuelto (sidebar, cards y filtro)

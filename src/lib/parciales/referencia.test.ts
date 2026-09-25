@@ -7,7 +7,7 @@ import { pasosCodigo } from '@lib/simuladores/codigo/pasos'
 import type { ConfigCodigo } from '@lib/simuladores/codigo/tipos'
 import { pasosPlanificacion } from '@lib/simuladores/planificacion/pasos'
 import type { ConfigPlanificacion } from '@lib/simuladores/planificacion/tipos'
-import { grillaEsperada, variantesPlanificacion } from '@lib/simuladores/planificacion/verificar'
+import { grillasDesafio, variantesPlanificacion } from '@lib/simuladores/planificacion/verificar'
 import type { EjercicioSemaforos } from '@lib/semaforos/tipos'
 import { armarParciales } from './catalogo'
 import { notaDeItems, type PuntajeItem } from './nota'
@@ -66,7 +66,7 @@ function gantt(sim: Simulacion): number {
     sim.kind === 'planificacion'
       ? variantesPlanificacion(sim as unknown as ConfigPlanificacion).slice(1)
       : []
-  const esperadas = [resultado, ...alternativas].map((r) => grillaEsperada(r, procesos))
+  const { esperadas } = grillasDesafio([resultado, ...alternativas], procesos)
   return Math.min(...esperadas.map((e) => puntajeGantt(e, esperadas)))
 }
 
