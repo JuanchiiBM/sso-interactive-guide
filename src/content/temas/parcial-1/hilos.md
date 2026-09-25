@@ -82,6 +82,12 @@ Aun con jacketing, los ULT siguen siendo invisibles para el SO: no hay paralelis
 
 Un proceso puede tener varios KLT y, sobre cada uno, varios ULT. Así se busca lo mejor de los dos modelos: paralelismo y bloqueo independiente entre KLT, con cambios baratos entre los ULT de un mismo KLT. En un Gantt, cada KLT es una entidad que planifica el SO; dentro de cada KLT, la biblioteca planifica sus ULT.
 
+### El quantum y los ULT
+
+- El SO no ve los ULT: el **quantum es del proceso (o del KLT)** y se consume ejecute el ULT que ejecute. Si un ULT termina o se bloquea y la biblioteca pasa a otro, el quantum **no se reinicia**.
+- Cuando vence el quantum, el SO desaloja al KLT entero y **la biblioteca no se entera**: cuando el KLT vuelve a la CPU, sigue ejecutando el **mismo ULT** (salvo que la biblioteca use un algoritmo con desalojo y haya llegado un ULT que lo desplace).
+- Un ULT que llega mientras tanto entra a la cola **de la biblioteca**, no a la cola de Ready del SO.
+
 ## Comparación general
 
 |                                    | ULT                                        | KLT                                       | Procesos                    |

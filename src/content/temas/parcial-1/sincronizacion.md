@@ -175,6 +175,10 @@ signal(s) {             // también llamado V() o up()
 | **Binario** (de sincronización) | `0` o `1`              | Ordenar la ejecución: un proceso espera a que otro le "avise".                                                    |
 | **Contador** (general)          | `N` (instancias) o `0` | Limitar el acceso a N instancias de un recurso, o contar elementos disponibles.                                   |
 
+A diferencia del mutex, en un semáforo **binario de sincronización o contador** el `wait` y el `signal` los hacen, en general, **procesos distintos**: uno espera y otro avisa (o uno consume y otro produce).
+
+**Semáforos y `fork()`.** `fork()` copia la memoria del proceso, así que una variable común queda **duplicada**: el hijo no ve los cambios del padre ni al revés. Los semáforos, en cambio, son estructuras **del SO**: en los ejercicios se asume que los semáforos creados antes del `fork()` los **comparten** padre e hijos, y por eso sirven para sincronizarlos.
+
 ### Tres usos típicos
 
 **Mutua exclusión:**

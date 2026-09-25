@@ -25,6 +25,9 @@ Con multiprogramación hay varios procesos queriendo usar la CPU al mismo tiempo
 ## Conceptos base
 
 - **Grado (nivel) de multiprogramación**: cantidad de procesos activos en memoria principal, es decir, en Ready, Running o Blocked.
+  - Si el sistema tiene un **grado máximo** y llega un proceso con el cupo lleno, queda en **New** hasta que se libere un lugar.
+  - Un proceso **bloqueado sigue ocupando** su lugar: el cupo se libera recién cuando alguno **termina** (o lo suspende el planificador de mediano plazo).
+  - El tiempo en New no cuenta como espera en Ready, pero el tiempo de retorno se mide desde la llegada.
 - **CPU bound**: proceso que pasa la mayor parte del tiempo calculando.
 - **I/O bound**: proceso que hace poco cálculo y usa la E/S todo el tiempo.
 - La CPU nunca está realmente "vacía": si no hay procesos de usuario listos, ejecuta el proceso _idle_ del SO.
@@ -94,10 +97,14 @@ La próxima ráfaga se estima como un promedio ponderado entre la última ráfag
 - Con α alto pesa más el comportamiento reciente: la estimación reacciona rápido.
 - Con α bajo pesa más la historia: la estimación cambia despacio. Conviene cuando el proceso es estable.
 - Calcular estimaciones agrega overhead.
+- El planificador **elige por la estimación**, pero el proceso **ejecuta su ráfaga real**. Si la real resulta más larga que la estimada, el proceso sigue ejecutando igual: la estimación solo sirve para decidir a quién elegir.
+- La estimación de cada ráfaga se calcula cuando el proceso vuelve a Ready (con la ráfaga real que acaba de terminar).
 
 ### SRT (Shortest Remaining Time) = SJF con desalojo
 
 Cada vez que llega un proceso a Ready se compara su ráfaga con **lo que le falta** al que está ejecutando. Si la del recién llegado es menor, hay desalojo. Si hay empate, sigue el que ya estaba ejecutando.
+
+Con estimaciones, "lo que le falta" es la **estimación restante**: `estimación − lo que ya ejecutó`. Puede llegar a 0 (o quedar negativa) si la ráfaga real es más larga que la estimada; en ese caso el proceso sigue y solo lo desaloja alguien con una estimación **estrictamente menor**.
 
 - Favorece todavía más a los procesos cortos.
 - Tiene inanición y más overhead que SJF.
@@ -107,6 +114,7 @@ Cada vez que llega un proceso a Ready se compara su ráfaga con **lo que le falt
 Es FIFO con un **quantum** (Q): cuando el proceso agota su quantum, una interrupción de clock lo desaloja y lo manda al final de Ready.
 
 - Si el proceso se bloquea antes de agotar el quantum, **lo que le sobró no se acumula**: la próxima vez arranca con Q entero.
+- Si vence el quantum y **no hay nadie más en Ready**, el mismo proceso sigue ejecutando con un quantum nuevo (igual hay interrupción de clock).
 - Con Q muy chico hay muchísimos cambios de contexto y mucho overhead. Con Q muy grande nunca corta a nadie y se comporta como FIFO.
 - Es equitativo y no tiene inanición, pero **perjudica a los I/O bound**: se bloquean enseguida, pierden el resto del quantum y vuelven al final de la cola.
 
@@ -116,7 +124,7 @@ Corrige esa injusticia de RR contra los I/O bound con **dos colas FIFO**:
 
 | Cola                              | Quién entra                                    | Quantum con el que sale                    |
 | --------------------------------- | ---------------------------------------------- | ------------------------------------------ |
-| **Auxiliar (mayor prioridad)**    | Procesos que vuelven de una E/S.               | `Q − lo que ya usó` en la ráfaga anterior. |
+| **Auxiliar (mayor prioridad)**    | Procesos que vuelven de una E/S.               | `Q − lo que ya usó` desde que salió de la cola común. |
 | **Ready común (menor prioridad)** | Procesos nuevos y los que agotaron su quantum. | Q completo.                                |
 
 La cola común solo se atiende cuando la auxiliar está vacía. En la práctica, al proceso I/O bound se le "respeta" el quantum que le había sobrado.
@@ -183,6 +191,12 @@ Algunas aclaraciones:
 - En **SJF/SRT/HRRN** el orden de llegada no decide nada, porque se comparan ráfagas o ratios. Solo sirve para romper empates de ese criterio.
 - En **VRR**, el proceso que vuelve de E/S va a la cola **auxiliar**, así que no compite en ese desempate con los de la cola común.
 - En cada evento conviene preguntarse qué hizo intervenir al SO: una syscall, una interrupción de clock o una interrupción de E/S. La guía pide pensarlo explícitamente.
+
+### Supuestos de la guía para armar los Gantt
+
+- **E/S única y FIFO.** Salvo que el enunciado diga otra cosa, las columnas de E/S usan **un solo dispositivo**, que atiende a un proceso por vez en orden de llegada. Si un proceso termina su ráfaga de CPU y el dispositivo está ocupado, queda **bloqueado esperando el dispositivo**: su ráfaga de E/S recién empieza a contar cuando se libera, y ese tiempo **no** es espera en Ready.
+- **Varios dispositivos.** Si el enunciado nombra dispositivos distintos, cada uno tiene su propia cola FIFO y pueden trabajar en paralelo entre sí.
+- **Varios procesadores.** La cola de Ready es una sola. Con **afinidad**, un proceso que ya ejecutó en una CPU vuelve a esa misma CPU (la espera aunque la otra esté libre); **sin afinidad**, toma cualquier CPU libre. Si hay dos CPUs libres al mismo tiempo, cualquiera de las dos es válida.
 
 ### Las dos versiones de la fórmula de estimación
 
