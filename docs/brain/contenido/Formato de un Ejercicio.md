@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
 tags: [contenido, ejercicios]
-actualizado: 2026-09-23
+actualizado: 2026-09-25
 ---
 
 # Formato de un Ejercicio
@@ -52,6 +52,9 @@ while(TRUE){ ... }
 
 </div>
 ````
+
+**Valores que el alumno calcula** en una tabla: celda `_(a calcular)_` → campo para anotar
+(ver [[Celdas a calcular en enunciados]]).
 
 **Notas aclaratorias** propias (no de la guía): `> **Nota:** …`.
 **Grafos dados como dato:** bloque ` ```grafo ` (ver [[Bloques SVG grafo y diagrama]]; ej. Deadlock Ej. 1). Si el grafo es la respuesta,
