@@ -295,3 +295,10 @@
   background: var(--ok);
   vertical-align: middle;
 }
+
+/* Editor de semáforos de un simulacro ya finalizado: se ve pero no se edita */
+.sem-bloqueado .sem-editor-host,
+.sem-bloqueado [data-sem-editor] {
+  pointer-events: none;
+  opacity: 0.75;
+}

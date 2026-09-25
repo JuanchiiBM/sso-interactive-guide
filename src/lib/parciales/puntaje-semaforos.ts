@@ -2,7 +2,7 @@
 import { verificarSemaforos } from '@lib/semaforos/explorar'
 import { parsear } from '@lib/semaforos/parser'
 import { accionesDeMas } from '@lib/semaforos/seccion-critica'
-import type { EjercicioSemaforos } from '@lib/semaforos/tipos'
+import type { EjercicioSemaforos, ResultadoVerificacion } from '@lib/semaforos/tipos'
 
 /** Correcto pero con la sección crítica más grande que la de la resolución: "bien, pero no excelente". */
 export const FACTOR_SECCION_CRITICA = 0.75
@@ -14,6 +14,8 @@ export interface PuntajeSemaforos {
   tests: number
   /** Acciones de más dentro de mutex, comparado con la solución de referencia. */
   seccionCriticaDeMas: boolean
+  /** Lo que devolvió el verificador (para mostrar los tests al revelar). */
+  verificacion: ResultadoVerificacion
 }
 
 export function puntajeSemaforos(
@@ -28,6 +30,7 @@ export function puntajeSemaforos(
       testsOk: 0,
       tests: r.tests.length,
       seccionCriticaDeMas: false,
+      verificacion: r,
     }
   }
   const testsOk = r.tests.filter((t) => t.ok).length
@@ -41,5 +44,6 @@ export function puntajeSemaforos(
     testsOk,
     tests: r.tests.length,
     seccionCriticaDeMas,
+    verificacion: r,
   }
 }
