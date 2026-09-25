@@ -345,3 +345,13 @@
   font-weight: 500;
   color: var(--estado);
 }
+.simulacro-card[data-banda] {
+  /* pisa la utilidad border-line, que está en una capa posterior */
+  border-color: color-mix(in srgb, var(--banda) 70%, transparent) !important;
+}
+.simulacro-card[data-banda]:hover {
+  border-color: var(--banda) !important;
+}
+.simulacro-card [data-card-nota] {
+  color: var(--banda);
+}
