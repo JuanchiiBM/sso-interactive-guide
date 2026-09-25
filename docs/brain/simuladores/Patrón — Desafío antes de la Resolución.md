@@ -2,7 +2,7 @@
 tipo: patron
 aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice]
 tags: [patron, simuladores, ux]
-actualizado: 2026-09-23
+actualizado: 2026-09-25
 ---
 # Patrón — Desafío antes de la Resolución
 
@@ -55,3 +55,4 @@ y van en `data-claves` de las cards y de los links del sidebar; `initProgreso` l
 - `marcarResuelto` dispara `so:progreso` y se repinta en vivo (el sidebar se pone verde al acertar la
   última parte).
 
+**Modo examen:** los mismos componentes con `modo="examen"`, sin feedback hasta finalizar: ver [[Simulacros]].
