@@ -182,15 +182,15 @@ function pintar(salida: HTMLElement, r: ResultadoVerificacion) {
     salida.replaceChildren(titulo, lista)
     return
   }
-  const pasados = r.tests.filter((t) => t.ok).length
   const titulo = document.createElement('p')
   titulo.className = `text-sm font-medium ${r.ok ? 'text-ok' : 'text-bad'}`
   titulo.textContent = r.ok
-    ? `¡Correcto! ${pasados}/${r.tests.length} tests pasados.`
-    : `${pasados}/${r.tests.length} tests pasados.`
+    ? `¡Correcto! Pasa los ${r.tests.length} tests.`
+    : 'No pasa todos los tests. Estos fallan:'
   const lista = document.createElement('ul')
   lista.className = 'sem-tests'
-  for (const t of r.tests) {
+  // si algo falla, el verificador corta ahí: los demás "ok" no están comprobados
+  for (const t of r.ok ? r.tests : r.tests.filter((t) => !t.ok)) {
     const li = document.createElement('li')
     li.dataset.ok = String(t.ok)
     li.textContent = t.nombre
