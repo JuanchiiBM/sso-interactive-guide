@@ -2,9 +2,32 @@
 import { $, $$ } from '@lib/dom'
 import { estaResuelto, rutaActual } from '@lib/progreso'
 import { controlarResolucion } from '@lib/desafios/boton-resolucion'
+import type { ItemExamen } from '@lib/desafios/tipos'
 
 export function initMultipleChoice(): void {
-  for (const box of $$<HTMLElement>('[data-mc]')) init(box)
+  for (const box of $$<HTMLElement>('[data-mc][data-mc-modo="practica"]')) init(box)
+}
+
+/** Multiple choice dentro de un simulacro: vale 1 o 0; al revelar marca la correcta y la elegida. */
+export function crearMCExamen(box: HTMLElement): ItemExamen {
+  const correcta = Number(box.dataset.mcCorrecta)
+  const elegida = () => {
+    const input = $<HTMLInputElement>('input[type="radio"]:checked', box)
+    return input ? Number(input.value) : null
+  }
+  return {
+    puntaje: async () => (elegida() === correcta ? 1 : 0),
+    revelar() {
+      const e = elegida()
+      for (const op of $$<HTMLElement>('[data-mc-opcion]', box)) {
+        const i = Number(op.dataset.mcOpcion)
+        op.dataset.estado = i === correcta ? 'correcta' : i === e ? 'error' : 'incorrecta'
+        $<HTMLElement>('[data-mc-explicacion]', op)?.removeAttribute('hidden')
+        $<HTMLInputElement>('input', op)!.disabled = true
+      }
+      $<HTMLElement>('[data-mc-respuesta]', box)!.hidden = false
+    },
+  }
 }
 
 function init(box: HTMLElement): void {
