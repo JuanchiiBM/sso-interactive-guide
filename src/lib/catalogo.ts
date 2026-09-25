@@ -1,5 +1,6 @@
 /** Consultas a las content collections, agrupadas para navegación (solo build/SSR). */
 import { getCollection, type CollectionEntry } from 'astro:content'
+import { armarParciales, type Parcial } from '@lib/parciales/catalogo'
 
 export type Tema = CollectionEntry<'temas'>
 export type Ejercicio = CollectionEntry<'ejercicios'>
@@ -27,7 +28,17 @@ export async function getCatalogo(parcial?: 1 | 2): Promise<TemaConEjercicios[]>
   }))
 }
 
+/** Los parciales reales como simulacros, con la teoría y la práctica cargadas de cada examen. */
+export async function getParciales(): Promise<Parcial[]> {
+  const [temas, ejercicios] = await Promise.all([getTemas(1), getEjercicios()])
+  return armarParciales(
+    ejercicios,
+    temas.map((t) => t.id),
+  )
+}
+
 export const temaHref = (id: string) => `/teoria/${id}/`
+export const simulacroHref = (id: string) => `/simulacros/${id}/`
 export const ejercicioHref = (id: string) => `/ejercicios/${id}/`
 
 /** "Ej. 12", o "Simulacro" / "Simulacro 2" para los de numeración `S`, `S2`. */
