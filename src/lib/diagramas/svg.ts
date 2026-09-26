@@ -9,6 +9,10 @@ export const esc = (s: string) =>
 /** `data-el` para que un recorrido paso a paso pueda resaltar el elemento. */
 const dataEl = (el?: string) => (el ? ` data-el="${esc(el)}"` : '')
 
+/** Marca como oculto (hasta que un paso lo muestre) el primer elemento con `data-el` del HTML dado. */
+export const oculto = (html: string) =>
+  html.replace(/data-el="([^"]+)"/, 'data-el="$1" data-rc-oculto')
+
 /** Agrupa elementos bajo un `data-el`; con `oculto`, el recorrido lo muestra recién cuando un paso lo pide. */
 export function grupo(
   el: string,
@@ -56,10 +60,21 @@ export function rombo(x: number, y: number, w: number, h: number, texto: string)
 }
 
 /** Flecha con etiqueta opcional ubicada en (lx, ly). */
-export function flecha(d: string, etiqueta?: string, lx = 0, ly = 0, clase = '', el?: string) {
-  const label = etiqueta
-    ? `<text class="dg-etiqueta" x="${lx}" y="${ly}">${esc(etiqueta)}</text>`
-    : ''
+/** Con `val`, la etiqueta la puede cambiar un recorrido por paso (`valores`). */
+export function flecha(
+  d: string,
+  etiqueta?: string,
+  lx = 0,
+  ly = 0,
+  clase = '',
+  el?: string,
+  val?: string,
+) {
+  const dataVal = val ? ` data-val="${esc(val)}"` : ''
+  const label =
+    etiqueta != null
+      ? `<text class="dg-etiqueta" x="${lx}" y="${ly}"${dataVal}>${esc(etiqueta)}</text>`
+      : ''
   return `<g class="dg-flecha ${clase}"${dataEl(el)}><path d="${d}" marker-end="url(#dg-punta)"/>${label}</g>`
 }
 

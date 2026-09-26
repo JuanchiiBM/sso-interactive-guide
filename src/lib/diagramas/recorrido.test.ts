@@ -60,7 +60,9 @@ describe.each(Object.entries(RECORRIDOS))('recorrido %s', (_, r) => {
   const html = renderRecorrido(r)
   const els = atributos(html, 'data-el')
   const vals = atributos(html, 'data-val')
-  const ocultos = new Set([...html.matchAll(/data-el="([^"]+)" data-rc-oculto/g)].map((m) => m[1]))
+  const ocultos = new Set(
+    [...html.matchAll(/data-el="([^"]+)"[^>]*data-rc-oculto/g)].map((m) => m[1]),
+  )
   const pasos = (r.variantes ?? [{ nombre: '', pasos: r.pasos ?? [] }]).flatMap((v) => v.pasos)
 
   it('tiene pasos con título y texto', () => {

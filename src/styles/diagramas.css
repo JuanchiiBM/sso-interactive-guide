@@ -248,20 +248,30 @@ rect.ge-vacia {
 .dg-punta-on {
   fill: var(--accent);
 }
-.recorrido .rc-ok rect,
-.recorrido .rc-ok path {
+.recorrido [data-el].rc-ok:not(.dg-flecha) rect,
+.recorrido [data-el].rc-ok:not(.dg-flecha) path {
   stroke: var(--ok);
   fill: color-mix(in srgb, var(--ok) 14%, var(--surface));
 }
-.recorrido .rc-mal rect,
-.recorrido .rc-mal path {
+.recorrido [data-el].rc-mal:not(.dg-flecha) rect,
+.recorrido [data-el].rc-mal:not(.dg-flecha) path {
   stroke: var(--bad);
   fill: color-mix(in srgb, var(--bad) 14%, var(--surface));
 }
-.recorrido .rc-aviso rect,
-.recorrido .rc-aviso path {
+.recorrido [data-el].rc-aviso:not(.dg-flecha) rect,
+.recorrido [data-el].rc-aviso:not(.dg-flecha) path {
   stroke: var(--warn);
   fill: color-mix(in srgb, var(--warn) 14%, var(--surface));
+}
+/* en una flecha el estado pinta solo el trazo; le gana al acento del resaltado */
+.recorrido .dg-flecha[data-el].rc-ok path {
+  stroke: var(--ok);
+}
+.recorrido .dg-flecha[data-el].rc-mal path {
+  stroke: var(--bad);
+}
+.recorrido .dg-flecha[data-el].rc-aviso path {
+  stroke: var(--warn);
 }
 .recorrido.rc-activo [data-rc-oculto]:not(.rc-visible) {
   display: none;
@@ -542,3 +552,21 @@ rect.ge-vacia {
   stroke-width: 2;
 }
 /* fin sincronización y deadlock */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · tanda 2 · imagen del proceso, interrupciones y hilos ── */
+
+/* fin tanda 2 · imagen del proceso, interrupciones y hilos */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · tanda 2 · estados y planificadores ── */
+
+/* fin tanda 2 · estados y planificadores */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · tanda 2 · semáforos, soluciones de software y deadlock ── */
+
+/* fin tanda 2 · semáforos, soluciones de software y deadlock */
