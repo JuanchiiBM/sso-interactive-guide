@@ -756,6 +756,158 @@ rect.ge-vacia {
 /* separador para que las secciones se mergeen por separado */
 
 /* ── Tanda 3 · sistemas operativos y arquitectura ── */
+/* primitivas-so.ts y fijos de SO/arquitectura: kernel, anillos, pirámide de memoria */
+.t3s-kernel rect {
+  fill: color-mix(in srgb, var(--p5) 12%, var(--surface));
+  stroke: var(--p5);
+}
+.t3s-servicio rect {
+  fill: color-mix(in srgb, var(--p3) 12%, var(--surface));
+  stroke: var(--p3);
+}
+.t3s-recuadro rect {
+  stroke-width: 1.5;
+}
+.t3s-recuadro.t3s-kernel rect {
+  fill: color-mix(in srgb, var(--p5) 7%, var(--surface-2));
+}
+/* título apoyado sobre el borde: lo corta con el fondo del recuadro */
+.diagrama .t3s-leyenda {
+  text-anchor: start;
+  font-size: 11px;
+  fill: var(--muted);
+  paint-order: stroke;
+  stroke: var(--surface-2);
+  stroke-width: 8px;
+  stroke-linejoin: round;
+}
+.t3s-modulo rect,
+.t3s-capa rect {
+  fill: var(--surface);
+  stroke: var(--p5);
+}
+.diagrama .t3s-modulo text {
+  font-size: 12px;
+}
+.t3s-malla path {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+.recorrido .t3s-malla.rc-on path {
+  stroke: var(--accent);
+}
+.recorrido .t3s-recuadro.rc-on rect {
+  stroke-width: 2.4;
+}
+.t3s-divisor {
+  stroke: var(--line);
+  stroke-dasharray: 4 4;
+}
+.diagrama .t3s-col {
+  font-size: 13px;
+  font-weight: 700;
+}
+.diagrama .t3s-contador {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--accent);
+}
+.diagrama .t3s-nota {
+  text-anchor: start;
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+.diagrama .t3s-nota-c,
+.diagrama .t3s-pie {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.diagrama .t3s-der {
+  text-anchor: end;
+}
+.diagrama .t3s-clave {
+  font-weight: 600;
+  fill: var(--accent);
+}
+.diagrama .t3s-eje {
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+/* anillos: el privilegio crece hacia el centro; 1 y 2 casi sin uso, en punteado */
+.t3s-anillo {
+  stroke-width: 1.5;
+}
+.t3s-anillo-3 {
+  fill: color-mix(in srgb, var(--p1) 12%, var(--surface));
+  stroke: var(--p1);
+}
+.t3s-anillo-2 {
+  fill: color-mix(in srgb, var(--p5) 6%, var(--surface));
+  stroke: var(--line-strong);
+  stroke-dasharray: 4 4;
+}
+.t3s-anillo-1 {
+  fill: color-mix(in srgb, var(--p5) 12%, var(--surface));
+  stroke: var(--line-strong);
+  stroke-dasharray: 4 4;
+}
+.t3s-anillo-0 {
+  fill: color-mix(in srgb, var(--p5) 30%, var(--surface));
+  stroke: var(--p5);
+}
+.diagrama .t3s-rotulo {
+  font-size: 11px;
+  font-weight: 600;
+}
+.diagrama .t3s-rotulo-tenue {
+  fill: var(--muted);
+}
+.diagrama .t3s-rotulo-fuerte {
+  font-size: 12px;
+}
+.diagrama .t3s-rotulo-sub {
+  font-size: 10px;
+  font-weight: 400;
+  fill: var(--fg-soft);
+}
+.diagrama .t3s-psw {
+  text-anchor: start;
+  font-weight: 700;
+}
+.t3s-celda rect {
+  fill: var(--surface);
+}
+.diagrama .t3s-celda text {
+  font-size: 12px;
+}
+.t3s-bit rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.diagrama .t3s-bit text {
+  font-weight: 700;
+  fill: var(--accent);
+}
+/* pirámide de memoria: volátil en azul, no volátil en ámbar */
+.t3s-nivel path {
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.t3s-volatil path {
+  fill: color-mix(in srgb, var(--p1) 12%, var(--surface));
+  stroke: var(--p1);
+}
+.t3s-persistente path {
+  fill: color-mix(in srgb, var(--p4) 12%, var(--surface));
+  stroke: var(--p4);
+}
+.t3s-corte {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
 
 /* fin tanda 3 · sistemas operativos y arquitectura */
 
