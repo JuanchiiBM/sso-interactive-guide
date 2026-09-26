@@ -75,6 +75,10 @@ Un **wrapper** es una función de biblioteca (por ejemplo, de la biblioteca est�
 
 > **Ojo:** el wrapper **no** hace el cambio de modo. Es código de usuario que en algún momento invoca la syscall, y es la syscall la que pasa a modo kernel.
 
+```diagrama wrapper-syscall
+
+```
+
 ## Modos de ejecución
 
 La CPU tiene "anillos de protección" (típicamente del 0 al 3). En la práctica se habla de dos:
@@ -83,6 +87,10 @@ La CPU tiene "anillos de protección" (típicamente del 0 al 3). En la práctica
 - **Modo usuario (anillo 3)**: solo instrucciones no privilegiadas. Ahí corren todas las aplicaciones.
 
 El modo actual queda indicado en un bit del **PSW**.
+
+```diagrama anillos-proteccion
+
+```
 
 ### ¿Qué pasa si un programa intenta una instrucción privilegiada?
 
@@ -115,6 +123,10 @@ Es el paso de modo usuario a kernel o al revés. Reglas clave:
 | **Monolítico**  | Todo el SO es un único bloque en modo kernel; cualquier parte puede llamar a cualquier otra.                                                                  | Muy eficiente, casi sin overhead de comunicación.                                   | Difícil de mantener y depurar; un cambio chico puede romper todo.                                      |
 | **En capas**    | El kernel se divide en capas con interfaces bien definidas; cada una usa a la de abajo.                                                                       | Más ordenado y fácil de mantener; los cambios quedan acotados.                      | Menos fluidez: una operación puede atravesar muchas capas.                                             |
 | **Microkernel** | En modo kernel queda solo lo mínimo (interrupciones, E/S básica, comunicación, planificación). El resto de los servicios corre como procesos en modo usuario. | Flexible y robusto: se agregan o sacan módulos, y una falla no tira abajo al resto. | Más overhead: los módulos se comunican por mensajes a través del kernel, y eso pega en la performance. |
+
+```recorrido arquitecturas-kernel
+
+```
 
 ## Preguntas de parcial
 

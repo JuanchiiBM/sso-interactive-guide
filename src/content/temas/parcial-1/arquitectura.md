@@ -141,6 +141,10 @@ Las memorias forman una pirámide. Arriba están las más rápidas, chicas y car
 - **No volátil**: la información se conserva.
 - **Suspender** la máquina significa mantener energizada (o volcar) la memoria para poder retomar el estado al "despertar".
 
+```diagrama jerarquia-memoria
+
+```
+
 ## Preguntas de parcial
 
 **1. ¿En qué consiste el ciclo de ejecución de una instrucción? ¿Puede surgir una interrupción como consecuencia de ese ciclo?**
