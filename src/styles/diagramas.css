@@ -382,6 +382,79 @@ rect.ge-vacia {
 }
 
 /* ── Recorridos · procesos y SO (estilos propios de esos dibujos) ── */
+/* primitivas-procesos.ts: subtítulos, carriles de tiempo, tarjetas (PCB), insignias y código */
+.diagrama .rp-sub {
+  font-size: 10px;
+  fill: var(--fg-soft);
+}
+.rp-carril rect {
+  fill: var(--surface);
+  stroke: var(--line);
+}
+.diagrama .rp-carril text {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+.rp-bloque {
+  --c: var(--fg-soft);
+}
+.rp-bloque.rp-p1 {
+  --c: var(--p1);
+}
+.rp-bloque.rp-p2 {
+  --c: var(--p2);
+}
+.rp-bloque.rp-so {
+  --c: var(--p5);
+}
+.rp-bloque rect {
+  fill: color-mix(in srgb, var(--c) 22%, var(--surface));
+  stroke: var(--c);
+  stroke-width: 1.5;
+}
+.diagrama .rp-bloque text {
+  font-size: 12px;
+}
+.recorrido .rp-bloque.rc-on rect {
+  stroke-width: 2.6;
+}
+.dg-flecha.rp-corte path {
+  stroke: var(--muted);
+  stroke-dasharray: 4 4;
+}
+.dg-flecha.rp-adopcion path {
+  stroke-dasharray: 6 4;
+}
+.rp-insignia rect {
+  fill: color-mix(in srgb, var(--warn) 22%, var(--surface));
+  stroke: var(--warn);
+}
+.diagrama .rp-insignia text {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--warn);
+}
+.diagrama .rp-codigo {
+  text-anchor: start;
+}
+.diagrama .rp-nota {
+  font-size: 11px;
+  fill: var(--accent);
+}
+.rp-salida rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+}
+.rp-indicador rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.diagrama .rp-indicador text {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--accent);
+}
 
 /* fin procesos y SO */
 
