@@ -104,6 +104,10 @@ Es el paso de modo usuario a kernel o al revés. Reglas clave:
 3. Si la operación es bloqueante, el proceso pasa a _Blocked_ y el planificador elige otro.
 4. Cuando termina, el resultado queda disponible para el proceso (por ejemplo, en su stack), se vuelve a modo usuario y el proceso sigue cuando lo vuelvan a elegir.
 
+```recorrido syscall-read
+
+```
+
 ## Arquitecturas de kernel
 
 | Tipo            | Idea                                                                                                                                                          | A favor                                                                             | En contra                                                                                              |
