@@ -96,6 +96,10 @@ Agrega dos estados cuyas estructuras están en **disco** en lugar de RAM. Solo e
 
 Los procesos entran y salen de estos estados por decisión del planificador de mediano plazo (swapping). Si un proceso Blocked/Suspended recibe su evento, pasa a Ready/Suspended: sigue en disco, pero ya no espera nada.
 
+```recorrido estados-suspendidos
+
+```
+
 ### Syscalls bloqueantes y no bloqueantes
 
 |                                                 | Bloqueante                                | No bloqueante                                           |

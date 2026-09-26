@@ -48,3 +48,21 @@ export function recuadro(
     `</g>`
   )
 }
+
+/** Caja con el nombre a la izquierda, para dejar lugar a fichas del lado derecho. */
+export function bandeja(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  nombre: string,
+  el: string,
+  clase = '',
+) {
+  return (
+    `<g class="dg-nodo ${clase}" data-el="${esc(el)}">` +
+    `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="10"/>` +
+    texto(x - w / 2 + 14, y, nombre, { clase: 're-izq' }) +
+    `</g>`
+  )
+}

@@ -78,7 +78,10 @@ los junta con `import.meta.glob` (un id repetido falla en build).
   (marca oculto el primer `data-el` de un HTML, p. ej. `oculto(caja(…, 'nota'))`), `lienzo`.
 - `primitivas-procesos.ts`: `nodo` (caja con subtítulo variable), `tarjeta`, `arista`, `bloque`, `carril`,
   `insignia`.
-- `primitivas-planificacion.ts`: `cola` (con casilleros), `casilleros` (posiciones de fichas), `recuadro`.
+- `primitivas-planificacion.ts`: `cola` (con casilleros), `casilleros` (posiciones de fichas), `recuadro`,
+  `bandeja` (caja con el nombre a la izquierda y lugar para fichas).
+- `siete-estados.ts`: `lienzoSieteEstados` (7 estados con zonas RAM y disco), `lugaresSieteEstados`,
+  `datoSieteEstados`; lo usan `estados-suspendidos` y `tipos-planificadores`.
 - `primitivas-sincronizacion.ts`: `codigo` (columna de código con líneas resaltables), `lugaresCodigo`,
   `valor`, `fila`, `cartel`, `rect`. `banquero.ts`: el algoritmo puro, testeado.
 
