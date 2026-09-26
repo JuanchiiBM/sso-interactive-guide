@@ -65,6 +65,10 @@ Hay **un PCB por proceso**. Está siempre en memoria y el SO lo usa para adminis
 - **Información de E/S**: archivos abiertos, dispositivos asignados.
 - **Información contable**: tiempo de CPU consumido, entre otros datos.
 
+```diagrama pcb-grupos
+
+```
+
 ## Estados de un proceso
 
 ### Modelo de 5 estados

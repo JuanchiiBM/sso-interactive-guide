@@ -32,6 +32,10 @@ Con multiprogramación hay varios procesos queriendo usar la CPU al mismo tiempo
 - **I/O bound**: proceso que hace poco cálculo y usa la E/S todo el tiempo.
 - La CPU nunca está realmente "vacía": si no hay procesos de usuario listos, ejecuta el proceso _idle_ del SO.
 
+```recorrido colas-dispositivos
+
+```
+
 ## Tipos de planificadores
 
 | Planificador      | Decide                                                         | Transiciones que maneja                                        | ¿Afecta la multiprogramación?                          |
@@ -121,6 +125,10 @@ Es FIFO con un **quantum** (Q): cuando el proceso agota su quantum, una interrup
 - Si vence el quantum y **no hay nadie más en Ready**, el mismo proceso sigue ejecutando con un quantum nuevo (igual hay interrupción de clock).
 - Con Q muy chico hay muchísimos cambios de contexto y mucho overhead. Con Q muy grande nunca corta a nadie y se comporta como FIFO.
 - Es equitativo y no tiene inanición, pero **perjudica a los I/O bound**: se bloquean enseguida, pierden el resto del quantum y vuelven al final de la cola.
+
+```recorrido rr-quantum
+
+```
 
 ### Virtual Round Robin (VRR)
 

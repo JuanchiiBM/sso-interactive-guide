@@ -140,6 +140,10 @@ lock = false;
 - Sigue teniendo **espera activa**.
 - La puede usar un proceso de usuario, porque no es una instrucción privilegiada.
 
+```recorrido test-and-set
+
+```
+
 ## Semáforos
 
 Un **semáforo** es una estructura del SO con un **contador entero** y una **cola de procesos bloqueados**. Se usa con dos syscalls atómicas:

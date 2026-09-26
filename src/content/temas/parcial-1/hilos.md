@@ -96,6 +96,10 @@ Un proceso puede tener varios KLT y, sobre cada uno, varios ULT. Así se busca l
 - Cuando vence el quantum, el SO desaloja al KLT entero y **la biblioteca no se entera**: cuando el KLT vuelve a la CPU, sigue ejecutando el **mismo ULT** (salvo que la biblioteca use un algoritmo con desalojo y haya llegado un ULT que lo desplace).
 - Un ULT que llega mientras tanto entra a la cola **de la biblioteca**, no a la cola de Ready del SO.
 
+```recorrido quantum-ult
+
+```
+
 ## Comparación general
 
 |                                    | ULT                                        | KLT                                       | Procesos                    |

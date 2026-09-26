@@ -24,6 +24,10 @@ mismo par se curvan. ⚠️ No usar `resaltar-ciclo` en un enunciado donde detec
 ## ```diagrama <id> — diagramas fijos de teoría
 Registro en `DIAGRAMAS` (`src/lib/diagramas/index.ts`): `estados-proceso`, `ciclo-instruccion`,
 `hilos-ult-klt`. Se dibujan a mano con las primitivas de `svg.ts` (`caja`, `rombo`, `flecha`, `marco`).
+Los nuevos van en `src/lib/diagramas/fijos/<tema>.ts`, que exporta `diagramas: Record<id, () => string>`
+(se registran solos; no importar `../index` desde ahí). `fijos.test.ts` revisa que cada uno genere un
+`<figure class="diagrama">` con `aria-label` y sin `style` inline. Si el dibujo tiene una secuencia o
+una causa, es un [[Recorridos paso a paso|recorrido]]; si se entiende de un vistazo, un diagrama fijo.
 
 ## ```gantt — Gantt ya resuelto (enunciados de Gantt inverso)
 El cuerpo es la **misma config YAML** que una `simulaciones:` de planificación (sin `kind`, con
