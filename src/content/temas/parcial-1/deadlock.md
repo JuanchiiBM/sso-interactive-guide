@@ -62,6 +62,10 @@ resaltar-ciclo
 - **Con un ciclo y todos los recursos del ciclo con una sola instancia**: **hay** deadlock.
 - **Con un ciclo y recursos con varias instancias**: **puede o no** haber deadlock. Para saberlo hay que correr el algoritmo de detección.
 
+```recorrido grafo-pedido-a-pedido
+
+```
+
 El grafo muestra la situación, pero para **justificar** un deadlock en el parcial hace falta un algoritmo. El mismo estado se puede escribir como matrices de asignación y de peticiones.
 
 ## Condiciones para que exista deadlock (Coffman)
@@ -141,6 +145,10 @@ No se restringe la asignación: si el recurso está libre, se da. Cada cierto ti
 4. Suponer que termina y libera todo: `D = D + A[proceso]`.
 5. Repetir desde el paso 3 hasta que ningún proceso pueda avanzar.
 6. **Los procesos que quedan sin marcar están en deadlock.**
+
+```recorrido deteccion
+
+```
 
 #### Recuperación
 
