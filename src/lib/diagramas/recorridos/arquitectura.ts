@@ -23,7 +23,7 @@ const MANEJADOR = [
   '0x80C  IRET',
 ]
 const panelFijo = (y: number, h: number, titulo: string) =>
-  `<g class="dg-panel"><rect x="10" y="${y}" width="254" height="${h}" rx="12"/><text x="24" y="${y + 16}">${titulo}</text></g>`
+  `<g class="dg-panel"><rect x="10" y="${y}" width="254" height="${h}" rx="12"/><text class="ri-leyenda" x="24" y="${y}">${titulo}</text></g>`
 
 const atencionInterrupcion: Recorrido = {
   ancho: 720,
@@ -32,7 +32,7 @@ const atencionInterrupcion: Recorrido = {
   cuerpo: [
     panelFijo(20, 138, 'Programa · modo usuario'),
     codigo('prog', COD_X, PROG_Y, 222, PROGRAMA),
-    panelFijo(180, 138, 'Manejador · código del SO, modo kernel'),
+    panelFijo(180, 138, 'Manejador (SO) · modo kernel'),
     codigo('man', COD_X, MAN_Y, 222, MANEJADOR),
     tarjeta(
       375,
@@ -49,7 +49,7 @@ const atencionInterrupcion: Recorrido = {
     ),
     oculto(flecha('M375,270 L375,144', 'interrupción', 375, 205, '', 'irq')),
     caja(375, 290, 110, 40, 'Disco', 'dg-bloqueado', 'disco'),
-    `<g class="dg-panel"><rect x="490" y="20" width="220" height="146" rx="12"/><text x="504" y="36">Pila del kernel</text></g>`,
+    `<g class="dg-panel"><rect x="490" y="20" width="220" height="146" rx="12"/><text class="ri-leyenda" x="504" y="20">Pila del kernel</text></g>`,
     oculto(valor('s-pc', 510, 50, 180, 28, 'PC = 0x108')),
     oculto(valor('s-psw', 510, 84, 180, 28, 'PSW: usuario · hab.')),
     oculto(valor('s-regs', 510, 118, 180, 28, 'AC = 8 · BX · …')),

@@ -462,7 +462,7 @@ const imagenProceso: Recorrido = {
   alto: 352,
   titulo: 'Imagen del proceso: secciones de memoria y un memory leak',
   cuerpo: [
-    `<g class="dg-panel"><rect x="8" y="14" width="316" height="322" rx="12"/><text x="22" y="30">programa en C · la ficha es el PC</text></g>`,
+    `<g class="dg-panel"><rect x="8" y="14" width="316" height="322" rx="12"/><text class="ri-leyenda" x="22" y="14">programa en C · la ficha es el PC</text></g>`,
     codigo('img', IMG_X, IMG_Y, 280, LINEAS_IMG),
     texto(350, 20, 'direcciones altas', { clase: 'dg-zona' }),
     texto(350, 344, 'direcciones bajas', { clase: 'dg-zona' }),
@@ -474,8 +474,8 @@ const imagenProceso: Recorrido = {
     seccion(350, 298, 256, 32, 'Código'),
     arista('M370,155 L370,178', { el: 'crece-stack', punta: true }),
     arista('M384,196 L384,173', { el: 'crece-heap', punta: true }),
-    caja(520, 282, 150, 24, 'contador = 5', '', 'contador'),
-    `<g data-el="instrucciones">${texto(520, 314, 'main y cargar · solo lectura', { clase: 'ri-chica' })}</g>`,
+    caja(520, 282, 130, 22, 'contador = 5', '', 'contador'),
+    `<g data-el="instrucciones">${texto(512, 314, 'main y cargar · solo lectura', { clase: 'ri-chica ri-mini' })}</g>`,
     caja(668, 70, 88, 76, 'PCB\n(lo maneja\nel SO)', 'dg-neutro', 'pcb'),
     tarjeta(520, 58, 160, 44, 'marco de main', [{ t: 'total = 0' }], {
       el: 'marco-main',
