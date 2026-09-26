@@ -84,6 +84,12 @@ los junta con `import.meta.glob` (un id repetido falla en build).
   `datoSieteEstados`; lo usan `estados-suspendidos` y `tipos-planificadores`.
 - `primitivas-sincronizacion.ts`: `codigo` (columna de código con líneas resaltables), `lugaresCodigo`,
   `valor`, `fila`, `cartel`, `rect`. `banquero.ts`: el algoritmo puro, testeado.
+- `primitivas-arquitectura.ts`: `seccion` (franja de un bloque de memoria), `panel`. Clase `ri-leyenda`:
+  título de panel apoyado sobre el borde.
+- `primitivas-so.ts`: `cruce` (flecha resaltable con insignia, p. ej. "trap"), `recuadroTitulado`.
+- `primitivas-t3.ts`: `panelLeyenda`, `celda` (celda de Gantt con las clases `ge-*` del sitio), `eje`, `chip`,
+  `anchoTexto`.
+- `siete-estados.ts` (dibujo de 7 estados), `banquero.ts` y `deteccion.ts` (algoritmos puros, testeados).
 
 ## Gotchas
 
@@ -101,6 +107,9 @@ los junta con `import.meta.glob` (un id repetido falla en build).
   `export const recorridos`. Los helpers van en `src/lib/diagramas/`.
 - **Prettier y el hook:** lint-staged formatea el `.md` entero al commitear (puede realinear tablas);
   a mano, `prettier --write` solo sobre los archivos tocados, nunca sobre `src`.
+- **Espacios al inicio de un `<text>`** se colapsan: para sangrar código usá espacios de no separación.
+- **Caché del navegador con `pnpm preview`:** después de un rebuild puede seguir sirviendo el HTML viejo;
+  recargá forzado o agregá `?v=2` a la URL.
 - **Caché de content collections:** si cambiás un recorrido y el HTML no cambia,
   `rm -rf .astro node_modules/.astro` antes de `pnpm build`.
 
