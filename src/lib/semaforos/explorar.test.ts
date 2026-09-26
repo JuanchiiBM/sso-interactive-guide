@@ -248,6 +248,15 @@ describe('motivos de falla', () => {
     const r = verificarSemaforos(prog('semaphore m = 0;', { Hilo: MUTEX }), contador)
     expect(r.tests.find((t) => /deadlock/.test(t.nombre))!.motivo).toMatch(/Hilo en wait\(m\)/)
   })
+
+  it('max-semaforos usa el motivo del ejercicio si lo trae', () => {
+    const ej: EjercicioSemaforos = {
+      ...contador,
+      tests: [{ tipo: 'max-semaforos', max: 1, motivo: 'x solo se lee.' }],
+    }
+    const r = verificarSemaforos(prog('semaphore m = 1, x = 1;', { Hilo: MUTEX }), ej)
+    expect(r.tests[0].motivo).toBe('x solo se lee.')
+  })
 })
 
 describe('motor v2: arrays, locales al azar y recursos implícitos', () => {
