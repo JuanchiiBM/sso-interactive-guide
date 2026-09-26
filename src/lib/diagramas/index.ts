@@ -1,54 +1,85 @@
 /** Diagramas fijos de la teoría, referenciados desde markdown con ```diagrama <id>. */
-import { caja, flecha, marco, rombo } from './svg'
+import { caja, flecha, marco, rombo, type Lienzo } from './svg'
 
 const W = 112
 const H = 40
 
-function estadosProceso(): string {
-  const n = { x: 70, y: 70 }
-  const r = { x: 250, y: 70 }
-  const run = { x: 470, y: 70 }
-  const ex = { x: 650, y: 70 }
-  const bl = { x: 360, y: 230 }
-  return marco({
+/** Posición de cada estado del diagrama de 5 estados (la usa también su recorrido). */
+export const ESTADOS = {
+  new: { x: 70, y: 70 },
+  ready: { x: 250, y: 70 },
+  running: { x: 470, y: 70 },
+  exit: { x: 650, y: 70 },
+  blocked: { x: 360, y: 230 },
+}
+export const ANCHO_ESTADO = W
+export const ALTO_ESTADO = H
+
+export function lienzoEstadosProceso(): Lienzo {
+  const { new: n, ready: r, running: run, exit: ex, blocked: bl } = ESTADOS
+  return {
     ancho: 720,
     alto: 290,
     titulo: 'Diagrama de 5 estados de un proceso',
     cuerpo: [
-      flecha(`M${n.x + W / 2},${n.y} L${r.x - W / 2 - 4},${r.y}`, 'admitido', 160, n.y - 14),
+      flecha(
+        `M${n.x + W / 2},${n.y} L${r.x - W / 2 - 4},${r.y}`,
+        'admitido',
+        160,
+        n.y - 14,
+        '',
+        'admitido',
+      ),
       flecha(
         `M${r.x + 30},${r.y - H / 2} Q360,-5 ${run.x - 30},${run.y - H / 2 - 4}`,
         'dispatch',
         360,
         9,
+        '',
+        'dispatch',
       ),
       flecha(
         `M${run.x - 30},${run.y + H / 2} Q360,140 ${r.x + 30},${r.y + H / 2 + 4}`,
         'fin de quantum / desalojo',
         360,
         128,
+        '',
+        'desalojo',
       ),
-      flecha(`M${run.x + W / 2},${run.y} L${ex.x - W / 2 - 4},${ex.y}`, 'termina', 560, run.y - 14),
+      flecha(
+        `M${run.x + W / 2},${run.y} L${ex.x - W / 2 - 4},${ex.y}`,
+        'termina',
+        560,
+        run.y - 14,
+        '',
+        'termina',
+      ),
       flecha(
         `M${run.x},${run.y + H / 2} L${bl.x + 40},${bl.y - H / 2 - 4}`,
         'espera un evento',
         520,
         170,
+        '',
+        'espera',
       ),
       flecha(
         `M${bl.x - 40},${bl.y - H / 2} L${r.x},${r.y + H / 2 + 4}`,
         'ocurre el evento',
         200,
         170,
+        '',
+        'evento',
       ),
-      caja(n.x, n.y, W, H, 'New', 'dg-neutro'),
-      caja(r.x, r.y, W, H, 'Ready', 'dg-listo'),
-      caja(run.x, run.y, W, H, 'Running', 'dg-activo'),
-      caja(ex.x, ex.y, W, H, 'Exit', 'dg-neutro'),
-      caja(bl.x, bl.y, W, H, 'Blocked', 'dg-bloqueado'),
+      caja(n.x, n.y, W, H, 'New', 'dg-neutro', 'new'),
+      caja(r.x, r.y, W, H, 'Ready', 'dg-listo', 'ready'),
+      caja(run.x, run.y, W, H, 'Running', 'dg-activo', 'running'),
+      caja(ex.x, ex.y, W, H, 'Exit', 'dg-neutro', 'exit'),
+      caja(bl.x, bl.y, W, H, 'Blocked', 'dg-bloqueado', 'blocked'),
     ],
-  })
+  }
 }
+
+const estadosProceso = () => marco(lienzoEstadosProceso())
 
 function cicloInstruccion(): string {
   const y = 70

@@ -65,7 +65,7 @@ Hay **un PCB por proceso**. Está siempre en memoria y el SO lo usa para adminis
 
 ### Modelo de 5 estados
 
-```diagrama estados-proceso
+```recorrido estados-proceso
 
 ```
 

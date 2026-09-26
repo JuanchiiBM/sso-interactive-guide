@@ -222,3 +222,161 @@ rect.ge-vacia {
 .ge-ref.ge-io {
   border: 1px dashed var(--fg-soft);
 }
+
+/* ── Recorridos paso a paso (```recorrido): con JS se ve un paso a la vez ── */
+.recorrido:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.recorrido [data-el] {
+  transition: opacity 250ms ease;
+}
+.recorrido[data-rc-foco] [data-el]:not(.rc-on) {
+  opacity: 0.28;
+}
+.recorrido .dg-nodo.rc-on rect,
+.recorrido .dg-nodo.rc-on path {
+  stroke-width: 2.6;
+}
+.recorrido .dg-flecha.rc-on path {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.recorrido .dg-flecha.rc-on .dg-etiqueta {
+  fill: var(--accent);
+}
+.dg-punta-on {
+  fill: var(--accent);
+}
+.recorrido .rc-ok rect,
+.recorrido .rc-ok path {
+  stroke: var(--ok);
+  fill: color-mix(in srgb, var(--ok) 14%, var(--surface));
+}
+.recorrido .rc-mal rect,
+.recorrido .rc-mal path {
+  stroke: var(--bad);
+  fill: color-mix(in srgb, var(--bad) 14%, var(--surface));
+}
+.recorrido .rc-aviso rect,
+.recorrido .rc-aviso path {
+  stroke: var(--warn);
+  fill: color-mix(in srgb, var(--warn) 14%, var(--surface));
+}
+.recorrido.rc-activo [data-rc-oculto]:not(.rc-visible) {
+  display: none;
+}
+.rc-ficha circle {
+  fill: var(--accent);
+}
+.diagrama .rc-ficha text {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--surface);
+}
+.recorrido:not(.rc-activo) .rc-ficha,
+.rc-ficha.rc-fuera {
+  opacity: 0;
+}
+.recorrido.rc-animar .rc-ficha {
+  transition:
+    transform 450ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 250ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .recorrido [data-el],
+  .recorrido.rc-animar .rc-ficha {
+    transition: none;
+  }
+}
+.rc-controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.rc-boton {
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--fg);
+}
+.rc-boton:hover:not(:disabled) {
+  background: var(--hover);
+}
+.rc-boton:disabled {
+  opacity: 0.4;
+}
+.rc-puntos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.rc-punto {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.rc-punto[aria-current] {
+  background: var(--accent);
+}
+.rc-texto {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--fg-soft);
+}
+.rc-pasos {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+.rc-activo .rc-pasos {
+  padding: 0;
+  list-style: none;
+  text-align: center;
+  min-height: 3em;
+}
+.rc-num {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.rc-titulo {
+  color: var(--fg);
+}
+.rc-variante-titulo {
+  margin: 0.5rem 0 0.25rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+.rc-activo .rc-variante-titulo {
+  display: none;
+}
+.rc-pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+.rc-pestana {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--fg-soft);
+}
+.rc-pestana[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+/* en pantallas chicas el dibujo scrollea dentro del recuadro en vez de achicarse hasta no leerse */
+.recorrido {
+  overflow-x: auto;
+}
+.recorrido svg {
+  min-width: 540px;
+}
