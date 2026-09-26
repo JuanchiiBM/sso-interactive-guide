@@ -142,12 +142,20 @@ else               { /* código del padre: pid es el PID del hijo */ }
 
 Si el hijo necesita correr **otro** programa, reemplaza su imagen con alguna función de la familia `exec` (por ejemplo `execv`).
 
+```recorrido fork-fork
+
+```
+
 ## Finalización de procesos
 
 - **El propio proceso** termina, en forma normal (`exit()`) o anormal (un error).
 - **El SO u otro proceso** lo termina (`kill`). Un padre puede terminar a un hijo si usa más recursos de los permitidos, si su tarea ya no hace falta o si el propio padre está terminando.
 - El padre recoge el resultado del hijo con `wait()`. Mientras no lo hace, el hijo queda **zombie**.
 - Si el padre muere antes, el hijo **sigue ejecutando**. En Linux lo "adopta" otro proceso (históricamente `init`).
+
+```recorrido arbol-procesos
+
+```
 
 ## Cambio de proceso (process switch)
 
@@ -161,6 +169,10 @@ Ocurre cuando el proceso que usa la CPU deja de ejecutar y el SO pone a otro. Im
 Todo ese trabajo es **overhead**: tiempo de CPU que no avanza ningún proceso de usuario. Por eso conviene minimizarlo.
 
 No hay que confundirlo con el **cambio de contexto** en sí, que es más general. También hay cambio de contexto cuando se atiende una interrupción o una syscall, y en esos casos no necesariamente cambia el proceso.
+
+```recorrido cambio-proceso
+
+```
 
 ## Preguntas de parcial
 
