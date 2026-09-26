@@ -65,7 +65,7 @@ Después el PC avanza a la siguiente instrucción, salvo que haya un salto (`JMP
 
 El ciclo real le agrega una cuarta etapa, la **etapa de interrupción**, que ocurre **después de terminar** cada instrucción. Fetch, decode y execute no se cortan a la mitad.
 
-```diagrama ciclo-instruccion
+```recorrido ciclo-instruccion
 
 ```
 
@@ -112,6 +112,10 @@ Las **excepciones** vienen de errores o situaciones anómalas del programa, como
 9. Restaura los registros.
 10. Restaura **primero el PSW y después el PC**: apenas se restaura el PC, la CPU sigue ejecutando el programa, así que el PSW tiene que estar listo antes.
 11. Vuelve a habilitar las interrupciones.
+
+```recorrido atencion-interrupcion
+
+```
 
 ### Interrupciones múltiples
 

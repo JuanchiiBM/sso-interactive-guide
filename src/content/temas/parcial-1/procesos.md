@@ -43,6 +43,10 @@ Todo eso tiene que estar representado en memoria principal. El **entorno** del p
 
 **¿Por qué hay memory leak si no hago `free()`?** El puntero se guarda en el stack, pero el bloque al que apunta está en el heap. Cuando termina la función, esa parte del stack se descarta y se pierde la dirección. El bloque del heap sigue ocupado y ya nadie puede liberarlo.
 
+```recorrido imagen-proceso
+
+```
+
 **Duración de los datos en C:**
 
 - **Estática**: variables globales o marcadas `static`. Viven lo mismo que el proceso.

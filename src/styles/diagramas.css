@@ -559,6 +559,54 @@ rect.ge-vacia {
 /* separador para que las secciones se mergeen por separado */
 
 /* ── Recorridos · tanda 2 · imagen del proceso, interrupciones y hilos ── */
+/* primitivas-arquitectura.ts: secciones de memoria, paneles resaltables y textos chicos */
+.ri-seccion rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.2;
+}
+.ri-seccion.ri-libre rect {
+  fill: var(--surface-2);
+  stroke-dasharray: 4 4;
+}
+.diagrama .ri-seccion text {
+  text-anchor: start;
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+.diagrama .ri-chica {
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+.diagrama .ri-mini {
+  font-size: 10px;
+}
+/* título de panel apoyado sobre el borde (como un fieldset): lo corta con el fondo del recuadro */
+.diagrama .dg-panel .ri-leyenda {
+  paint-order: stroke;
+  stroke: var(--surface-2);
+  stroke-width: 8px;
+  stroke-linejoin: round;
+}
+.diagrama .ri-izq {
+  text-anchor: start;
+}
+.recorrido .ri-panel.rc-on rect {
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+.ri-llave {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.4;
+}
+.recorrido .rc-on .ri-llave {
+  stroke: var(--accent);
+}
+.recorrido .ri-rombo.rc-on path {
+  stroke-width: 2.6;
+}
 
 /* fin tanda 2 · imagen del proceso, interrupciones y hilos */
 
