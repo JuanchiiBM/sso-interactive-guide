@@ -388,6 +388,18 @@ rect.ge-vacia {
 /* separador para que las secciones se mergeen por separado */
 
 /* ── Recorridos · planificación e hilos ── */
+.rl-casilla {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.rl-aux rect {
+  fill: color-mix(in srgb, var(--p2) 12%, var(--surface));
+  stroke: var(--p2);
+}
+.diagrama .rl-dato {
+  text-anchor: start;
+  font-size: 12px;
+}
 
 /* fin planificación e hilos */
 

@@ -74,6 +74,10 @@ Esto es lo que más se evalúa en los ejercicios de hilos (ver la guía: ULT con
 2. **Wrappers de la biblioteca.** La biblioteca envuelve la syscall (algo como un `write_ult`). Antes de hacer la syscall real, la biblioteca registra el bloqueo y deja preparado cuál es el próximo ULT según su algoritmo. El proceso **se sigue bloqueando entero**, pero al volver se respeta la planificación de la biblioteca.
 3. **Jacketing (revestimiento).** La biblioteca convierte la syscall bloqueante en su **versión no bloqueante**. Marca como "bloqueado" solo al ULT que la pidió, sigue ejecutando otros ULT y cada tanto le pregunta al SO si la operación terminó. Así **el proceso no se bloquea** y los demás ULT siguen avanzando.
 
+```recorrido hilos-syscall-bloqueante
+
+```
+
 > Convención de la cátedra para los ejercicios: **se asume que NO hay jacketing** salvo que el enunciado lo diga.
 
 Aun con jacketing, los ULT siguen siendo invisibles para el SO: no hay paralelismo y hay dos niveles de planificación.
