@@ -52,6 +52,10 @@ a = c;                a = b;
 
 Ejecutados uno después del otro, el resultado es `a = 0`. Si una interrupción los intercala, `a` puede terminar en `1` o en `-1`. El problema es que `a++` "parece" atómico, pero son varias instrucciones de máquina.
 
+```recorrido condicion-carrera
+
+```
+
 > Solo hay que sincronizar si al menos uno **escribe**. Dos procesos que únicamente leen el mismo dato no generan condición de carrera.
 
 ### Requisitos de una buena solución
@@ -253,6 +257,10 @@ while (TRUE) {                   while (TRUE) {
 - Si el buffer es **infinito**, sobra `lugares`: siempre hay lugar.
 - **Orden de los `wait`**: primero el contador y después el mutex. Si se invierte (`wait(mutex)` y después `wait(elementos)` con el buffer vacío), el consumidor se duerme con el mutex tomado, el productor nunca puede entrar y hay **deadlock**.
 - `producir()` y `consumir()` quedan **fuera** de la sección crítica, para que sea lo más chica posible.
+
+```recorrido productor-consumidor
+
+```
 
 ## Monitores
 

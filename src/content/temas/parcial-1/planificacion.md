@@ -122,12 +122,16 @@ Es FIFO con un **quantum** (Q): cuando el proceso agota su quantum, una interrup
 
 Corrige esa injusticia de RR contra los I/O bound con **dos colas FIFO**:
 
-| Cola                              | Quién entra                                    | Quantum con el que sale                    |
-| --------------------------------- | ---------------------------------------------- | ------------------------------------------ |
+| Cola                              | Quién entra                                    | Quantum con el que sale                               |
+| --------------------------------- | ---------------------------------------------- | ----------------------------------------------------- |
 | **Auxiliar (mayor prioridad)**    | Procesos que vuelven de una E/S.               | `Q − lo que ya usó` desde que salió de la cola común. |
-| **Ready común (menor prioridad)** | Procesos nuevos y los que agotaron su quantum. | Q completo.                                |
+| **Ready común (menor prioridad)** | Procesos nuevos y los que agotaron su quantum. | Q completo.                                           |
 
 La cola común solo se atiende cuando la auxiliar está vacía. En la práctica, al proceso I/O bound se le "respeta" el quantum que le había sobrado.
+
+```recorrido vrr-cola-auxiliar
+
+```
 
 ### HRRN (Highest Response Ratio Next)
 

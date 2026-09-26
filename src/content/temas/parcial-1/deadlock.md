@@ -125,6 +125,10 @@ Cada proceso declara de antemano la **cantidad máxima** de cada recurso que va 
 3. **Simular**: `D = D − Sol`, `A[P2] = A[P2] + Sol`, `Pend[P2] = Pend[P2] − Sol`.
 4. Correr el chequeo de estado seguro sobre el estado simulado. Si es seguro, se concede. Si es inseguro, **no se concede**: se deshace la simulación y P2 espera. **No se desaloja nada.**
 
+```recorrido banquero
+
+```
+
 ### 3. Detección y recuperación
 
 No se restringe la asignación: si el recurso está libre, se da. Cada cierto tiempo se corre el **algoritmo de detección**, que usa las **peticiones actuales**. No necesita las necesidades máximas.

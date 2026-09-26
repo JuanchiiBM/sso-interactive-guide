@@ -222,3 +222,323 @@ rect.ge-vacia {
 .ge-ref.ge-io {
   border: 1px dashed var(--fg-soft);
 }
+
+/* ── Recorridos paso a paso (```recorrido): con JS se ve un paso a la vez ── */
+.recorrido:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.recorrido [data-el] {
+  transition: opacity 250ms ease;
+}
+.recorrido[data-rc-foco] [data-el]:not(.rc-on) {
+  opacity: 0.28;
+}
+.recorrido .dg-nodo.rc-on rect,
+.recorrido .dg-nodo.rc-on path {
+  stroke-width: 2.6;
+}
+.recorrido .dg-flecha.rc-on path {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.recorrido .dg-flecha.rc-on .dg-etiqueta {
+  fill: var(--accent);
+}
+.dg-punta-on {
+  fill: var(--accent);
+}
+.recorrido .rc-ok rect,
+.recorrido .rc-ok path {
+  stroke: var(--ok);
+  fill: color-mix(in srgb, var(--ok) 14%, var(--surface));
+}
+.recorrido .rc-mal rect,
+.recorrido .rc-mal path {
+  stroke: var(--bad);
+  fill: color-mix(in srgb, var(--bad) 14%, var(--surface));
+}
+.recorrido .rc-aviso rect,
+.recorrido .rc-aviso path {
+  stroke: var(--warn);
+  fill: color-mix(in srgb, var(--warn) 14%, var(--surface));
+}
+.recorrido.rc-activo [data-rc-oculto]:not(.rc-visible) {
+  display: none;
+}
+.rc-ficha circle {
+  fill: var(--accent);
+}
+.diagrama .rc-ficha text {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--surface);
+}
+.recorrido:not(.rc-activo) .rc-ficha,
+.rc-ficha.rc-fuera {
+  opacity: 0;
+}
+.recorrido.rc-animar .rc-ficha {
+  transition:
+    transform 450ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 250ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .recorrido [data-el],
+  .recorrido.rc-animar .rc-ficha {
+    transition: none;
+  }
+}
+.rc-controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.rc-boton {
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--fg);
+}
+.rc-boton:hover:not(:disabled) {
+  background: var(--hover);
+}
+.rc-boton:disabled {
+  opacity: 0.4;
+}
+.rc-puntos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.rc-punto {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.rc-punto[aria-current] {
+  background: var(--accent);
+}
+.rc-texto {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--fg-soft);
+}
+.rc-pasos {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+.rc-activo .rc-pasos {
+  padding: 0;
+  list-style: none;
+  text-align: center;
+  min-height: 3em;
+}
+.rc-num {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.rc-titulo {
+  color: var(--fg);
+}
+.rc-variante-titulo {
+  margin: 0.5rem 0 0.25rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+.rc-activo .rc-variante-titulo {
+  display: none;
+}
+.rc-pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+.rc-pestana {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--fg-soft);
+}
+.rc-pestana[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+/* en pantallas chicas el dibujo scrollea dentro del recuadro en vez de achicarse hasta no leerse */
+.recorrido {
+  overflow-x: auto;
+}
+.recorrido svg {
+  min-width: 540px;
+}
+
+/* ── Recorridos · procesos y SO (estilos propios de esos dibujos) ── */
+/* primitivas-procesos.ts: subtítulos, carriles de tiempo, tarjetas (PCB), insignias y código */
+.diagrama .rp-sub {
+  font-size: 10px;
+  fill: var(--fg-soft);
+}
+.rp-carril rect {
+  fill: var(--surface);
+  stroke: var(--line);
+}
+.diagrama .rp-carril text {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+.rp-bloque {
+  --c: var(--fg-soft);
+}
+.rp-bloque.rp-p1 {
+  --c: var(--p1);
+}
+.rp-bloque.rp-p2 {
+  --c: var(--p2);
+}
+.rp-bloque.rp-so {
+  --c: var(--p5);
+}
+.rp-bloque rect {
+  fill: color-mix(in srgb, var(--c) 22%, var(--surface));
+  stroke: var(--c);
+  stroke-width: 1.5;
+}
+.diagrama .rp-bloque text {
+  font-size: 12px;
+}
+.recorrido .rp-bloque.rc-on rect {
+  stroke-width: 2.6;
+}
+.dg-flecha.rp-corte path {
+  stroke: var(--muted);
+  stroke-dasharray: 4 4;
+}
+.dg-flecha.rp-adopcion path {
+  stroke-dasharray: 6 4;
+}
+.rp-insignia rect {
+  fill: color-mix(in srgb, var(--warn) 22%, var(--surface));
+  stroke: var(--warn);
+}
+.diagrama .rp-insignia text {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--warn);
+}
+.diagrama .rp-codigo {
+  text-anchor: start;
+}
+.diagrama .rp-nota {
+  font-size: 11px;
+  fill: var(--accent);
+}
+.rp-salida rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+}
+.rp-indicador rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.diagrama .rp-indicador text {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--accent);
+}
+
+/* fin procesos y SO */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · planificación e hilos ── */
+.rl-casilla {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.rl-aux rect {
+  fill: color-mix(in srgb, var(--p2) 12%, var(--surface));
+  stroke: var(--p2);
+}
+.diagrama .rl-dato {
+  text-anchor: start;
+  font-size: 12px;
+}
+
+/* fin planificación e hilos */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · sincronización y deadlock ── */
+.diagrama .rs-titulo {
+  font-size: 12.5px;
+  font-weight: 600;
+  fill: var(--fg-soft);
+}
+.diagrama .rs-nota {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.diagrama .rs-izq,
+.diagrama .rs-codigo {
+  text-anchor: start;
+}
+.diagrama .rs-codigo {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.diagrama .rs-cola {
+  text-anchor: end;
+  font-size: 11px;
+  fill: var(--warn);
+}
+.diagrama .rs-cuenta {
+  font-size: 12px;
+  fill: var(--fg-soft);
+}
+.diagrama .rs-cartel text {
+  font-weight: 600;
+}
+.rs-linea rect {
+  fill: transparent;
+  stroke: transparent;
+}
+.rs-caja rect,
+.rs-fila rect,
+.rs-cartel rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.2;
+}
+.rs-casilla rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-dasharray: 4 3;
+}
+.rs-item circle {
+  fill: color-mix(in srgb, var(--p2) 22%, var(--surface));
+  stroke: var(--p2);
+  stroke-width: 1.5;
+}
+/* resaltado sin estado: acento; si hay rc-ok/rc-mal/rc-aviso, manda el estado */
+.recorrido .rs-linea.rc-on:not(.rc-ok, .rc-mal, .rc-aviso) rect,
+.recorrido .rs-caja.rc-on:not(.rc-ok, .rc-mal, .rc-aviso) rect,
+.recorrido .rs-fila.rc-on:not(.rc-ok, .rc-mal, .rc-aviso) rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.recorrido .rs-linea.rc-on rect,
+.recorrido .rs-caja.rc-on rect,
+.recorrido .rs-fila.rc-on rect {
+  stroke-width: 2;
+}
+/* fin sincronización y deadlock */

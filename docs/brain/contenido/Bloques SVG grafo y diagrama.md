@@ -2,7 +2,7 @@
 tipo: componente
 aliases: [grafo, grafo de asignación, resource allocation graph, RAG, diagrama, svg, bloques, bloqueSVG, renderGrafo, renderDiagrama, satteri, gantt, gantt estático, gantt inverso, renderGanttEstatico]
 tags: [componente, contenido, svg]
-actualizado: 2026-09-24
+actualizado: 2026-09-26
 ---
 # Bloques SVG grafo y diagrama
 
@@ -52,5 +52,5 @@ Código: `src/lib/diagramas/gantt-estatico.ts`. Se usa en planificación Ej. 17�
   Si cambiás el código de un bloque y el HTML no cambia: `rm -rf .astro node_modules/.astro`.
 - Colores siempre por clase CSS con tokens, nunca en el SVG.
 
-**Conectado con:** [[Decisión — SVG propio en el sitio, mermaid solo en el brain]], [[Contenido]],
+**Conectado con:** [[Recorridos paso a paso]] (la versión interactiva), [[Decisión — SVG propio en el sitio, mermaid solo en el brain]], [[Contenido]],
 [[Formato de un Ejercicio]]
