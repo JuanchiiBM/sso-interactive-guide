@@ -2,7 +2,7 @@
 tipo: servicio
 aliases: [semáforos, semaforos, wait, signal, semaphore, sincronización, verificador, model checking, intercalaciones, tests, leetcode, verificarSemaforos]
 tags: [simulador, sincronizacion, deadlock]
-actualizado: 2026-09-25
+actualizado: 2026-09-26
 ---
 # Verificador de Semáforos
 
@@ -89,6 +89,9 @@ Los "alcanzable" evitan que un mutex pase por solución de un contador.
 
 Todo test acepta `motivo:` propio. **Usalo en los `rango`**: el genérico ("posA llega a valer -1")
 expone contadores internos que el alumno no conoce.
+`max-semaforos` sin `motivo` dice "el enunciado pide como máximo N": ponelo solo así cuando el
+enunciado **fija** la cantidad (Sinc. 8). Si el tope sale de razonar (Deadlock 15: c y d solo se
+leen), el `motivo` tiene que explicar eso.
 
 ## Motor v2 (arrays, locales, azar, recursos implícitos)
 | Spec del ejercicio                 | Para qué                                               | Ejemplo            |

@@ -600,7 +600,7 @@ export function explorar(
       m = faltan.length ? `Nunca llega a ejecutarse: ${faltan.join(', ')}.` : undefined
     }
     if (t.tipo === 'max-semaforos' && nSemaforos > t.max) {
-      m = `Usaste ${nSemaforos} semáforos y el enunciado pide como máximo ${t.max}.`
+      m = t.motivo ?? `Usaste ${nSemaforos} semáforos y el enunciado pide como máximo ${t.max}.`
     }
     // con poda, "nunca se alcanza" no es concluyente: el fallo de seguridad ya basta
     if (podado && ALCANZABILIDAD.has(t.tipo)) m = undefined
