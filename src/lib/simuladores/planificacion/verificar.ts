@@ -70,6 +70,19 @@ export const extenderGrilla = (g: GrillaGantt, total: number): GrillaGantt =>
     Object.entries(g).map(([p, m]) => [p, [...m, ...Array<Marca>(total - m.length).fill(null)]]),
   )
 
+/** Columnas vacías de más en la grilla del desafío: que su largo no delate cuándo termina el Gantt. */
+export const COLUMNAS_EXTRA = 5
+
+/** Grillas válidas (la de la resolución primero) extendidas al ancho del desafío: la más larga + margen. */
+export function grillasDesafio(
+  resultados: ResultadoPlanificacion[],
+  procesos: string[],
+): { total: number; esperadas: GrillaGantt[] } {
+  const total = Math.max(...resultados.map((r) => r.ticks.length)) + COLUMNAS_EXTRA
+  const esperadas = resultados.map((r) => extenderGrilla(grillaEsperada(r, procesos), total))
+  return { total, esperadas }
+}
+
 export function verificarGantt(esperada: GrillaGantt, respuesta: GrillaGantt): Veredicto {
   const procesos = Object.keys(esperada)
   const ticks = esperada[procesos[0]]?.length ?? 0

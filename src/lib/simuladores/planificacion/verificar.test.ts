@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { simularPlanificacion } from './simular'
 import {
+  COLUMNAS_EXTRA,
   grillaEsperada,
+  grillasDesafio,
   variantesPlanificacion,
   verificarGantt,
   type GrillaGantt,
@@ -123,5 +125,31 @@ describe('variantes válidas con 2 CPUs (Planificación Ej. 3)', () => {
     const sin = variantesPlanificacion(base)
     expect(sin.length).toBeGreaterThan(conAfinidad.length)
     for (const r of sin) expect(r.fin).toBe(simularPlanificacion(base).fin)
+  })
+})
+
+describe('grillasDesafio', () => {
+  const corto = simularPlanificacion({
+    algoritmo: 'fifo',
+    procesos: [{ id: 'A', llegada: 0, rafagas: [2] }],
+  })
+  const largo = simularPlanificacion({
+    algoritmo: 'fifo',
+    procesos: [{ id: 'A', llegada: 0, rafagas: [3] }],
+  })
+
+  it('suma COLUMNAS_EXTRA a la variante más larga y rellena todas con vacías', () => {
+    const { total, esperadas } = grillasDesafio([corto, largo], ['A'])
+    expect(total).toBe(3 + COLUMNAS_EXTRA)
+    expect(esperadas.map((g) => g.A.length)).toEqual([total, total])
+    expect(esperadas[0].A.slice(2).every((m) => m === null)).toBe(true)
+  })
+
+  it('pintar en las columnas extra da incorrecto', () => {
+    const { esperadas } = grillasDesafio([r], ['A', 'B'])
+    const bien = structuredClone(esperadas[0])
+    expect(verificarGantt(esperadas[0], bien).ok).toBe(true)
+    bien.A[r.ticks.length + 1] = 'cpu'
+    expect(verificarGantt(esperadas[0], bien).ok).toBe(false)
   })
 })
