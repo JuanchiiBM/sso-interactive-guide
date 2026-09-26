@@ -5,6 +5,7 @@ import { seccion } from '../primitivas-arquitectura'
 import { cartel, codigo, lugaresCodigo } from '../primitivas-sincronizacion'
 import type { Recorrido } from '../recorrido'
 import { caja, oculto, texto } from '../svg'
+import { datoSieteEstados, lienzoSieteEstados, lugaresSieteEstados } from '../siete-estados'
 
 // la ficha va en la esquina superior derecha de cada estado
 const lugares = Object.fromEntries(
@@ -578,3 +579,68 @@ export const recorridos: Record<string, Recorrido> = {
   'cambio-proceso': cambioProceso,
   'imagen-proceso': imagenProceso,
 }
+
+// ── Modelo de 7 estados: suspensión y swapping ──
+const estadosSuspendidos: Recorrido = {
+  ...lienzoSieteEstados(),
+  titulo: 'Un proceso suspendido por el planificador de mediano plazo',
+  cuerpo: [
+    ...lienzoSieteEstados().cuerpo,
+    datoSieteEstados('mem', 'memoria: con lugar'),
+    `<g data-el="nota-pcb" data-rc-oculto>${texto(640, 340, 'en RAM: solo el PCB', { clase: 're-nota' })}</g>`,
+  ],
+  fichas: { p1: 'P1', p2: 'P2' },
+  lugares: lugaresSieteEstados(),
+  pasos: [
+    {
+      titulo: 'P1 bloqueado en RAM.',
+      texto:
+        'P1 pidió una E/S lenta y espera en **Blocked**. No puede avanzar, pero su imagen sigue ocupando memoria principal.',
+      resaltar: ['blocked'],
+      fichas: { p1: 'blocked' },
+      valores: { mem: 'memoria: casi llena' },
+    },
+    {
+      titulo: 'Se llena la memoria: swap out.',
+      texto:
+        'Hace falta lugar para los que sí pueden ejecutar: el planificador de **mediano plazo** suspende a P1. Su imagen va a disco y en RAM queda solo el PCB.',
+      resaltar: ['susp-blocked', 'blocked-susp', 'nota-pcb'],
+      fichas: { p1: 'blocked-susp' },
+      valores: { mem: 'memoria: llena' },
+      mostrar: ['nota-pcb'],
+    },
+    {
+      titulo: 'Ocurre su evento.',
+      texto:
+        'Termina la E/S que esperaba y pasa a **Ready/Suspended**: ya no espera nada, pero sigue en disco, así que todavía no compite por la CPU.',
+      resaltar: ['evento-susp', 'ready-susp', 'nota-pcb'],
+      fichas: { p1: 'ready-susp' },
+    },
+    {
+      titulo: 'Baja la carga: swap in.',
+      texto:
+        'Terminó otro proceso y se liberó memoria: el mediano plazo trae a P1 de vuelta a **Ready**. Recién ahora el de corto plazo lo puede elegir.',
+      resaltar: ['activar-ready', 'ready'],
+      fichas: { p1: 'ready' },
+      valores: { mem: 'memoria: con lugar' },
+      ocultar: ['nota-pcb'],
+    },
+    {
+      titulo: 'Llega un proceso nuevo.',
+      texto:
+        'Se crea P2 cuando la memoria volvió a llenarse. El planificador de largo plazo decide si admitirlo y adónde.',
+      resaltar: ['new'],
+      fichas: { p2: 'new' },
+      valores: { mem: 'memoria: llena' },
+    },
+    {
+      titulo: 'Admitido directo a disco.',
+      texto:
+        'No hay lugar en RAM, así que entra a **Ready/Suspended** sin pasar por Ready: queda listo en disco hasta que un swap in lo traiga.',
+      resaltar: ['admitido-susp', 'ready-susp'],
+      fichas: { p2: 'ready-susp' },
+    },
+  ],
+}
+
+recorridos['estados-suspendidos'] = estadosSuspendidos

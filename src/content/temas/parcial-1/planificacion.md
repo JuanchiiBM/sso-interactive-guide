@@ -42,6 +42,10 @@ Con multiprogramación hay varios procesos queriendo usar la CPU al mismo tiempo
 
 El de corto plazo es el que se ejecuta más seguido. Interviene con cada interrupción, syscall o señal que pueda cambiar quién debe usar la CPU, y por eso tiene que ser muy liviano. Tiene dos piezas: el **dispatcher**, que le entrega la CPU al proceso elegido, y el **cambio de contexto**.
 
+```recorrido tipos-planificadores
+
+```
+
 ### Con desalojo y sin desalojo
 
 - **Sin desalojo (non-preemptive)**: una vez que un proceso tiene la CPU, la conserva hasta que se bloquea o termina. Puede monopolizarla.
@@ -163,6 +167,10 @@ Es parecido al anterior, pero los procesos **cambian de cola**. La versión típ
 
 No tiene una única definición: **las reglas exactas las fija el enunciado**. Generan replanificación la interrupción por quantum, la llegada de un proceso nuevo, el fin de una E/S y el bloqueo de un proceso.
 
+```recorrido feedback-multinivel
+
+```
+
 ## Tabla comparativa
 
 | Algoritmo               | Desalojo        | Criterio de selección              | Quantum       | Inanición                                                        | Overhead        | Observaciones                                                    |
@@ -189,6 +197,10 @@ La guía de ejercicios 2026 fija estos criterios para resolver empates en los Ga
    El motivo: las interrupciones se atienden antes que las syscalls, y entre interrupciones tiene prioridad la de clock.
 
 2. Si sigue el empate, gana **el proceso cuyo nombre va antes en orden ascendente** (A antes que B).
+
+```recorrido desempate-catedra
+
+```
 
 Algunas aclaraciones:
 
