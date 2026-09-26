@@ -479,5 +479,66 @@ rect.ge-vacia {
 /* separador para que las secciones se mergeen por separado */
 
 /* ── Recorridos · sincronización y deadlock ── */
-
+.diagrama .rs-titulo {
+  font-size: 12.5px;
+  font-weight: 600;
+  fill: var(--fg-soft);
+}
+.diagrama .rs-nota {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.diagrama .rs-izq,
+.diagrama .rs-codigo {
+  text-anchor: start;
+}
+.diagrama .rs-codigo {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.diagrama .rs-cola {
+  text-anchor: end;
+  font-size: 11px;
+  fill: var(--warn);
+}
+.diagrama .rs-cuenta {
+  font-size: 12px;
+  fill: var(--fg-soft);
+}
+.diagrama .rs-cartel text {
+  font-weight: 600;
+}
+.rs-linea rect {
+  fill: transparent;
+  stroke: transparent;
+}
+.rs-caja rect,
+.rs-fila rect,
+.rs-cartel rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.2;
+}
+.rs-casilla rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-dasharray: 4 3;
+}
+.rs-item circle {
+  fill: color-mix(in srgb, var(--p2) 22%, var(--surface));
+  stroke: var(--p2);
+  stroke-width: 1.5;
+}
+/* resaltado sin estado: acento; si hay rc-ok/rc-mal/rc-aviso, manda el estado */
+.recorrido .rs-linea.rc-on:not(.rc-ok, .rc-mal, .rc-aviso) rect,
+.recorrido .rs-caja.rc-on:not(.rc-ok, .rc-mal, .rc-aviso) rect,
+.recorrido .rs-fila.rc-on:not(.rc-ok, .rc-mal, .rc-aviso) rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.recorrido .rs-linea.rc-on rect,
+.recorrido .rs-caja.rc-on rect,
+.recorrido .rs-fila.rc-on rect {
+  stroke-width: 2;
+}
 /* fin sincronización y deadlock */
