@@ -1,7 +1,10 @@
 /** Recorridos del tema Hilos. */
+import { panel } from '../primitivas-arquitectura'
 import { recuadro } from '../primitivas-planificacion'
+import { tarjeta } from '../primitivas-procesos'
+import { codigo, lugaresCodigo } from '../primitivas-sincronizacion'
 import type { Paso, Recorrido } from '../recorrido'
-import { caja, flecha, texto } from '../svg'
+import { caja, flecha, oculto, texto } from '../svg'
 
 const arranque: Paso = {
   titulo: 'Arranque.',
@@ -166,6 +169,114 @@ const syscallUlt: Recorrido = {
   ],
 }
 
+// ── Proceso monohilo vs multihilo: arriba lo compartido, abajo una columna por hilo ──
+const HCOD = { x: 48, y: 62 }
+const LINEAS_HILO = ['1  leer_entrada();', '2  procesar();', '3  total++;', '4  escribir();']
+const COLUMNAS = [130, 360, 590]
+const PROPIO = ['tcb-1', 'tcb-2', 'tcb-3', 'stack-1', 'stack-2', 'stack-3']
+const COMPARTIDO = ['codigo', 'pcb', 'datos', 'heap', 'archivos']
+const tcb = (i: number, estado: string, pc: string) =>
+  tarjeta(
+    COLUMNAS[i - 1],
+    226,
+    196,
+    80,
+    `TCB · hilo ${i}`,
+    [
+      { t: `TID ${i} · ${estado}`, val: `est-${i}` },
+      { t: pc, val: `pc-${i}` },
+      { t: 'registros · prioridad' },
+    ],
+    { el: `tcb-${i}`, oculto: true, clase: 'dg-activo' },
+  )
+const pila = (i: number) => {
+  const html = recuadro(
+    COLUMNAS[i - 1],
+    296,
+    196,
+    40,
+    `stack-${i}`,
+    `stk-${i}`,
+    `stack del hilo ${i}`,
+  )
+  return i === 1 ? html : oculto(html)
+}
+
+const procesoHilos: Recorrido = {
+  ancho: 720,
+  alto: 340,
+  titulo: 'Proceso con un hilo y con tres: qué comparten y qué tiene cada hilo',
+  cuerpo: [
+    `<g class="dg-panel"><rect x="8" y="8" width="704" height="324" rx="14"/><text x="22" y="22">Proceso · arriba lo compartido, abajo lo propio de cada hilo</text></g>`,
+    panel('codigo', 24, 34, 232, 134, 'Código'),
+    codigo('cod', HCOD.x, HCOD.y, 196, LINEAS_HILO),
+    caja(335, 66, 130, 40, 'PCB', 'dg-neutro', 'pcb'),
+    caja(495, 66, 170, 40, 'Datos (globales)', 'dg-listo', 'datos'),
+    caja(650, 66, 110, 40, 'Heap', 'dg-listo', 'heap'),
+    caja(487, 124, 436, 40, 'Archivos abiertos y otros recursos', 'dg-neutro', 'archivos'),
+    tcb(1, 'Running', 'PC: en la CPU'),
+    tcb(2, 'Ready', 'PC guardado: línea 4'),
+    tcb(3, 'Ready', 'PC guardado: línea 1'),
+    pila(1),
+    pila(2),
+    pila(3),
+  ],
+  fichas: { pc: 'PC' },
+  lugares: lugaresCodigo('cod', HCOD.x, HCOD.y, LINEAS_HILO.length),
+  pasos: [
+    {
+      titulo: 'Un proceso con un solo hilo.',
+      texto:
+        'Tiene **una** línea de ejecución: un PC y un stack. Cuando deja la CPU, su contexto se guarda en el PCB.',
+      resaltar: [...COMPARTIDO, 'stack-1'],
+      fichas: { pc: 'cod-0' },
+      valores: { 'stk-1': 'stack' },
+    },
+    {
+      titulo: 'El mismo proceso con tres hilos.',
+      texto:
+        'Ahora hay tres líneas de ejecución sobre los mismos recursos. Si el SO soporta hilos, planifica cada hilo y no el proceso entero.',
+      resaltar: [...COMPARTIDO, ...PROPIO],
+      mostrar: ['tcb-1', 'tcb-2', 'tcb-3', 'stack-2', 'stack-3'],
+      valores: { 'stk-1': 'stack del hilo 1' },
+    },
+    {
+      titulo: 'Lo compartido.',
+      texto:
+        'Los tres ven el mismo código, las mismas globales, el mismo heap y los mismos archivos abiertos. Por eso en datos y heap hace falta sincronizar.',
+      resaltar: COMPARTIDO,
+    },
+    {
+      titulo: 'Lo propio de cada hilo.',
+      texto:
+        'Cada uno tiene su **TCB** (TID, estado, prioridad, PC y registros) y su **stack**: las variables locales no se comparten porque viven en la pila de cada hilo.',
+      resaltar: PROPIO,
+    },
+    {
+      titulo: 'Ejecuta el hilo 1.',
+      texto:
+        'El PC de la CPU es el del hilo 1 y avanza por el código. Los otros dos esperan con su PC guardado en su TCB: cada uno va por una línea distinta del **mismo** código.',
+      resaltar: ['cod-1', 'tcb-1', 'tcb-2', 'tcb-3'],
+      fichas: { pc: 'cod-1' },
+    },
+    {
+      titulo: 'Cambio de hilo.',
+      texto:
+        'Se guarda el PC (y los registros) del hilo 1 en su TCB, que seguirá en la línea 3, y se carga el del hilo 2, que retoma en la 4. Es un cambio de contexto, pero más liviano que uno de proceso: el espacio de memoria es el mismo.',
+      resaltar: ['cod-3', 'tcb-1', 'tcb-2'],
+      fichas: { pc: 'cod-3' },
+      valores: {
+        'est-1': 'TID 1 · Ready',
+        'pc-1': 'PC guardado: línea 3',
+        'est-2': 'TID 2 · Running',
+        'pc-2': 'PC: en la CPU',
+      },
+      clases: { 'tcb-2': 'rc-ok' },
+    },
+  ],
+}
+
 export const recorridos: Record<string, Recorrido> = {
   'hilos-syscall-bloqueante': syscallUlt,
+  'hilos-proceso': procesoHilos,
 }
