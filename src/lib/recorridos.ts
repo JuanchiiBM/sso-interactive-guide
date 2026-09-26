@@ -39,14 +39,21 @@ function init(fig: HTMLElement): void {
       if (e.c[id]) el.classList.add(e.c[id])
       if (el.hasAttribute('data-rc-oculto')) el.classList.toggle('rc-visible', e.m.includes(id))
       // la punta de la flecha resaltada cambia de color con su marcador propio
-      for (const path of $$<SVGPathElement>('path[marker-end]', el))
+      for (const path of $$<SVGPathElement>('path[marker-end*="dg-punta"]', el))
         path.setAttribute('marker-end', `url(#${e.r.includes(id) ? 'dg-punta-on' : 'dg-punta'})`)
     }
     for (const t of valores) t.textContent = e.v[t.dataset.val!] ?? inicial.get(t)!
     for (const f of fichas) {
       const pos = e.f[f.dataset.rcFicha!]
+      // una ficha que recién aparece se ubica sin animar (si no, vuela desde el origen)
+      const aparece = !!pos && (f.classList.contains('rc-fuera') || !f.style.transform)
+      if (aparece) f.classList.add('rc-salto')
       f.classList.toggle('rc-fuera', !pos)
       if (pos) f.style.transform = `translate(${pos[0]}px, ${pos[1]}px)`
+      if (aparece) {
+        f.getBoundingClientRect()
+        requestAnimationFrame(() => f.classList.remove('rc-salto'))
+      }
     }
 
     puntos.replaceChildren(

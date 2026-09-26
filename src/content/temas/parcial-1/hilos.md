@@ -27,6 +27,10 @@ Consecuencias directas:
 - Las **variables locales no se comparten** entre hilos, porque viven en el stack de cada uno. Las **globales y el heap sí**, así que ahí hace falta sincronizar.
 - Cambiar de un hilo a otro implica un **cambio de contexto**, aunque más liviano que cambiar de proceso.
 
+```recorrido hilos-proceso
+
+```
+
 ## Ventajas y desventajas
 
 **Ventajas:**

@@ -10,7 +10,7 @@ const nav = [
 ]
 ---
 
-<header class="sticky top-0 z-40 h-14 flex items-center gap-3 px-3 md:px-5 border-b border-line bg-surface/85 backdrop-blur">
+<header class="sticky top-0 z-40 h-14 flex items-center gap-2 sm:gap-3 px-3 md:px-5 border-b border-line bg-surface/85 backdrop-blur">
   <button
     type="button"
     data-sidebar-open
@@ -36,15 +36,15 @@ const nav = [
     >
       {universidadLabel}
     </span>
-    <span class="truncate font-heading text-sm text-fg">{SITE.materia}</span>
+    <span class="hidden sm:block truncate font-heading text-sm text-fg">{SITE.materia}</span>
   </a>
 
-  <nav class="ml-auto flex items-center gap-1" aria-label="Secciones">
+  <nav class="ml-auto flex items-center sm:gap-1" aria-label="Secciones">
     {nav.map((item) => (
       <a
         href={item.href}
         class:list={[
-          'px-2.5 py-1.5 rounded-md text-sm transition-colors',
+          'px-1.5 sm:px-2.5 py-1.5 rounded-md text-[13px] sm:text-sm transition-colors',
           item.active ? 'text-fg bg-hover' : 'text-muted hover:text-fg hover:bg-hover',
         ]}
         aria-current={item.active ? 'page' : undefined}

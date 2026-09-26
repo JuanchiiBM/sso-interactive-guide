@@ -1,5 +1,5 @@
 /** Diagramas fijos de la teoría, referenciados desde markdown con ```diagrama <id>. */
-import { caja, flecha, marco, rombo, type Lienzo } from './svg'
+import { caja, flecha, grupo, marco, rombo, type Lienzo } from './svg'
 
 const W = 112
 const H = 40
@@ -81,40 +81,60 @@ export function lienzoEstadosProceso(): Lienzo {
 
 const estadosProceso = () => marco(lienzoEstadosProceso())
 
-function cicloInstruccion(): string {
-  const y = 70
-  const xs = [70, 210, 350]
-  const dec = { x: 530, y }
-  const man = { x: 530, y: 200 }
-  return marco({
+/** Posiciones del ciclo de instrucción (las usa también su recorrido). */
+export const CICLO = {
+  y: 70,
+  xs: [70, 210, 350],
+  dec: { x: 530, y: 70 },
+  man: { x: 530, y: 200 },
+}
+
+export function lienzoCicloInstruccion(): Lienzo {
+  const { y, xs, dec, man } = CICLO
+  return {
     ancho: 660,
     alto: 260,
     titulo: 'Ciclo de instrucción con etapa de interrupción',
     cuerpo: [
-      flecha(`M${xs[0] + 50},${y} L${xs[1] - 54},${y}`),
-      flecha(`M${xs[1] + 50},${y} L${xs[2] - 54},${y}`),
-      flecha(`M${xs[2] + 50},${y} L${dec.x - 84},${y}`),
+      flecha(`M${xs[0] + 50},${y} L${xs[1] - 54},${y}`, undefined, 0, 0, '', 'f-decode'),
+      flecha(`M${xs[1] + 50},${y} L${xs[2] - 54},${y}`, undefined, 0, 0, '', 'f-execute'),
+      flecha(`M${xs[2] + 50},${y} L${dec.x - 84},${y}`, undefined, 0, 0, '', 'f-chequeo'),
       flecha(
         `M${dec.x},${y - 28} C${dec.x},-10 ${xs[0]},-10 ${xs[0]},${y - H / 2 - 4}`,
         'no',
         300,
         18,
+        '',
+        'no',
       ),
-      flecha(`M${dec.x},${y + 28} L${man.x},${man.y - 24}`, 'sí', dec.x + 12, 135),
+      flecha(`M${dec.x},${y + 28} L${man.x},${man.y - 24}`, 'sí', dec.x + 12, 135, '', 'si'),
       flecha(
         `M${man.x - 110},${man.y} L${xs[0]} ${man.y} L${xs[0]},${y + H / 2 + 4}`,
         'vuelve a fetch',
         250,
         man.y - 8,
+        '',
+        'vuelve',
       ),
-      caja(xs[0], y, 100, H, 'Fetch', 'dg-activo'),
-      caja(xs[1], y, 100, H, 'Decode', 'dg-activo'),
-      caja(xs[2], y, 100, H, 'Execute', 'dg-activo'),
-      rombo(dec.x, dec.y, 164, 56, '¿Interrupción?'),
-      caja(man.x, man.y, 220, 48, 'Guardar PC y PSW\nsaltar al manejador', 'dg-bloqueado'),
+      caja(xs[0], y, 100, H, 'Fetch', 'dg-activo', 'fetch'),
+      caja(xs[1], y, 100, H, 'Decode', 'dg-activo', 'decode'),
+      caja(xs[2], y, 100, H, 'Execute', 'dg-activo', 'execute'),
+      // rombo() no lleva data-el: se envuelve para poder resaltarlo
+      grupo('chequeo', rombo(dec.x, dec.y, 164, 56, '¿Interrupción?'), { clase: 'ri-rombo' }),
+      caja(
+        man.x,
+        man.y,
+        220,
+        48,
+        'Guardar PC y PSW\nsaltar al manejador',
+        'dg-bloqueado',
+        'manejador',
+      ),
     ],
-  })
+  }
 }
+
+const cicloInstruccion = () => marco(lienzoCicloInstruccion())
 
 function hilosUltKlt(): string {
   const panel = (x: number, w: number, titulo: string) =>
