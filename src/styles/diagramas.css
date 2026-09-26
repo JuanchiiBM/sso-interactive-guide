@@ -914,5 +914,57 @@ rect.ge-vacia {
 /* separador para que las secciones se mergeen por separado */
 
 /* ── Tanda 3 · procesos, planificación, hilos y sincronización ── */
+/* primitivas-t3.ts: celdas de Gantt (reusan ge-cpu/ge-io), chips del PCB y leyendas sobre el borde */
+.diagrama .t3p-celda-texto {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--surface);
+}
+.recorrido .t3p-celda.rc-on rect {
+  stroke: var(--fg);
+  stroke-width: 1.5;
+}
+.diagrama .t3p-eje {
+  font-size: 10px;
+  fill: var(--muted);
+}
+rect.t3p-ref {
+  --c: var(--fg-soft);
+}
+.t3p-banda rect {
+  fill: var(--surface);
+  stroke: var(--line);
+}
+.t3p-banda-contexto > rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.diagrama .t3p-grupo {
+  text-anchor: start;
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--fg-soft);
+}
+.t3p-chip rect {
+  fill: var(--surface-2);
+  stroke: var(--line-strong);
+}
+.t3p-chip.t3p-chip-contexto rect {
+  fill: var(--surface);
+  stroke: var(--accent);
+}
+.diagrama .t3p-chip text {
+  font-size: 12px;
+}
+.diagrama .t3p-nota {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.diagrama .t3p-leyenda {
+  paint-order: stroke;
+  stroke: var(--surface-2);
+  stroke-width: 8px;
+  stroke-linejoin: round;
+}
 
 /* fin tanda 3 · procesos, planificación, hilos y sincronización */

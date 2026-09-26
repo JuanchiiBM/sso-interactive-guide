@@ -1,8 +1,11 @@
 /** Recorridos del tema Hilos. */
+import { simularPlanificacion } from '../../simuladores/planificacion/simular'
+import type { ConfigPlanificacion } from '../../simuladores/planificacion/tipos'
 import { panel } from '../primitivas-arquitectura'
 import { recuadro } from '../primitivas-planificacion'
 import { tarjeta } from '../primitivas-procesos'
 import { codigo, lugaresCodigo } from '../primitivas-sincronizacion'
+import { celda, eje, panelLeyenda } from '../primitivas-t3'
 import type { Paso, Recorrido } from '../recorrido'
 import { caja, flecha, oculto, texto } from '../svg'
 
@@ -276,7 +279,124 @@ const procesoHilos: Recorrido = {
   ],
 }
 
+// ── El quantum es del KLT: ULT1 y ULT2 lo van gastando sin que se reinicie ──
+export const configQuantumUlt: ConfigPlanificacion = {
+  algoritmo: 'rr',
+  quantum: 4,
+  procesos: [
+    {
+      id: 'KA',
+      hilos: [
+        { id: 'ULT1', llegada: 0, rafagas: [2] },
+        { id: 'ULT2', llegada: 0, rafagas: [4] },
+      ],
+    },
+    { id: 'P', llegada: 0, rafagas: [2] },
+  ],
+}
+const COLOR_HILO: Record<string, string> = { ULT1: 'ge-p1', ULT2: 'ge-p2', P: 'ge-p3' }
+const Q_X = 150
+const Q_W = 80
+const CPU_Y = 262
+const vacia = (x: number, y: number, w: number, h: number) =>
+  `<rect class="ge-vacia" x="${x + 1}" y="${y - h / 2 + 1}" width="${w - 2}" height="${h - 2}" rx="3"/>`
+const usoQuantum = (id: string, i: number, ult: string) =>
+  celda(id, Q_X + i * Q_W, 53, Q_W, 34, `ge-cpu ${COLOR_HILO[ult]}`, { t: ult, oculto: true })
+const celdasCpu = simularPlanificacion(configQuantumUlt).ticks.map((t) =>
+  celda(`cpu-${t.t}`, 80 + t.t * 70, CPU_Y, 70, 30, `ge-cpu ${COLOR_HILO[t.cpu!]}`, {
+    t: t.cpu!,
+    oculto: true,
+  }),
+)
+
+const quantumUlt: Recorrido = {
+  ancho: 720,
+  alto: 310,
+  titulo: 'El quantum es del KLT: los ULT lo comparten y la biblioteca no se entera del desalojo',
+  cuerpo: [
+    panelLeyenda(10, 18, 700, 70, 'Quantum de KA, el KLT · q = 4'),
+    texto(80, 53, 'lo usa:', { clase: 're-nota' }),
+    ...Array.from({ length: 4 }, (_, i) => vacia(Q_X + i * Q_W, 53, Q_W, 34)),
+    usoQuantum('qa-0', 0, 'ULT1'),
+    usoQuantum('qa-1', 1, 'ULT1'),
+    usoQuantum('qa-2', 2, 'ULT2'),
+    usoQuantum('qa-3', 3, 'ULT2'),
+    usoQuantum('qb-0', 0, 'ULT2'),
+    usoQuantum('qb-1', 1, 'ULT2'),
+    recuadro(590, 53, 190, 34, 'resta', 'resta', 'le quedan 4 de 4'),
+    panelLeyenda(10, 116, 345, 96, 'Biblioteca de KA · espacio de usuario'),
+    recuadro(98, 168, 150, 34, 'ult1', 'e-ult1', 'ULT1: lista', 'dg-listo'),
+    recuadro(268, 168, 150, 34, 'ult2', 'e-ult2', 'ULT2: lista', 'dg-listo'),
+    panelLeyenda(365, 116, 345, 96, 'Planificador del SO · solo ve a KA'),
+    recuadro(453, 168, 150, 34, 'ka', 'e-ka', 'KA: Ready', 'dg-activo'),
+    recuadro(623, 168, 150, 34, 'p', 'e-p', 'P: Ready', 'dg-neutro'),
+    texto(40, CPU_Y, 'CPU'),
+    ...Array.from({ length: 8 }, (_, t) => vacia(80 + t * 70, CPU_Y, 70, 30)),
+    ...celdasCpu,
+    ...eje(80, 290, 70, 8),
+  ],
+  pasos: [
+    {
+      titulo: 'KA toma la CPU.',
+      texto:
+        'KA y P llegan juntos y KA va primero por orden alfabético: el SO le da **q = 4**. Adentro, la biblioteca elige a ULT1.',
+      resaltar: ['ka', 'ult1', 'resta'],
+      valores: { 'e-ka': 'KA: Running', 'e-ult1': 'ULT1: ejecutando' },
+      clases: { ka: 'rc-ok' },
+    },
+    {
+      titulo: 'ULT1 usa 2 y termina.',
+      texto:
+        'Consume 2 u.t. del quantum de KA y termina. Al SO no le importa qué ULT las usó: se descuentan del KLT.',
+      resaltar: ['qa-0', 'qa-1', 'cpu-0', 'cpu-1', 'ult1', 'resta'],
+      mostrar: ['qa-0', 'qa-1', 'cpu-0', 'cpu-1'],
+      valores: { resta: 'le quedan 2 de 4', 'e-ult1': 'ULT1: terminó' },
+    },
+    {
+      titulo: 'La biblioteca pasa a ULT2.',
+      texto:
+        'Cambia de hilo sin pasar por el SO, que sigue viendo a KA en Running. Por eso **el quantum no se reinicia**: quedan 2.',
+      resaltar: ['ult2', 'ka', 'resta'],
+      valores: { 'e-ult2': 'ULT2: ejecutando' },
+    },
+    {
+      titulo: 'ULT2 usa las 2 que quedan.',
+      texto: 'Su ráfaga es de 4, así que todavía le faltan 2, pero el quantum de KA se terminó.',
+      resaltar: ['qa-2', 'qa-3', 'cpu-2', 'cpu-3', 'ult2', 'resta'],
+      mostrar: ['qa-2', 'qa-3', 'cpu-2', 'cpu-3'],
+      valores: { resta: 'le quedan 0 de 4' },
+    },
+    {
+      titulo: 'Vence el quantum.',
+      texto:
+        'La interrupción de clock hace que el SO desaloje a KA y lo mande al final de Ready. La biblioteca **no se entera**: para ella, ULT2 sigue ejecutando.',
+      resaltar: ['ka', 'p', 'ult2'],
+      valores: { 'e-ka': 'KA: Ready', 'e-p': 'P: Running', resta: 'KA espera en Ready' },
+      clases: { ka: '', p: 'rc-ok', ult2: 'rc-aviso' },
+    },
+    {
+      titulo: 'Ejecuta P.',
+      texto: 'P usa sus 2 u.t. y termina en t = 6. Mientras tanto no corre ningún ULT de KA.',
+      resaltar: ['cpu-4', 'cpu-5', 'p'],
+      mostrar: ['cpu-4', 'cpu-5'],
+      valores: { 'e-p': 'P: terminó' },
+      clases: { p: '' },
+    },
+    {
+      titulo: 'KA vuelve: sigue ULT2.',
+      texto:
+        'Con un quantum nuevo, la biblioteca retoma el ULT que tenía elegido: ULT2 hace las 2 u.t. que le faltaban y termina en t = 8.',
+      resaltar: ['qb-0', 'qb-1', 'cpu-6', 'cpu-7', 'ka', 'ult2', 'resta'],
+      mostrar: ['qb-0', 'qb-1', 'cpu-6', 'cpu-7'],
+      ocultar: ['qa-0', 'qa-1', 'qa-2', 'qa-3'],
+      valores: { 'e-ka': 'KA: terminó', 'e-ult2': 'ULT2: terminó', resta: 'le quedan 2 de 4' },
+      clases: { ult2: 'rc-ok' },
+    },
+  ],
+}
+
 export const recorridos: Record<string, Recorrido> = {
   'hilos-syscall-bloqueante': syscallUlt,
   'hilos-proceso': procesoHilos,
+  'quantum-ult': quantumUlt,
 }

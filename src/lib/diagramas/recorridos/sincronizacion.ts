@@ -894,9 +894,113 @@ const semaforoPorDentro: Recorrido = {
   ],
 }
 
+// ── Test-and-set: lee y escribe el lock en un solo paso; el que pierde da vueltas ──
+const LINEAS_TS = ['while (test_and_set(&lock));', '/* sección crítica */', 'lock = false;']
+const SANGRIA = ' '.repeat(4) // el SVG colapsa los espacios comunes
+const FUNCION_TS = [
+  'bool test_and_set(bool *lock) {',
+  SANGRIA + 'bool anterior = *lock;',
+  SANGRIA + '*lock = true;',
+  SANGRIA + 'return anterior;',
+  '}',
+]
+const TS0 = { x: 36, y: 44, w: 230 }
+const TS1 = { x: 472, y: 44, w: 230 }
+
+const testAndSet: Recorrido = {
+  ancho: 720,
+  alto: 300,
+  titulo: 'Test-and-set: el lock se lee y se escribe en un solo paso, y el que pierde da vueltas',
+  cuerpo: [
+    texto(TS0.x + TS0.w / 2, 20, 'P0', { clase: 'rs-titulo' }),
+    texto(TS1.x + TS1.w / 2, 20, 'P1', { clase: 'rs-titulo' }),
+    texto(369, 20, 'memoria compartida', { clase: 'rs-titulo' }),
+    codigo('p0', TS0.x, TS0.y, TS0.w, LINEAS_TS),
+    codigo('p1', TS1.x, TS1.y, TS1.w, LINEAS_TS),
+    valor('lock', 309, 44, 120, 34, 'lock = false'),
+    grupo(
+      'ts',
+      rect(36, 156, 330, 128, 10) +
+        texto(50, 156, 'atómica: todo en un solo paso', { clase: 'rs-nota rs-izq t3p-leyenda' }) +
+        FUNCION_TS.map((l, i) => texto(52, 176 + i * 22, l, { clase: 'rs-codigo' })).join(''),
+      { clase: 'rs-caja' },
+    ),
+    valor('ret', 400, 162, 300, 34, 'test_and_set devolvió: —'),
+    valor('vueltas', 400, 208, 300, 34, 'vueltas de P1 en el while: 0'),
+    cartel('espera', 550, 270, 300, 30, 'espera activa: usa CPU sin avanzar'),
+  ],
+  fichas: { p0: 'P0', p1: 'P1' },
+  lugares: {
+    ...lugaresCodigo('p0', TS0.x, TS0.y, LINEAS_TS.length),
+    ...lugaresCodigo('p1', TS1.x, TS1.y, LINEAS_TS.length),
+  },
+  pasos: [
+    {
+      titulo: 'Arranque.',
+      texto:
+        '`lock = false`: nadie está en la sección crítica. P0 y P1 quieren entrar, y los dos van a probar con la misma instrucción.',
+      resaltar: ['lock', 'p0-0', 'p1-0'],
+      fichas: { p0: 'p0-0', p1: 'p1-0' },
+    },
+    {
+      titulo: 'P0 hace test_and_set.',
+      texto:
+        'Lee `false` y escribe `true` **en un solo paso**: nadie puede meterse entre la lectura y la escritura, ni siquiera otro procesador.',
+      resaltar: ['ts', 'lock', 'p0-0', 'ret'],
+      valores: { lock: 'lock = true', ret: 'devolvió a P0: false' },
+      clases: { ts: 'rc-ok' },
+    },
+    {
+      titulo: 'P0 entra.',
+      texto:
+        'Como la instrucción le devolvió `false`, el `while` termina y P0 entra a su sección crítica. El lock quedó en `true` para los demás.',
+      resaltar: ['p0-1', 'lock'],
+      fichas: { p0: 'p0-1' },
+      clases: { ts: '', 'p0-1': 'rc-ok' },
+    },
+    {
+      titulo: 'P1 hace test_and_set.',
+      texto:
+        'Mientras P0 está adentro (en otra CPU, o porque lo interrumpieron), P1 prueba: lee `true`, vuelve a escribir `true` y le devuelve `true`. Sigue en el `while`.',
+      resaltar: ['ts', 'lock', 'p1-0', 'ret', 'vueltas'],
+      valores: { ret: 'devolvió a P1: true', vueltas: 'vueltas de P1 en el while: 1' },
+      clases: { ts: 'rc-aviso', 'p1-0': 'rc-aviso' },
+    },
+    {
+      titulo: 'P1 da vueltas.',
+      texto:
+        'Cada vuelta es otro `test_and_set` que devuelve `true`. P1 usa la CPU sin avanzar: **espera activa**, mientras P0 siga en su sección crítica.',
+      resaltar: ['p1-0', 'vueltas', 'espera'],
+      valores: { vueltas: 'vueltas de P1 en el while: 5' },
+      clases: { ts: '' },
+      mostrar: ['espera'],
+    },
+    {
+      titulo: 'P0 sale.',
+      texto:
+        'Con `lock = false` (una escritura común, no hace falta la instrucción atómica) libera la sección crítica.',
+      resaltar: ['p0-2', 'lock'],
+      fichas: { p0: 'p0-2' },
+      valores: { lock: 'lock = false' },
+      clases: { 'p0-1': '' },
+    },
+    {
+      titulo: 'P1 entra.',
+      texto:
+        'Su siguiente `test_and_set` lee `false` y deja `true`: sale del `while` y entra. Hay mutua exclusión sin alternancia, pero se gastaron 5 vueltas esperando.',
+      resaltar: ['ts', 'lock', 'p1-1', 'ret'],
+      fichas: { p0: null, p1: 'p1-1' },
+      valores: { lock: 'lock = true', ret: 'devolvió a P1: false' },
+      clases: { 'p1-0': '', 'p1-1': 'rc-ok' },
+      ocultar: ['espera'],
+    },
+  ],
+}
+
 export const recorridos: Record<string, Recorrido> = {
   'condicion-carrera': carrera,
   'intentos-software': intentosSoftware,
   'semaforo-por-dentro': semaforoPorDentro,
   'productor-consumidor': productorConsumidor,
+  'test-and-set': testAndSet,
 }
