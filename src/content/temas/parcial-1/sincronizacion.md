@@ -108,6 +108,10 @@ while (interesado[j] && turno == j);  // espera activa
 interesado[i] = false;
 ```
 
+```recorrido intentos-software
+
+```
+
 ## Soluciones de hardware
 
 ### Deshabilitar interrupciones
@@ -170,6 +174,10 @@ signal(s) {             // también llamado V() o up()
 | `< 0` | Su valor absoluto es la cantidad de procesos bloqueados esperando. |
 
 **Nunca se inicializa en un valor negativo.**
+
+```recorrido semaforo-por-dentro
+
+```
 
 ### Tipos de semáforos
 

@@ -1,7 +1,7 @@
-/** Recorridos del tema Sincronización: condición de carrera y productor-consumidor. */
+/** Recorridos del tema Sincronización: carrera, soluciones de software, semáforo y productor-consumidor. */
 import { cartel, codigo, lugaresCodigo, rect, valor } from '../primitivas-sincronizacion'
 import type { Paso, Recorrido } from '../recorrido'
-import { grupo, texto } from '../svg'
+import { grupo, oculto, texto } from '../svg'
 
 // ── Condición de carrera ──
 
@@ -374,7 +374,529 @@ const productorConsumidor: Recorrido = {
   ],
 }
 
+// ── Intentos de solución por software ──
+
+/** Sangría que el SVG no colapsa. */
+const S = '  '
+const N_LINEAS = 8
+type Codigo = (i: number, j: number) => string[]
+
+const INTENTO_1: Codigo = (i, j) => [
+  `while (turno != ${i});`,
+  '/* sección crítica */',
+  `turno = ${j};`,
+  '/* resto del código */',
+]
+const INTENTO_2: Codigo = (i, j) => [
+  `while (adentro[${j}]);`,
+  `adentro[${i}] = true;`,
+  '/* sección crítica */',
+  `adentro[${i}] = false;`,
+]
+const INTENTO_3: Codigo = (i, j) => [
+  `interesado[${i}] = true;`,
+  `while (interesado[${j}]);`,
+  '/* sección crítica */',
+  `interesado[${i}] = false;`,
+]
+const INTENTO_4: Codigo = (i, j) => [
+  `interesado[${i}] = true;`,
+  `while (interesado[${j}]) {`,
+  `${S}interesado[${i}] = false;`,
+  `${S}/* espera un rato */`,
+  `${S}interesado[${i}] = true;`,
+  '}',
+  '/* sección crítica */',
+  `interesado[${i}] = false;`,
+]
+const PETERSON: Codigo = (i, j) => [
+  `interesado[${i}] = true;`,
+  `turno = ${j};`,
+  `while (interesado[${j}] && turno == ${j});`,
+  '/* sección crítica */',
+  `interesado[${i}] = false;`,
+]
+
+const C0 = { x: 30, y: 100, w: 310 }
+const C1 = { x: 380, y: 100, w: 310 }
+const lineasDe = (c: Codigo, i: number) => {
+  const l = c(i, 1 - i)
+  return [...l, ...Array<string>(N_LINEAS - l.length).fill('')]
+}
+const varFlag = (k: number) =>
+  oculto(valor(`var-f${k}`, k === 0 ? 95 : 445, 32, 180, 30, '', { val: `f${k}` }))
+
+/** Primer paso de cada pestaña: carga el código y las variables de ese intento. */
+function arranque(c: Codigo, flag: string | null, turno: number | null, texto: string): Paso {
+  const cod = Object.fromEntries(
+    [0, 1].flatMap((i) => lineasDe(c, i).map((l, k) => [`c${i}-${k}`, l])),
+  )
+  const vars = [...(flag ? ['var-f0', 'var-f1'] : []), ...(turno !== null ? ['var-turno'] : [])]
+  return {
+    titulo: 'Arranque.',
+    texto,
+    resaltar: vars,
+    fichas: { p0: 'c0-0', p1: 'c1-0' },
+    valores: {
+      ...cod,
+      ...(flag ? { f0: `${flag}[0] = false`, f1: `${flag}[1] = false` } : {}),
+      ...(turno !== null ? { turno: `turno = ${turno}` } : {}),
+    },
+    mostrar: vars,
+  }
+}
+
+const intentosSoftware: Recorrido = {
+  ancho: 720,
+  alto: 354,
+  titulo: 'Intentos de solución por software para dos procesos, P0 y P1',
+  cuerpo: [
+    texto(360, 16, 'variables compartidas', { clase: 'rs-nota' }),
+    varFlag(0),
+    oculto(valor('var-turno', 295, 32, 130, 30, 'turno = 0', { val: 'turno' })),
+    varFlag(1),
+    texto(C0.x + C0.w / 2, 86, 'P0', { clase: 'rs-titulo' }),
+    texto(C1.x + C1.w / 2, 86, 'P1', { clase: 'rs-titulo' }),
+    codigo('c0', C0.x, C0.y, C0.w, lineasDe(INTENTO_1, 0), true),
+    codigo('c1', C1.x, C1.y, C1.w, lineasDe(INTENTO_1, 1), true),
+    cartel('cartel', 360, 330, 560, 32, ''),
+  ],
+  fichas: { p0: 'P0', p1: 'P1' },
+  lugares: {
+    ...lugaresCodigo('c0', C0.x, C0.y, N_LINEAS),
+    ...lugaresCodigo('c1', C1.x, C1.y, N_LINEAS),
+  },
+  variantes: [
+    {
+      nombre: '1. Variable turno',
+      pasos: [
+        arranque(
+          INTENTO_1,
+          null,
+          0,
+          'Una sola variable compartida: `turno = 0`. Cada proceso entra solo cuando `turno` tiene su número.',
+        ),
+        {
+          titulo: 'P0 entra.',
+          texto:
+            '`turno != 0` es falso: P0 sale del `while` y entra. P1 da vueltas en su `while` (espera activa) porque no es su turno.',
+          resaltar: ['c0-0', 'c0-1', 'var-turno', 'c1-0'],
+          fichas: { p0: 'c0-1' },
+          clases: { 'c1-0': 'rc-aviso' },
+        },
+        {
+          titulo: 'P0 sale.',
+          texto: 'Le pasa el turno a P1 con `turno = 1` y sigue con el resto de su código.',
+          resaltar: ['c0-2', 'c0-3', 'var-turno'],
+          fichas: { p0: 'c0-3' },
+          valores: { turno: 'turno = 1' },
+        },
+        {
+          titulo: 'P1 entra.',
+          texto: 'Ahora `turno != 1` es falso: P1 sale del `while` y entra a la sección crítica.',
+          resaltar: ['c1-0', 'c1-1', 'var-turno'],
+          fichas: { p1: 'c1-1' },
+          clases: { 'c1-0': '' },
+        },
+        {
+          titulo: 'P1 sale.',
+          texto: '`turno = 0`: le devuelve el turno a P0 y sigue con su resto.',
+          resaltar: ['c1-2', 'c1-3', 'var-turno'],
+          fichas: { p1: 'c1-3' },
+          valores: { turno: 'turno = 0' },
+        },
+        {
+          titulo: 'P1 quiere entrar otra vez.',
+          texto:
+            'Vuelve al `while (turno != 1)` y, como `turno = 0`, espera. Pero P0 sigue en su resto y **no tiene intención de entrar**.',
+          resaltar: ['c1-0', 'var-turno', 'c0-3'],
+          fichas: { p1: 'c1-0' },
+          clases: { 'c1-0': 'rc-aviso' },
+        },
+        {
+          titulo: 'Sin progreso.',
+          texto:
+            'La sección crítica está libre y P1 no puede usarla hasta que P0 pase por ella: **alternancia estricta**. Hay mutua exclusión, pero no hay progreso.',
+          resaltar: ['c1-0', 'c0-3', 'cartel'],
+          valores: { cartel: 'SC libre y P1 esperando: no hay progreso' },
+          clases: { 'c1-0': 'rc-mal', cartel: 'rc-mal' },
+          mostrar: ['cartel'],
+        },
+      ],
+    },
+    {
+      nombre: '2. Flags "estoy adentro"',
+      pasos: [
+        arranque(
+          INTENTO_2,
+          'adentro',
+          null,
+          'Un flag por proceso, los dos en false. Cada uno mira el flag del otro y **después** levanta el suyo.',
+        ),
+        {
+          titulo: 'P0 mira.',
+          texto: '`while (adentro[1])`: el flag de P1 está en false, así que P0 sale del bucle.',
+          resaltar: ['c0-0', 'var-f1'],
+          fichas: { p0: 'c0-1' },
+        },
+        {
+          titulo: 'Interrupción.',
+          texto:
+            'Justo antes de `adentro[0] = true`, el SO le da la CPU a P1. El flag de P0 **todavía está en false**.',
+          resaltar: ['c0-1', 'var-f0', 'cartel'],
+          valores: { cartel: 'interrupción: el SO le da la CPU a P1' },
+          clases: { 'c0-1': 'rc-aviso', cartel: 'rc-aviso' },
+          mostrar: ['cartel'],
+        },
+        {
+          titulo: 'P1 mira.',
+          texto:
+            '`while (adentro[0])`: ve false, porque P0 no llegó a levantarlo, y sale del bucle.',
+          resaltar: ['c1-0', 'var-f0'],
+          fichas: { p1: 'c1-1' },
+          ocultar: ['cartel'],
+        },
+        {
+          titulo: 'P1 entra.',
+          texto: '`adentro[1] = true` y entra a la sección crítica.',
+          resaltar: ['c1-1', 'c1-2', 'var-f1'],
+          fichas: { p1: 'c1-2' },
+          valores: { f1: 'adentro[1] = true' },
+        },
+        {
+          titulo: 'Vuelve P0.',
+          texto:
+            'Sigue donde quedó: ya pasó el `while`, así que no vuelve a mirar. Levanta su flag y entra.',
+          resaltar: ['c0-1', 'c0-2', 'var-f0'],
+          fichas: { p0: 'c0-2' },
+          valores: { f0: 'adentro[0] = true' },
+          clases: { 'c0-1': '' },
+        },
+        {
+          titulo: 'Los dos adentro.',
+          texto:
+            '**No hay mutua exclusión**: mirar el flag y levantarlo son dos pasos separados, y una interrupción puede caer en el medio.',
+          resaltar: ['c0-2', 'c1-2', 'cartel'],
+          valores: { cartel: 'P0 y P1 en la sección crítica a la vez' },
+          clases: { 'c0-2': 'rc-mal', 'c1-2': 'rc-mal', cartel: 'rc-mal' },
+          mostrar: ['cartel'],
+        },
+      ],
+    },
+    {
+      nombre: '3. Primero me declaro interesado',
+      pasos: [
+        arranque(
+          INTENTO_3,
+          'interesado',
+          null,
+          'Se invierte el orden: cada proceso **primero** levanta su flag y después espera a que el otro baje el suyo.',
+        ),
+        {
+          titulo: 'P0 se declara interesado.',
+          texto: '`interesado[0] = true`.',
+          resaltar: ['c0-0', 'var-f0'],
+          fichas: { p0: 'c0-1' },
+          valores: { f0: 'interesado[0] = true' },
+        },
+        {
+          titulo: 'Interrupción.',
+          texto: 'Antes de que P0 llegue a mirar el flag del otro, el SO le da la CPU a P1.',
+          resaltar: ['c0-1', 'cartel'],
+          valores: { cartel: 'interrupción: el SO le da la CPU a P1' },
+          clases: { cartel: 'rc-aviso' },
+          mostrar: ['cartel'],
+        },
+        {
+          titulo: 'P1 se declara interesado.',
+          texto:
+            '`interesado[1] = true` y va al `while (interesado[0])`: está en true, así que P1 espera.',
+          resaltar: ['c1-0', 'c1-1', 'var-f0', 'var-f1'],
+          fichas: { p1: 'c1-1' },
+          valores: { f1: 'interesado[1] = true' },
+          clases: { 'c1-1': 'rc-aviso' },
+          ocultar: ['cartel'],
+        },
+        {
+          titulo: 'Vuelve P0.',
+          texto: '`while (interesado[1])` también da true: P0 también se queda esperando.',
+          resaltar: ['c0-1', 'var-f1'],
+          clases: { 'c0-1': 'rc-aviso' },
+        },
+        {
+          titulo: 'Deadlock.',
+          texto:
+            'Cada uno espera que el otro baje su flag, y el flag se baja recién al salir de la sección crítica, a la que ninguno llega. Hay mutua exclusión, pero hay **deadlock**.',
+          resaltar: ['c0-1', 'c1-1', 'var-f0', 'var-f1', 'cartel'],
+          valores: { cartel: 'los dos esperan para siempre: deadlock' },
+          clases: {
+            'c0-1': 'rc-mal',
+            'c1-1': 'rc-mal',
+            'var-f0': 'rc-mal',
+            'var-f1': 'rc-mal',
+            cartel: 'rc-mal',
+          },
+          mostrar: ['cartel'],
+        },
+      ],
+    },
+    {
+      nombre: '4. Ceder si hay conflicto',
+      pasos: [
+        arranque(
+          INTENTO_4,
+          'interesado',
+          null,
+          'Como el 3, pero si el otro también está interesado, se baja el flag, se espera un rato y se reintenta.',
+        ),
+        {
+          titulo: 'Los dos se declaran interesados.',
+          texto:
+            'Corren a la par (en dos CPUs, o con cambios de contexto justo en esos puntos): `interesado[0] = true` e `interesado[1] = true`.',
+          resaltar: ['c0-0', 'c1-0', 'var-f0', 'var-f1'],
+          fichas: { p0: 'c0-1', p1: 'c1-1' },
+          valores: { f0: 'interesado[0] = true', f1: 'interesado[1] = true' },
+        },
+        {
+          titulo: 'Los dos ven conflicto.',
+          texto: 'Cada uno mira el flag del otro, lo ve en true y entra al cuerpo del `while`.',
+          resaltar: ['c0-1', 'c1-1', 'var-f0', 'var-f1'],
+          fichas: { p0: 'c0-2', p1: 'c1-2' },
+        },
+        {
+          titulo: 'Los dos ceden.',
+          texto: 'Bajan su flag para dejar pasar al otro y esperan un rato.',
+          resaltar: ['c0-2', 'c0-3', 'c1-2', 'c1-3', 'var-f0', 'var-f1'],
+          fichas: { p0: 'c0-3', p1: 'c1-3' },
+          valores: { f0: 'interesado[0] = false', f1: 'interesado[1] = false' },
+        },
+        {
+          titulo: 'Los dos reintentan.',
+          texto:
+            'Pasado el mismo rato, levantan el flag otra vez **al mismo tiempo** y vuelven a mirar la condición del `while`.',
+          resaltar: ['c0-4', 'c1-4', 'c0-1', 'c1-1', 'var-f0', 'var-f1'],
+          fichas: { p0: 'c0-1', p1: 'c1-1' },
+          valores: { f0: 'interesado[0] = true', f1: 'interesado[1] = true' },
+        },
+        {
+          titulo: 'Y otra vez.',
+          texto:
+            'Ven el flag del otro en true, vuelven a ceder, y así. Los dos **cambian de estado todo el tiempo**, pero ninguno llega a la sección crítica.',
+          resaltar: ['c0-1', 'c0-2', 'c0-3', 'c0-4', 'c1-1', 'c1-2', 'c1-3', 'c1-4'],
+          clases: Object.fromEntries(
+            [1, 2, 3, 4].flatMap((k) => [
+              [`c0-${k}`, 'rc-aviso'],
+              [`c1-${k}`, 'rc-aviso'],
+            ]),
+          ),
+        },
+        {
+          titulo: 'Livelock.',
+          texto:
+            'No es deadlock, porque no están trabados: se mueven. Es **livelock**, como dos personas que se corren para el mismo lado en un pasillo. Si las demoras no coinciden se destraba, pero nada lo garantiza.',
+          resaltar: ['c0-6', 'c1-6', 'cartel'],
+          valores: { cartel: 'se mueven y ninguno entra: livelock' },
+          clases: {
+            ...Object.fromEntries(
+              [1, 2, 3, 4].flatMap((k) => [
+                [`c0-${k}`, ''],
+                [`c1-${k}`, ''],
+              ]),
+            ),
+            'c0-6': 'rc-mal',
+            'c1-6': 'rc-mal',
+            cartel: 'rc-mal',
+          },
+          mostrar: ['cartel'],
+        },
+      ],
+    },
+    {
+      nombre: 'Peterson',
+      pasos: [
+        arranque(
+          PETERSON,
+          'interesado',
+          0,
+          'Los flags de interés del intento 3 más una variable `turno` que desempata. Se prueba con la misma intercalación que rompía a los otros.',
+        ),
+        {
+          titulo: 'P0 se declara y cede.',
+          texto:
+            '`interesado[0] = true` y `turno = 1`: por si P1 también quiere entrar, le deja la prioridad.',
+          resaltar: ['c0-0', 'c0-1', 'var-f0', 'var-turno'],
+          fichas: { p0: 'c0-2' },
+          valores: { f0: 'interesado[0] = true', turno: 'turno = 1' },
+        },
+        {
+          titulo: 'Interrupción.',
+          texto: 'Antes del `while` de P0, el SO le da la CPU a P1.',
+          resaltar: ['c0-2', 'cartel'],
+          valores: { cartel: 'interrupción: el SO le da la CPU a P1' },
+          clases: { cartel: 'rc-aviso' },
+          mostrar: ['cartel'],
+        },
+        {
+          titulo: 'P1 hace lo mismo.',
+          texto:
+            '`interesado[1] = true` y `turno = 0`. Como los dos escribieron `turno`, **el último que lo escribió es el que espera**.',
+          resaltar: ['c1-0', 'c1-1', 'var-f1', 'var-turno'],
+          fichas: { p1: 'c1-2' },
+          valores: { f1: 'interesado[1] = true', turno: 'turno = 0' },
+          ocultar: ['cartel'],
+        },
+        {
+          titulo: 'P1 espera.',
+          texto:
+            '`interesado[0] && turno == 0` es verdadero: P1 da vueltas en el `while` (espera activa).',
+          resaltar: ['c1-2', 'var-f0', 'var-turno'],
+          clases: { 'c1-2': 'rc-aviso' },
+        },
+        {
+          titulo: 'Vuelve P0 y entra.',
+          texto:
+            '`interesado[1] && turno == 1` es falso, porque `turno` vale 0: P0 entra y P1 sigue afuera. **Hay mutua exclusión.**',
+          resaltar: ['c0-2', 'c0-3', 'var-turno'],
+          fichas: { p0: 'c0-3' },
+          clases: { 'c0-3': 'rc-ok' },
+        },
+        {
+          titulo: 'P0 sale y entra P1.',
+          texto:
+            '`interesado[0] = false` hace falsa la condición de P1, que entra. Sin deadlock y con progreso; lo que queda es la **espera activa**.',
+          resaltar: ['c0-4', 'c1-3', 'var-f0', 'cartel'],
+          fichas: { p0: 'c0-4', p1: 'c1-3' },
+          valores: {
+            f0: 'interesado[0] = false',
+            cartel: 'funciona: mutua exclusión, progreso, sin deadlock',
+          },
+          clases: { 'c0-3': '', 'c1-2': '', 'c1-3': 'rc-ok', cartel: 'rc-ok' },
+          mostrar: ['cartel'],
+        },
+      ],
+    },
+  ],
+}
+
+// ── Semáforo por dentro ──
+
+const CODIGO_SEMAFORO = [
+  'wait(s) {',
+  `${S}s.valor--;`,
+  `${S}if (s.valor < 0) bloquear(…);`,
+  '}',
+  'signal(s) {',
+  `${S}s.valor++;`,
+  `${S}if (s.valor <= 0) desbloquear(…);`,
+  '}',
+]
+const SEM = { x: 30, y: 40, w: 280 }
+const zona = (el: string, x: number, titulo: string) =>
+  grupo(el, rect(x, 180, 170, 56) + texto(x + 85, 194, titulo, { clase: 'rs-nota' }), {
+    clase: 'rs-caja',
+  })
+const nota = (t: string) => ({ 'nota-valor': t })
+
+const semaforoPorDentro: Recorrido = {
+  ancho: 720,
+  alto: 290,
+  titulo: 'Un semáforo por dentro: su valor y su cola de bloqueados con tres procesos',
+  cuerpo: [
+    texto(SEM.x + SEM.w / 2, 20, 'wait y signal', { clase: 'rs-titulo' }),
+    codigo('sem', SEM.x, SEM.y, SEM.w, CODIGO_SEMAFORO),
+    `<rect class="rd-marco" x="340" y="30" width="360" height="126" rx="10"/>`,
+    texto(520, 46, 'semáforo s (mutex)', { clase: 'rs-titulo' }),
+    valor('sem-valor', 356, 66, 150, 36, 's.valor = 1', { val: 'valor' }),
+    texto(431, 126, '1: una instancia libre', { clase: 'rs-nota', val: 'nota-valor' }),
+    grupo(
+      'sem-cola',
+      texto(605, 76, 'bloqueados (FIFO)', { clase: 'rs-nota' }) +
+        rect(545, 92, 50, 36) +
+        rect(615, 92, 50, 36),
+      { clase: 'rs-caja' },
+    ),
+    zona('sc', 340, 'sección crítica'),
+    zona('afuera', 530, 'fuera de la SC'),
+    cartel('cartel', 360, 268, 460, 30, ''),
+  ],
+  fichas: { p1: 'P1', p2: 'P2', p3: 'P3' },
+  lugares: {
+    'cola-0': { x: 570, y: 110 },
+    'cola-1': { x: 640, y: 110 },
+    sc: { x: 425, y: 218 },
+    'afuera-1': { x: 575, y: 218 },
+    'afuera-2': { x: 615, y: 218 },
+    'afuera-3': { x: 655, y: 218 },
+  },
+  pasos: [
+    {
+      titulo: 'Arranque.',
+      texto:
+        'Un semáforo es un **contador** y una **cola de bloqueados**. Como mutex arranca en 1: una instancia libre. Los tres procesos quieren entrar a la sección crítica.',
+      resaltar: ['sem-valor', 'sem-cola'],
+      fichas: { p1: 'afuera-1', p2: 'afuera-2', p3: 'afuera-3' },
+    },
+    {
+      titulo: 'P1 hace wait.',
+      texto:
+        '`s.valor--` lo deja en 0. Como **no es negativo**, P1 no se bloquea y entra a la sección crítica.',
+      resaltar: ['sem-0', 'sem-1', 'sem-2', 'sem-valor', 'sc'],
+      fichas: { p1: 'sc' },
+      valores: { valor: 's.valor = 0', ...nota('0: nada libre y nadie espera') },
+    },
+    {
+      titulo: 'P2 hace wait.',
+      texto:
+        '`s.valor` pasa a −1. Ahora sí es negativo: P2 **se bloquea** y va a la cola del semáforo. No gasta CPU esperando.',
+      resaltar: ['sem-1', 'sem-2', 'sem-valor', 'sem-cola'],
+      fichas: { p2: 'cola-0' },
+      valores: { valor: 's.valor = −1', ...nota('|−1| = 1 bloqueado') },
+      clases: { 'sem-cola': 'rc-aviso' },
+    },
+    {
+      titulo: 'P3 hace wait.',
+      texto:
+        '`s.valor` baja a −2 y P3 se encola detrás de P2. El valor negativo, en absoluto, es la **cantidad de bloqueados**.',
+      resaltar: ['sem-1', 'sem-2', 'sem-valor', 'sem-cola'],
+      fichas: { p3: 'cola-1' },
+      valores: { valor: 's.valor = −2', ...nota('|−2| = 2 bloqueados') },
+    },
+    {
+      titulo: 'P1 hace signal.',
+      texto:
+        '`s.valor++` da −1, que es `<= 0`: había alguien esperando, así que despierta **al primero de la cola** (FIFO), P2, que pasa a listo y entra. `signal` nunca bloquea.',
+      resaltar: ['sem-5', 'sem-6', 'sem-valor', 'sem-cola', 'sc'],
+      fichas: { p1: 'afuera-1', p2: 'sc', p3: 'cola-0' },
+      valores: { valor: 's.valor = −1', ...nota('|−1| = 1 bloqueado') },
+    },
+    {
+      titulo: 'P2 hace signal.',
+      texto: '`s.valor` pasa a 0, todavía `<= 0`: despierta a P3, el único que quedaba en la cola.',
+      resaltar: ['sem-5', 'sem-6', 'sem-valor', 'sem-cola', 'sc'],
+      fichas: { p2: 'afuera-2', p3: 'sc' },
+      valores: { valor: 's.valor = 0', ...nota('0: nada libre y nadie espera') },
+      clases: { 'sem-cola': '' },
+    },
+    {
+      titulo: 'P3 hace signal.',
+      texto:
+        '`s.valor` vuelve a 1. Como es positivo, no hay nadie a quien despertar: queda una instancia libre, igual que al principio.',
+      resaltar: ['sem-5', 'sem-6', 'sem-valor', 'cartel'],
+      fichas: { p3: 'afuera-3' },
+      valores: {
+        valor: 's.valor = 1',
+        ...nota('1: una instancia libre'),
+        cartel: 'tres wait y tres signal: vuelve a 1',
+      },
+      clases: { 'sem-valor': 'rc-ok', cartel: 'rc-ok' },
+      mostrar: ['cartel'],
+    },
+  ],
+}
+
 export const recorridos: Record<string, Recorrido> = {
   'condicion-carrera': carrera,
+  'intentos-software': intentosSoftware,
+  'semaforo-por-dentro': semaforoPorDentro,
   'productor-consumidor': productorConsumidor,
 }
