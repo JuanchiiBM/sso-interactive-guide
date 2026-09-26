@@ -14,8 +14,8 @@ aparecen elementos. Estilo "explicado paso a paso" (issue #13).
 | Qué | Dónde |
 | --- | --- |
 | Tipos y render en build | `src/lib/diagramas/recorrido.ts` |
-| Registro por id | `src/lib/diagramas/recorridos/index.ts` (`RECORRIDOS`) |
-| Un archivo por tema | `src/lib/diagramas/recorridos/<tema>.ts` |
+| Registro por id | `src/lib/diagramas/recorridos/index.ts` (`RECORRIDOS`, se arma solo) |
+| Un archivo por tema | `src/lib/diagramas/recorridos/<tema>.ts`, que exporta `recorridos: Record<id, Recorrido>` |
 | Primitivas SVG | `src/lib/diagramas/svg.ts` (`caja`, `flecha`, `rombo`, `grupo`, `texto`, `lienzo`) |
 | Cliente | `src/lib/recorridos.ts` (`initRecorridos`, en `src/scripts/client.ts`) |
 | Estilos | `src/styles/diagramas.css`, sección "Recorridos" |
@@ -50,7 +50,8 @@ export const miRecorrido: Recorrido = {
 }
 ```
 
-Y registrarlo en `RECORRIDOS` con su id.
+Y sumarlo al `export const recorridos = { 'mi-id': miRecorrido }` del archivo de su tema: `index.ts`
+los junta con `import.meta.glob` (un id repetido falla en build).
 
 - **Qué se hereda:** `fichas`, `valores`, `clases` y lo visible (`mostrar`/`ocultar`) pasan al paso
   siguiente; `resaltar` no. El estado completo de cada paso se calcula en build (`estados()`) y va

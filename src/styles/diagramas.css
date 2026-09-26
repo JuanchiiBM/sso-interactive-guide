@@ -380,3 +380,19 @@ rect.ge-vacia {
 .recorrido svg {
   min-width: 540px;
 }
+
+/* ── Recorridos · procesos y SO (estilos propios de esos dibujos) ── */
+
+/* fin procesos y SO */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · planificación e hilos ── */
+
+/* fin planificación e hilos */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · sincronización y deadlock ── */
+
+/* fin sincronización y deadlock */

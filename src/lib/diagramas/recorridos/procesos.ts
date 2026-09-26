@@ -10,7 +10,7 @@ const lugares = Object.fromEntries(
   ]),
 )
 
-export const estadosProceso: Recorrido = {
+const estadosProceso: Recorrido = {
   ...lienzoEstadosProceso(),
   titulo: 'Un proceso recorriendo el diagrama de 5 estados',
   fichas: { p1: 'P1' },
@@ -75,4 +75,8 @@ export const estadosProceso: Recorrido = {
       fichas: { p1: 'exit' },
     },
   ],
+}
+
+export const recorridos: Record<string, Recorrido> = {
+  'estados-proceso': estadosProceso,
 }
