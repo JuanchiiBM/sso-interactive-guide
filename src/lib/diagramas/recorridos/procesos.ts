@@ -1,8 +1,11 @@
 /** Recorridos del tema Procesos. */
 import { ALTO_ESTADO, ANCHO_ESTADO, ESTADOS, lienzoEstadosProceso } from '../index'
 import { arista, bloque, carril, insignia, nodo, tarjeta } from '../primitivas-procesos'
+import { seccion } from '../primitivas-arquitectura'
+import { cartel, codigo, lugaresCodigo } from '../primitivas-sincronizacion'
 import type { Recorrido } from '../recorrido'
-import { texto } from '../svg'
+import { caja, oculto, texto } from '../svg'
+import { datoSieteEstados, lienzoSieteEstados, lugaresSieteEstados } from '../siete-estados'
 
 // la ficha va en la esquina superior derecha de cada estado
 const lugares = Object.fromEntries(
@@ -435,9 +438,209 @@ const cambioProceso: Recorrido = {
   ],
 }
 
+// ── Imagen del proceso: dónde va cada cosa y por qué un malloc sin free pierde memoria ──
+const IMG_X = 36
+const IMG_Y = 44
+const LINEAS_IMG = [
+  'int contador = 5;',
+  'void cargar(void) {',
+  '  int *v = malloc(40);',
+  '  v[0] = contador;',
+  '}  // sin free(v)',
+  'int main(void) {',
+  '  int total = 0;',
+  '  cargar();',
+  '  cargar();',
+  '  return 0;',
+  '}',
+]
+// v queda en la línea de abajo del marco de cargar; de ahí sale el puntero al heap
+const puntero = (el: string, yBloque: number) =>
+  arista(`M600,139 C646,139 646,${yBloque} 584,${yBloque}`, { el, oculto: true, punta: true })
+
+const imagenProceso: Recorrido = {
+  ancho: 720,
+  alto: 352,
+  titulo: 'Imagen del proceso: secciones de memoria y un memory leak',
+  cuerpo: [
+    `<g class="dg-panel"><rect x="8" y="14" width="316" height="322" rx="12"/><text class="ri-leyenda" x="22" y="14">programa en C · la ficha es el PC</text></g>`,
+    codigo('img', IMG_X, IMG_Y, 280, LINEAS_IMG),
+    texto(350, 20, 'direcciones altas', { clase: 'dg-zona' }),
+    texto(350, 344, 'direcciones bajas', { clase: 'dg-zona' }),
+    seccion(350, 30, 256, 120, 'Stack'),
+    seccion(350, 150, 256, 50, '', 'ri-libre'),
+    texto(398, 175, 'libre', { clase: 'dg-zona' }),
+    seccion(350, 200, 256, 66, 'Heap'),
+    seccion(350, 266, 256, 32, 'Datos'),
+    seccion(350, 298, 256, 32, 'Código'),
+    arista('M370,155 L370,178', { el: 'crece-stack', punta: true }),
+    arista('M384,196 L384,173', { el: 'crece-heap', punta: true }),
+    caja(520, 282, 130, 22, 'contador = 5', '', 'contador'),
+    `<g data-el="instrucciones">${texto(512, 314, 'main y cargar · solo lectura', { clase: 'ri-chica ri-mini' })}</g>`,
+    caja(668, 70, 88, 76, 'PCB\n(lo maneja\nel SO)', 'dg-neutro', 'pcb'),
+    tarjeta(520, 58, 160, 44, 'marco de main', [{ t: 'total = 0' }], {
+      el: 'marco-main',
+      oculto: true,
+      clase: 'dg-activo',
+    }),
+    tarjeta(
+      520,
+      117,
+      160,
+      58,
+      'marco de cargar',
+      [{ t: 'retorno → main' }, { t: 'v = ?', val: 'c-v' }],
+      { el: 'marco-cargar', oculto: true, clase: 'dg-activo' },
+    ),
+    oculto(caja(520, 250, 120, 24, '40 bytes', 'dg-listo', 'bloque1')),
+    oculto(caja(520, 222, 120, 24, '40 bytes', 'dg-listo', 'bloque2')),
+    puntero('puntero1', 250),
+    puntero('puntero2', 222),
+    cartel('leak', 520, 175, 164, 28, 'leak: 40 bytes'),
+  ],
+  fichas: { pc: 'PC' },
+  lugares: lugaresCodigo('img', IMG_X, IMG_Y, LINEAS_IMG.length),
+  pasos: [
+    {
+      titulo: 'Se carga el programa.',
+      texto:
+        'Las instrucciones van a **Código**, de solo lectura, y la global `contador` a **Datos**: vive lo mismo que el proceso. El SO arma además el PCB, que el proceso no puede tocar.',
+      resaltar: ['img-0', 'contador', 'instrucciones', 'pcb'],
+    },
+    {
+      titulo: 'Entra a main.',
+      texto:
+        'Se apila el marco de `main` con su local `total`: es automática, vive mientras se ejecuta `main`.',
+      resaltar: ['img-6', 'marco-main'],
+      fichas: { pc: 'img-6' },
+      mostrar: ['marco-main'],
+    },
+    {
+      titulo: 'Llama a cargar.',
+      texto:
+        'El marco nuevo va **debajo** del de `main`, porque el stack crece hacia las direcciones bajas. Guarda la dirección de retorno y la local `v`.',
+      resaltar: ['img-7', 'marco-cargar', 'crece-stack'],
+      fichas: { pc: 'img-7' },
+      mostrar: ['marco-cargar'],
+    },
+    {
+      titulo: 'malloc.',
+      texto:
+        'Los 40 bytes se reservan en el **heap**, que crece hacia arriba, y viven hasta el `free`. En el stack solo queda su dirección, guardada en `v`.',
+      resaltar: ['img-2', 'marco-cargar', 'puntero1', 'bloque1', 'crece-heap'],
+      fichas: { pc: 'img-2' },
+      mostrar: ['bloque1', 'puntero1'],
+      valores: { 'c-v': 'v = 0x5A0' },
+    },
+    {
+      titulo: 'Retorna sin free.',
+      texto:
+        'El marco de `cargar` se descarta solo, y con él `v`: se pierde la única dirección del bloque. Sigue ocupado y ya nadie lo puede liberar: **memory leak**.',
+      resaltar: ['img-4', 'bloque1', 'leak'],
+      fichas: { pc: 'img-4' },
+      ocultar: ['marco-cargar', 'puntero1'],
+      mostrar: ['leak'],
+      clases: { bloque1: 'rc-mal' },
+    },
+    {
+      titulo: 'Otra llamada a cargar.',
+      texto:
+        'El marco nuevo reusa el lugar del stack que había quedado libre. El heap no: el primer bloque sigue ocupado, así que `malloc` toma otro.',
+      resaltar: ['img-8', 'marco-cargar', 'puntero2', 'bloque2', 'bloque1'],
+      fichas: { pc: 'img-8' },
+      mostrar: ['marco-cargar', 'bloque2', 'puntero2'],
+      valores: { 'c-v': 'v = 0x5D0' },
+    },
+    {
+      titulo: 'Retorna otra vez sin free.',
+      texto: 'Se pierde otra dirección: ahora son 80 bytes ocupados que nadie puede liberar.',
+      resaltar: ['img-4', 'bloque1', 'bloque2', 'leak'],
+      fichas: { pc: 'img-4' },
+      ocultar: ['marco-cargar', 'puntero2'],
+      clases: { bloque2: 'rc-mal' },
+      valores: { leak: 'leak: 80 bytes' },
+    },
+    {
+      titulo: 'Termina el proceso.',
+      texto:
+        'Al terminar, el SO libera **toda** la imagen, heap incluido. El leak hace daño mientras el proceso vive: si `cargar` estuviera en un bucle, cada vuelta perdería 40 bytes más.',
+      resaltar: ['img-9', 'leak'],
+      fichas: { pc: 'img-9' },
+      ocultar: ['marco-main', 'bloque1', 'bloque2'],
+      valores: { leak: 'exit: SO libera todo' },
+    },
+  ],
+}
+
 export const recorridos: Record<string, Recorrido> = {
   'estados-proceso': estadosProceso,
   'arbol-procesos': arbolProcesos,
   'fork-fork': forkFork,
   'cambio-proceso': cambioProceso,
+  'imagen-proceso': imagenProceso,
 }
+
+// ── Modelo de 7 estados: suspensión y swapping ──
+const estadosSuspendidos: Recorrido = {
+  ...lienzoSieteEstados(),
+  titulo: 'Un proceso suspendido por el planificador de mediano plazo',
+  cuerpo: [
+    ...lienzoSieteEstados().cuerpo,
+    datoSieteEstados('mem', 'memoria: con lugar'),
+    `<g data-el="nota-pcb" data-rc-oculto>${texto(640, 340, 'en RAM: solo el PCB', { clase: 're-nota' })}</g>`,
+  ],
+  fichas: { p1: 'P1', p2: 'P2' },
+  lugares: lugaresSieteEstados(),
+  pasos: [
+    {
+      titulo: 'P1 bloqueado en RAM.',
+      texto:
+        'P1 pidió una E/S lenta y espera en **Blocked**. No puede avanzar, pero su imagen sigue ocupando memoria principal.',
+      resaltar: ['blocked'],
+      fichas: { p1: 'blocked' },
+      valores: { mem: 'memoria: casi llena' },
+    },
+    {
+      titulo: 'Se llena la memoria: swap out.',
+      texto:
+        'Hace falta lugar para los que sí pueden ejecutar: el planificador de **mediano plazo** suspende a P1. Su imagen va a disco y en RAM queda solo el PCB.',
+      resaltar: ['susp-blocked', 'blocked-susp', 'nota-pcb'],
+      fichas: { p1: 'blocked-susp' },
+      valores: { mem: 'memoria: llena' },
+      mostrar: ['nota-pcb'],
+    },
+    {
+      titulo: 'Ocurre su evento.',
+      texto:
+        'Termina la E/S que esperaba y pasa a **Ready/Suspended**: ya no espera nada, pero sigue en disco, así que todavía no compite por la CPU.',
+      resaltar: ['evento-susp', 'ready-susp', 'nota-pcb'],
+      fichas: { p1: 'ready-susp' },
+    },
+    {
+      titulo: 'Baja la carga: swap in.',
+      texto:
+        'Terminó otro proceso y se liberó memoria: el mediano plazo trae a P1 de vuelta a **Ready**. Recién ahora el de corto plazo lo puede elegir.',
+      resaltar: ['activar-ready', 'ready'],
+      fichas: { p1: 'ready' },
+      valores: { mem: 'memoria: con lugar' },
+      ocultar: ['nota-pcb'],
+    },
+    {
+      titulo: 'Llega un proceso nuevo.',
+      texto:
+        'Se crea P2 cuando la memoria volvió a llenarse. El planificador de largo plazo decide si admitirlo y adónde.',
+      resaltar: ['new'],
+      fichas: { p2: 'new' },
+      valores: { mem: 'memoria: llena' },
+    },
+    {
+      titulo: 'Admitido directo a disco.',
+      texto:
+        'No hay lugar en RAM, así que entra a **Ready/Suspended** sin pasar por Ready: queda listo en disco hasta que un swap in lo traiga.',
+      resaltar: ['admitido-susp', 'ready-susp'],
+      fichas: { p2: 'ready-susp' },
+    },
+  ],
+}
+
+recorridos['estados-suspendidos'] = estadosSuspendidos

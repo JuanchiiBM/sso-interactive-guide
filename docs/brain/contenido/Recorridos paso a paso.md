@@ -72,6 +72,19 @@ los junta con `import.meta.glob` (un id repetido falla en build).
 - 4 a 10 pasos. Si hace falta más, son dos recorridos o dos variantes.
 - El contenido tiene que ser correcto para la cátedra (ver [[Convenciones de la Cátedra FRBA]]).
 
+## Primitivas que ya existen (reusalas antes de hacer otra)
+
+- `svg.ts`: `caja`, `flecha` (con `val` la etiqueta cambia por paso), `rombo`, `grupo`, `texto`, `oculto(html)`
+  (marca oculto el primer `data-el` de un HTML, p. ej. `oculto(caja(…, 'nota'))`), `lienzo`.
+- `primitivas-procesos.ts`: `nodo` (caja con subtítulo variable), `tarjeta`, `arista`, `bloque`, `carril`,
+  `insignia`.
+- `primitivas-planificacion.ts`: `cola` (con casilleros), `casilleros` (posiciones de fichas), `recuadro`,
+  `bandeja` (caja con el nombre a la izquierda y lugar para fichas).
+- `siete-estados.ts`: `lienzoSieteEstados` (7 estados con zonas RAM y disco), `lugaresSieteEstados`,
+  `datoSieteEstados`; lo usan `estados-suspendidos` y `tipos-planificadores`.
+- `primitivas-sincronizacion.ts`: `codigo` (columna de código con líneas resaltables), `lugaresCodigo`,
+  `valor`, `fila`, `cartel`, `rect`. `banquero.ts`: el algoritmo puro, testeado.
+
 ## Gotchas
 
 - **Sätteri descarta `style` inline** del HTML de build: posiciones por atributos; la ficha la mueve
@@ -80,6 +93,14 @@ los junta con `import.meta.glob` (un id repetido falla en build).
   `marker-end`. Un `<path>` sin `marker-end` no lleva punta.
 - **Imports relativos** en `src/lib/diagramas/**` (no `@lib/`): los importa `bloques-svg.ts`, que
   también carga vitest sin el alias. El cliente (`src/lib/recorridos.ts`) sí usa `@lib/`.
+- **No anidar `data-el`:** el atenuado es `opacity` por elemento, así que un `data-el` adentro de otro
+  se atenúa dos veces. Un texto sin `data-el` nunca se atenúa (sirve para títulos y paneles fijos).
+- **Estado le gana al acento:** `rc-ok`/`rc-mal`/`rc-aviso` pisan el color del resaltado; en una flecha
+  pintan solo el trazo.
+- **En `recorridos/` solo van archivos de tema:** el registro toma todo `.ts` de esa carpeta y espera un
+  `export const recorridos`. Los helpers van en `src/lib/diagramas/`.
+- **Prettier y el hook:** lint-staged formatea el `.md` entero al commitear (puede realinear tablas);
+  a mano, `prettier --write` solo sobre los archivos tocados, nunca sobre `src`.
 - **Caché de content collections:** si cambiás un recorrido y el HTML no cambia,
   `rm -rf .astro node_modules/.astro` antes de `pnpm build`.
 

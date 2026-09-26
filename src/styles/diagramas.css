@@ -248,20 +248,30 @@ rect.ge-vacia {
 .dg-punta-on {
   fill: var(--accent);
 }
-.recorrido .rc-ok rect,
-.recorrido .rc-ok path {
+.recorrido [data-el].rc-ok:not(.dg-flecha) rect,
+.recorrido [data-el].rc-ok:not(.dg-flecha) path {
   stroke: var(--ok);
   fill: color-mix(in srgb, var(--ok) 14%, var(--surface));
 }
-.recorrido .rc-mal rect,
-.recorrido .rc-mal path {
+.recorrido [data-el].rc-mal:not(.dg-flecha) rect,
+.recorrido [data-el].rc-mal:not(.dg-flecha) path {
   stroke: var(--bad);
   fill: color-mix(in srgb, var(--bad) 14%, var(--surface));
 }
-.recorrido .rc-aviso rect,
-.recorrido .rc-aviso path {
+.recorrido [data-el].rc-aviso:not(.dg-flecha) rect,
+.recorrido [data-el].rc-aviso:not(.dg-flecha) path {
   stroke: var(--warn);
   fill: color-mix(in srgb, var(--warn) 14%, var(--surface));
+}
+/* en una flecha el estado pinta solo el trazo; le gana al acento del resaltado */
+.recorrido .dg-flecha[data-el].rc-ok path {
+  stroke: var(--ok);
+}
+.recorrido .dg-flecha[data-el].rc-mal path {
+  stroke: var(--bad);
+}
+.recorrido .dg-flecha[data-el].rc-aviso path {
+  stroke: var(--warn);
 }
 .recorrido.rc-activo [data-rc-oculto]:not(.rc-visible) {
   display: none;
@@ -282,6 +292,9 @@ rect.ge-vacia {
   transition:
     transform 450ms cubic-bezier(0.4, 0, 0.2, 1),
     opacity 250ms ease;
+}
+.recorrido.rc-animar .rc-ficha.rc-salto {
+  transition: opacity 250ms ease;
 }
 @media (prefers-reduced-motion: reduce) {
   .recorrido [data-el],
@@ -542,3 +555,191 @@ rect.ge-vacia {
   stroke-width: 2;
 }
 /* fin sincronización y deadlock */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · tanda 2 · imagen del proceso, interrupciones y hilos ── */
+/* primitivas-arquitectura.ts: secciones de memoria, paneles resaltables y textos chicos */
+.ri-seccion rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.2;
+}
+.ri-seccion.ri-libre rect {
+  fill: var(--surface-2);
+  stroke-dasharray: 4 4;
+}
+.diagrama .ri-seccion text {
+  text-anchor: start;
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+.diagrama .ri-chica {
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+.diagrama .ri-mini {
+  font-size: 10px;
+}
+/* título de panel apoyado sobre el borde (como un fieldset): lo corta con el fondo del recuadro */
+.diagrama .dg-panel .ri-leyenda {
+  paint-order: stroke;
+  stroke: var(--surface-2);
+  stroke-width: 8px;
+  stroke-linejoin: round;
+}
+.diagrama .ri-izq {
+  text-anchor: start;
+}
+.recorrido .ri-panel.rc-on rect {
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+.ri-llave {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.4;
+}
+.recorrido .rc-on .ri-llave {
+  stroke: var(--accent);
+}
+.recorrido .ri-rombo.rc-on path {
+  stroke-width: 2.6;
+}
+
+/* fin tanda 2 · imagen del proceso, interrupciones y hilos */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · tanda 2 · estados y planificadores ── */
+.re-zona rect {
+  stroke-width: 1;
+}
+.re-zona-ram rect {
+  fill: color-mix(in srgb, var(--p1) 6%, transparent);
+  stroke: color-mix(in srgb, var(--p1) 35%, transparent);
+}
+.re-zona-disco rect {
+  fill: color-mix(in srgb, var(--p4) 8%, transparent);
+  stroke: color-mix(in srgb, var(--p4) 45%, transparent);
+  stroke-dasharray: 5 4;
+}
+.diagrama .re-zona text,
+.diagrama .re-izq {
+  text-anchor: start;
+}
+.diagrama .re-zona text {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+.re-susp rect {
+  stroke-dasharray: 5 3;
+}
+.diagrama .re-dato {
+  text-anchor: end;
+  font-size: 12px;
+  fill: var(--fg-soft);
+}
+.diagrama .re-dato-centro {
+  font-size: 12px;
+}
+.diagrama .re-nota {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.re-cola-baja rect {
+  fill: color-mix(in srgb, var(--p5) 12%, var(--surface));
+  stroke: var(--p5);
+}
+
+/* fin tanda 2 · estados y planificadores */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · tanda 2 · semáforos, soluciones de software y deadlock ── */
+/* primitivas-grafo.ts: misma notación que el ```grafo, con punta propia (el cliente reescribe marker-end) */
+.rd-marco {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-dasharray: 4 4;
+}
+.rd-proceso circle {
+  fill: color-mix(in srgb, var(--p1) 14%, var(--surface));
+  stroke: var(--p1);
+  stroke-width: 2;
+}
+.rd-recurso rect {
+  fill: color-mix(in srgb, var(--p3) 12%, var(--surface));
+  stroke: var(--p3);
+  stroke-width: 2;
+}
+.rd-instancia circle,
+.rd-ley-instancia {
+  fill: var(--p3);
+}
+.rd-linea,
+.rd-leyenda path {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.rd-asignacion .rd-linea,
+.rd-ley-asignacion {
+  stroke: var(--fg-soft);
+}
+.rd-solicitud .rd-linea,
+.rd-ley-solicitud {
+  stroke: var(--warn);
+  stroke-dasharray: 6 5;
+}
+.rd-punta {
+  stroke: none;
+  fill: var(--fg-soft);
+}
+.rd-solicitud .rd-punta {
+  fill: var(--warn);
+}
+/* resaltado: acento; el estado (rc-*) le gana */
+.recorrido .rd-arista.rc-on .rd-linea {
+  stroke: var(--accent);
+  stroke-width: 2.6;
+}
+.recorrido .rd-arista.rc-on .rd-punta {
+  fill: var(--accent);
+}
+.recorrido .rd-arista[data-el].rc-mal .rd-linea {
+  fill: none;
+  stroke: var(--bad);
+}
+.recorrido .rd-arista[data-el].rc-aviso .rd-linea {
+  fill: none;
+  stroke: var(--warn);
+}
+.recorrido .rd-arista[data-el].rc-mal .rd-punta {
+  stroke: none;
+  fill: var(--bad);
+}
+.recorrido .rd-arista[data-el].rc-aviso .rd-punta {
+  stroke: none;
+  fill: var(--warn);
+}
+.recorrido .rd-proceso.rc-on circle,
+.recorrido .rd-recurso.rc-on rect {
+  stroke-width: 3;
+}
+.recorrido .rd-proceso.rc-ok circle {
+  stroke: var(--ok);
+  fill: color-mix(in srgb, var(--ok) 14%, var(--surface));
+}
+.recorrido .rd-proceso.rc-mal circle {
+  stroke: var(--bad);
+  fill: color-mix(in srgb, var(--bad) 14%, var(--surface));
+}
+.recorrido .rd-proceso.rc-aviso circle {
+  stroke: var(--warn);
+  fill: color-mix(in srgb, var(--warn) 14%, var(--surface));
+}
+
+/* fin tanda 2 · semáforos, soluciones de software y deadlock */
