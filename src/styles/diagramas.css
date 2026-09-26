@@ -393,6 +393,15 @@ rect.ge-vacia {
 .recorrido svg {
   min-width: 540px;
 }
+/* lo mismo para los diagramas fijos (todos son de ~720 de ancho) */
+@media (max-width: 640px) {
+  .diagrama {
+    overflow-x: auto;
+  }
+  .diagrama svg {
+    min-width: 540px;
+  }
+}
 
 /* ── Recorridos · procesos y SO (estilos propios de esos dibujos) ── */
 /* primitivas-procesos.ts: subtítulos, carriles de tiempo, tarjetas (PCB), insignias y código */
