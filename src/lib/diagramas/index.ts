@@ -166,11 +166,22 @@ function hilosUltKlt(): string {
   })
 }
 
+// cada archivo de fijos/ exporta `diagramas`; no pueden importar este archivo (import circular)
+const porTema = import.meta.glob<{ diagramas: Record<string, () => string> }>(
+  ['./fijos/*.ts', '!./fijos/*.test.ts'],
+  { eager: true },
+)
+
 export const DIAGRAMAS: Record<string, () => string> = {
   'estados-proceso': estadosProceso,
   'ciclo-instruccion': cicloInstruccion,
   'hilos-ult-klt': hilosUltKlt,
 }
+for (const [archivo, { diagramas }] of Object.entries(porTema))
+  for (const [id, fn] of Object.entries(diagramas)) {
+    if (DIAGRAMAS[id]) throw new Error(`Diagrama "${id}" repetido (${archivo})`)
+    DIAGRAMAS[id] = fn
+  }
 
 export function renderDiagrama(id: string): string {
   const fn = DIAGRAMAS[id.trim()]
