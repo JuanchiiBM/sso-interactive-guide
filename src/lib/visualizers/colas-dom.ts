@@ -1,4 +1,5 @@
-/** Primitivas del diagrama de colas: zonas con fichas y animación FLIP entre pasos. */
+/** Primitivas del diagrama de colas: fichas redondas en SVG que persisten entre pasos y se animan. */
+import { esc } from '@lib/diagramas/svg'
 
 export function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -19,63 +20,74 @@ export interface Ficha {
   texto: string
   /** Índice de color (el mismo que la fila del Gantt). */
   color: number
+  /** Color CSS explícito (p. ej. `var(--muted)` para un KLT sin fila); le gana a `color`. */
+  css?: string
   title?: string
 }
 
-export function ficha({ clave, texto, color, title }: Ficha): HTMLElement {
-  const f = el('span', 'colas-ficha', texto)
-  f.dataset.ficha = clave
-  f.style.setProperty('--c', colorProceso(color))
-  if (title) f.title = title
-  return f
-}
-
+/**
+ * Zona extra del diagrama (la aportan `zonasHilos` y cía.): se dibuja en SVG debajo del flujo del SO.
+ * `cola` = casilleros con el frente a la derecha; `recurso` = caja con las fichas adentro.
+ */
 export interface Zona {
   titulo: string
   fichas: Ficha[]
-  /** `cola` muestra el orden con flechas (el primero, a la izquierda). */
   tipo?: 'cola' | 'recurso'
   /** Texto chico al pie (quantum, dispositivo, etc.). */
   pie?: string
-  /** Para agrupar zonas en filas (`so`, `io`, …) desde quien compone. */
+  /** Zonas con el mismo grupo van en la misma fila. */
   grupo?: string
+  /** Borde resaltado en este paso (el resto del diagrama queda tenue si algo se resalta). */
+  resaltar?: boolean
 }
 
-export function zona({ titulo, fichas, tipo = 'cola', pie }: Zona): HTMLElement {
-  const z = el('div', `colas-zona colas-${tipo}`)
-  z.append(el('div', 'colas-titulo', titulo))
-  const cuerpo = el('div', 'colas-cuerpo')
-  if (!fichas.length) cuerpo.append(el('span', 'colas-vacia', tipo === 'cola' ? '∅' : 'libre'))
-  fichas.forEach((f, i) => {
-    if (i > 0 && tipo === 'cola') cuerpo.append(el('span', 'colas-flecha', '←'))
-    cuerpo.append(ficha(f))
-  })
-  z.append(cuerpo)
-  if (pie) z.append(el('div', 'colas-pie', pie))
-  return z
+export const SVG_NS = 'http://www.w3.org/2000/svg'
+export const RADIO_FICHA = 13
+
+/** Ficha ubicada en coordenadas del viewBox; `mueve` la marca con un aro (cambió de lugar). */
+export interface FichaUbicada {
+  ficha: Ficha
+  x: number
+  y: number
+  mueve?: boolean
 }
 
-/** Repinta `root` con `nuevo` y anima las fichas que cambiaron de lugar (FLIP). */
-export function repintarAnimado(root: HTMLElement, nuevo: HTMLElement[]): void {
-  const antes = new Map<string, DOMRect>()
-  root.querySelectorAll<HTMLElement>('[data-ficha]').forEach((f) => {
-    antes.set(f.dataset.ficha!, f.getBoundingClientRect())
-  })
-  root.replaceChildren(...nuevo)
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  root.querySelectorAll<HTMLElement>('[data-ficha]').forEach((f) => {
-    const previo = antes.get(f.dataset.ficha!)
-    if (!previo) {
-      f.animate([{ opacity: 0, transform: 'scale(0.6)' }, { opacity: 1 }], { duration: 220 })
-      return
+/** Markup de una ficha suelta (para dibujos estáticos); las animadas usan `moverFichas`. */
+export const fichaSvg = (f: Ficha, x: number, y: number) =>
+  `<g class="rc-ficha" style="--c:${f.css ?? colorProceso(f.color)}" transform="translate(${x} ${y})">` +
+  `<circle r="${RADIO_FICHA}"/><text>${esc(f.texto)}</text></g>`
+
+/**
+ * Deja en `capa` una ficha por clave en su lugar: las que ya estaban se deslizan (transición CSS de
+ * `transform`), las nuevas aparecen sin volar y las que no están se desvanecen.
+ */
+export function moverFichas(capa: SVGGElement, ubicadas: FichaUbicada[]): void {
+  const previas = new Map<string, SVGGElement>()
+  for (const g of Array.from(capa.children) as SVGGElement[]) previas.set(g.dataset.ficha!, g)
+  const vistas = new Set<string>()
+  for (const { ficha, x, y, mueve } of ubicadas) {
+    vistas.add(ficha.clave)
+    let g = previas.get(ficha.clave)
+    const aparece = !g || g.classList.contains('rc-fuera')
+    if (!g) {
+      g = document.createElementNS(SVG_NS, 'g') as SVGGElement
+      g.dataset.ficha = ficha.clave
+      g.append(document.createElementNS(SVG_NS, 'circle'), document.createElementNS(SVG_NS, 'text'))
+      g.append(document.createElementNS(SVG_NS, 'title'))
+      g.firstElementChild!.setAttribute('r', String(RADIO_FICHA))
+      capa.append(g)
     }
-    const ahora = f.getBoundingClientRect()
-    const dx = previo.left - ahora.left
-    const dy = previo.top - ahora.top
-    if (!dx && !dy) return
-    f.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], {
-      duration: 320,
-      easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
-    })
-  })
+    g.setAttribute('class', `rc-ficha${mueve ? ' colas-mueve' : ''}`)
+    g.style.setProperty('--c', ficha.css ?? colorProceso(ficha.color))
+    g.children[1].textContent = ficha.texto
+    g.children[2].textContent = ficha.title ?? ficha.texto
+    if (aparece) g.classList.add('rc-salto')
+    g.style.transform = `translate(${x}px, ${y}px)`
+    if (aparece) {
+      g.getBoundingClientRect()
+      const nodo = g
+      requestAnimationFrame(() => nodo.classList.remove('rc-salto'))
+    }
+  }
+  for (const [clave, g] of previas) if (!vistas.has(clave)) g.classList.add('rc-fuera')
 }

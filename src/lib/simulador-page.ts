@@ -21,7 +21,7 @@ type Registro = {
   pasos: (config: never) => Step<unknown>[]
   render: (root: HTMLElement, state: never) => void
   /** Diagrama de colas, si el host lo pide con `data-sim-diagrama`. */
-  colas?: (root: HTMLElement, state: never) => void
+  colas?: (root: HTMLElement, state: never, config: never) => void
   /** Sin desafío, la resolución se muestra directo. */
   desafio?: (root: HTMLElement, pasos: never, config: never) => DesafioGantt
 }
@@ -31,7 +31,7 @@ const SIMULADORES: Record<string, Registro> = {
   planificacion: {
     pasos: (c: ConfigPlanificacion) => pasosPlanificacion(c),
     render: (root, s: EstadoGantt) => renderGantt(root, s),
-    colas: (root, s: EstadoGantt) => renderColas(root, s),
+    colas: (root, s: EstadoGantt, c: ConfigPlanificacion) => renderColas(root, s, c),
     desafio: (root, pasos: Step<EstadoGantt>[], c: ConfigPlanificacion) =>
       crearDesafioGantt(root, pasos, variantesPlanificacion(c).slice(1)),
   },
@@ -160,8 +160,10 @@ function initSimulador(host: HTMLElement, indice: number): void {
   conectarPlayback(host, base)
 }
 
+let contadorColas = 0
+
 /** El paso a paso de la resolución: visualizador, controles, slider y atajos de teclado. */
-function conectarPlayback(host: HTMLElement, { sim, pasos, viz }: Preparado): void {
+function conectarPlayback(host: HTMLElement, { sim, pasos, viz, config }: Preparado): void {
   const playback = createPlayback(pasos)
   const texto = $<HTMLElement>('[data-sim-texto]', host)
   const contador = $<HTMLElement>('[data-sim-contador]', host)
@@ -175,7 +177,7 @@ function conectarPlayback(host: HTMLElement, { sim, pasos, viz }: Preparado): vo
   playback.subscribe((snap) => {
     if (!snap.step) return
     sim.render(viz, snap.step.state as never)
-    if (colas) sim.colas!(colas, snap.step.state as never)
+    if (colas && !colas.hidden) sim.colas!(colas, snap.step.state as never, config as never)
     if (texto) texto.textContent = snap.step.descripcion
     if (contador) contador.textContent = `${snap.current + 1} / ${snap.steps.length}`
     if (slider) slider.value = String(snap.current)
@@ -193,6 +195,26 @@ function conectarPlayback(host: HTMLElement, { sim, pasos, viz }: Preparado): vo
     adelante: playback.forward,
     fin: () => playback.goTo(pasos.length - 1),
     velocidad: () => playback.setSpeed((playback.getSnapshot().speed % 5) + 1),
+    diagrama: () => alternarDiagrama(),
+  }
+
+  // diagrama de colas: arranca oculto; abierto, esconde los chips del Gantt (ver simulador.css)
+  const toggle = $<HTMLButtonElement>('[data-sim-accion="diagrama"]', host)
+  if (colas && toggle) {
+    colas.id ||= `sim-colas-${++contadorColas}`
+    toggle.setAttribute('aria-controls', colas.id)
+  }
+  function alternarDiagrama() {
+    if (!colas || !toggle) return
+    const abrir = colas.hidden
+    colas.hidden = !abrir
+    host.dataset.simDiagrama = abrir ? 'abierto' : ''
+    toggle.setAttribute('aria-expanded', String(abrir))
+    toggle.textContent = abrir ? 'Ocultar diagrama' : 'Mostrar diagrama'
+    // se vuelve a montar con el paso actual, sin animar desde lo que mostraba al cerrarse
+    colas.replaceChildren()
+    const paso = playback.getSnapshot().step
+    if (abrir && paso) sim.colas!(colas, paso.state as never, config as never)
   }
   host.addEventListener('click', (e) => {
     const btn = (e.target as Element).closest<HTMLElement>('[data-sim-accion]')
