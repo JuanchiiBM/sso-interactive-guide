@@ -6,6 +6,7 @@ import { $, $$ } from '@lib/dom'
 import { createPlayback, SPEED_LABELS, type Step } from '@lib/playback'
 import { pasosPlanificacion, type EstadoGantt } from '@lib/simuladores/planificacion/pasos'
 import { renderGantt } from '@lib/visualizers/gantt'
+import { renderColas } from '@lib/visualizers/colas'
 import type { ConfigPlanificacion } from '@lib/simuladores/planificacion/tipos'
 import { crearDesafioGantt, type DesafioGantt } from '@lib/desafios/gantt'
 import { variantesPlanificacion } from '@lib/simuladores/planificacion/verificar'
@@ -19,6 +20,8 @@ import { porcentajeGantt, puntajeGantt } from '@lib/parciales/puntaje-gantt'
 type Registro = {
   pasos: (config: never) => Step<unknown>[]
   render: (root: HTMLElement, state: never) => void
+  /** Diagrama de colas, si el host lo pide con `data-sim-diagrama`. */
+  colas?: (root: HTMLElement, state: never) => void
   /** Sin desafío, la resolución se muestra directo. */
   desafio?: (root: HTMLElement, pasos: never, config: never) => DesafioGantt
 }
@@ -28,6 +31,7 @@ const SIMULADORES: Record<string, Registro> = {
   planificacion: {
     pasos: (c: ConfigPlanificacion) => pasosPlanificacion(c),
     render: (root, s: EstadoGantt) => renderGantt(root, s),
+    colas: (root, s: EstadoGantt) => renderColas(root, s),
     desafio: (root, pasos: Step<EstadoGantt>[], c: ConfigPlanificacion) =>
       crearDesafioGantt(root, pasos, variantesPlanificacion(c).slice(1)),
   },
@@ -164,12 +168,14 @@ function conectarPlayback(host: HTMLElement, { sim, pasos, viz }: Preparado): vo
   const slider = $<HTMLInputElement>('[data-sim-slider]', host)
   const playBtn = $<HTMLButtonElement>('[data-sim-play]', host)
   const speedLabel = $<HTMLElement>('[data-sim-speed-label]', host)
+  const colas = sim.colas ? $<HTMLElement>('[data-sim-colas]', host) : null
 
   if (slider) slider.max = String(pasos.length - 1)
 
   playback.subscribe((snap) => {
     if (!snap.step) return
     sim.render(viz, snap.step.state as never)
+    if (colas) sim.colas!(colas, snap.step.state as never)
     if (texto) texto.textContent = snap.step.descripcion
     if (contador) contador.textContent = `${snap.current + 1} / ${snap.steps.length}`
     if (slider) slider.value = String(snap.current)

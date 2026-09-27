@@ -12,6 +12,7 @@ Resolvedores paso a paso: lógica pura en `src/lib/simuladores/<tipo>/` + visual
 - [[Simulador de Planificación]] — Gantt de corto plazo (FIFO, SJF, SRT, RR, VRR, prioridades,
   HRRN, multinivel, feedback; varios dispositivos, grado de multiprogramación, 2 CPUs; hilos ULT/KLT
   con biblioteca, syscall directa / wrapper / jacketing).
+- [[Diagrama de Colas]] — fichas que se mueven entre Listos, CPU, E/S y bibliotecas en la resolución de los Gantt de guía.
 - [[Patrón — Desafío antes de la Resolución]] — la respuesta se ve recién al acertar.
 - [[Simulador de Gantt de Código]] — sentencias con duración + semáforos/recursos bajo un planificador (P-19…P-25).
 - [[Verificador de Semáforos]] — ejercicios de código con tests sobre todas las intercalaciones.
