@@ -22,6 +22,31 @@ import {
 const DESEMPATE_DEFAULT: OrigenListo[] = ['desalojo', 'io', 'nuevo']
 const LIMITE_TICKS = 10_000
 const DISPOSITIVO_UNICO = 'E/S'
+const MOTIVO: Record<OrigenListo, string> = {
+  desalojo: 'fin de quantum',
+  io: 'fin de E/S',
+  nuevo: 'llegada',
+}
+
+/** Por qué quedan en ese orden los que entran juntos a una cola (ya ordenados); null si entra uno solo. */
+export function explicarDesempate(
+  entran: { id: string; origen: OrigenListo }[],
+  destino: string,
+  desempate: OrigenListo[] = DESEMPATE_DEFAULT,
+  aIgualMotivo = 'por nombre',
+): string | null {
+  if (entran.length < 2) return null
+  const origenes = new Set(entran.map((e) => e.origen))
+  const ids = entran.map((e) => e.id)
+  const quienes = `${ids.slice(0, -1).join(', ')} y ${ids.at(-1)}`
+  const orden = ids.join(' → ')
+  if (origenes.size === 1)
+    return `${quienes} entran a la vez a ${destino} por ${MOTIVO[entran[0].origen]}; a igual motivo van ${aIgualMotivo}: ${orden}.`
+  const motivos = entran.map((e) => `${e.id} (${MOTIVO[e.origen]})`)
+  const regla = desempate.map((o) => MOTIVO[o]).join(' > ')
+  const resto = origenes.size < entran.length ? ` y, a igual motivo, ${aIgualMotivo}` : ''
+  return `${motivos.slice(0, -1).join(', ')} y ${motivos.at(-1)} entran a la vez a ${destino}; por el desempate de la cátedra (${regla})${resto}, queda ${orden}.`
+}
 
 /** Lo que ejecuta en una CPU: un proceso / KLT simple o un ULT. */
 interface Hilo {
@@ -557,6 +582,14 @@ export function simularPlanificacion(
         (x, y) => orden(x.origen) - orden(y.origen) || b.ults.indexOf(x.h) - b.ults.indexOf(y.h),
       )
       for (const e of b.pendientes) b.listos.push(e.h)
+      const juntos = b.pendientes.map((e) => ({ id: e.h.id, origen: e.origen }))
+      const texto = explicarDesempate(
+        juntos,
+        `la biblioteca de ${p.id}`,
+        desempate,
+        'en el orden en que se declararon',
+      )
+      if (texto) avisos.push(texto)
       b.pendientes = []
       b.novedad = true
     }
@@ -759,6 +792,11 @@ export function simularPlanificacion(
       entrar(e)
       reevaluar()
     }
+    colas.forEach((_, q) => {
+      const juntos = lote.filter((e) => e.cola === q)
+      const texto = explicarDesempate(juntos, nombreCola(q), desempate)
+      if (texto) eventos.push(texto)
+    })
     for (const gid of colaNew) {
       const g = grupos.get(gid)!
       if (!g.klts.some((k) => k.llegada === t)) continue

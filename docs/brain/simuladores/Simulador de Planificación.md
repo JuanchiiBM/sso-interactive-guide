@@ -2,7 +2,7 @@
 tipo: servicio
 aliases: [planificación, planificacion, scheduler, hilos, ult, klt, jacketing, wrapper, biblioteca de hilos, scheduling, gantt, simularPlanificacion, fifo, sjf, srt, rr, round robin, hrrn, prioridades, vrr, virtual round robin, multinivel, feedback, afinidad, multiprocesador, multiprogramación, estimación, dispositivos, suspensión, mediano plazo, overhead, interrupción, fila SO]
 tags: [simulador, planificacion]
-actualizado: 2026-09-24
+actualizado: 2026-09-27
 ---
 
 # Simulador de Planificación
@@ -55,6 +55,8 @@ Cada tick `t` representa el intervalo `[t, t+1)`. Orden dentro del tick:
 2. Entran a su cola de listos los **pendientes** del instante `t` (admitidos + fines de E/S + fin de
    quantum), ordenados por el desempate de la cátedra (ver [[Convenciones de la Cátedra FRBA]]).
    Cada pendiente ya trae su cola destino (ver Variantes).
+   Si entran 2+ a la misma cola, el paso lo explica con `explicarDesempate` (motivo de cada uno y
+   la regla aplicada); lo mismo en la cola de cada biblioteca de ULTs (a igual motivo, orden de declaración).
 3. **Desalojo**, por CPU: (a) multinivel/feedback con `desalojoEntreColas` y hay alguien en una cola
    de mayor prioridad que la del que ejecuta; (b) misma cola, algoritmo desalojante (SRT, prioridades
    con desalojo) y hay alguien estrictamente mejor. El desalojado va **al final de su misma cola**.
