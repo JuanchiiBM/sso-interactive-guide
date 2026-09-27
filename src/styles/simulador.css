@@ -355,3 +355,58 @@
 .simulacro-card [data-card-nota] {
   color: var(--banda);
 }
+
+/* ── Diagrama de colas (resolución de los Gantt de la guía) ── */
+/* con el diagrama abierto, los chips de texto del Gantt sobran (!important: le gana a `flex` de utilities) */
+[data-sim-diagrama='abierto'] [data-gantt-panel] {
+  display: none !important;
+}
+/* SVG con el look de los recorridos (diagramas.css): .diagrama .recorrido .rc-activo + dg-/rl-/rc- */
+.diagrama.colas-fig {
+  margin: 0;
+  padding: 0.75rem 0.5rem;
+  overflow: visible;
+}
+/* en celular el dibujo usa todo el ancho: cada px cuenta para que el texto se lea */
+.diagrama.colas-fig.colas-compacto {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+/* los recorridos fuerzan ancho mínimo y scroll; acá el SVG escala (y en celular se apila) */
+.colas-fig.recorrido svg {
+  min-width: 0;
+}
+.colas-fig .rc-ficha circle {
+  fill: var(--c);
+}
+.colas-fig .rc-ficha.colas-mueve circle {
+  stroke: var(--fg);
+  stroke-width: 2.5;
+}
+.diagrama.colas-fig .colas-rotulo,
+.diagrama.colas-fig .colas-nombre,
+.diagrama.colas-fig .colas-pie,
+.diagrama.colas-fig .colas-izq {
+  text-anchor: start;
+}
+.diagrama.colas-fig .colas-rotulo {
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+.diagrama.colas-fig .colas-pie {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.diagrama.colas-fig .colas-der {
+  text-anchor: end;
+}
+.diagrama.colas-fig .colas-centro {
+  text-anchor: middle;
+}
+.diagrama.colas-fig .colas-reloj {
+  text-anchor: end;
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--step);
+}

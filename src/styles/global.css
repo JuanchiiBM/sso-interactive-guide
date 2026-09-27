@@ -2,6 +2,7 @@
 @import './prose.css' layer(components);
 @import './simulador.css' layer(components);
 @import './diagramas.css' layer(components);
+@import './colas-hilos.css' layer(components);
 
 /* Tema por data-theme en <html> (claro/oscuro). Tokens semánticos: nunca colores fijos en componentes. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));

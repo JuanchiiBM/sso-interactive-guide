@@ -21,7 +21,10 @@ export async function getStaticPaths() {
 }
 
 const { ejercicio, anterior, siguiente } = Astro.props
-const { titulo, fuente, dificultad, tipo, tags, simulaciones, preguntas, semaforos, nota } = ejercicio.data
+const { titulo, fuente, dificultad, tipo, tags, simulaciones, preguntas, semaforos, nota } =
+  ejercicio.data
+// diagrama de colas: por ahora solo en los Gantt de la guía (no en parciales)
+const deGuia = fuente.guia.startsWith('Guía de Ejercicios')
 const notaHtml = nota ? await markdownAHtml(`**Nota:** ${nota.trim()}`) : null
 const interactivos = simulaciones.length + preguntas.length + semaforos.length
 const tema = await getEntry(ejercicio.data.tema)
@@ -123,7 +126,11 @@ const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
             <SemaforosDesafio desafio={d} clave={String(i)} />
           ))}
           {simulaciones.map((sim) => (
-            <SimuladorStage simulacion={sim} titulo={etiquetaSim(sim)} />
+            <SimuladorStage
+              simulacion={sim}
+              titulo={etiquetaSim(sim)}
+              diagrama={deGuia && sim.kind === 'planificacion'}
+            />
           ))}
         </div>
       ) : (

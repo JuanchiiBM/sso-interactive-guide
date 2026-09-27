@@ -8,9 +8,16 @@ interface Props {
   titulo?: string
   /** `examen`: sin Verificar ni Me rindo; lo corrige el simulacro al finalizar. */
   modo?: 'practica' | 'examen'
+  /** Diagrama de colas arriba del Gantt de la resolución (solo ejercicios de guía). */
+  diagrama?: boolean
 }
 
-const { simulacion, titulo = 'Resolución paso a paso', modo = 'practica' } = Astro.props
+const {
+  simulacion,
+  titulo = 'Resolución paso a paso',
+  modo = 'practica',
+  diagrama = false,
+} = Astro.props
 const configJson = JSON.stringify(simulacion).replace(/</g, '\\u003c')
 const boton =
   'inline-flex size-8 items-center justify-center rounded-md text-fg-soft hover:text-fg hover:bg-hover transition-colors'
@@ -19,6 +26,7 @@ const boton =
 <section
   data-simulador
   data-sim-modo={modo}
+  data-sim-diagrama={diagrama ? '' : undefined}
   tabindex="0"
   class="rounded-xl border border-line bg-surface-2 overflow-hidden"
   aria-label={titulo}
@@ -62,7 +70,25 @@ const boton =
   </div>
 
   <div data-sim-resolucion hidden>
-    <div class="p-4 flex flex-col gap-4 min-h-40 border-t border-line" data-sim-viz>
+    {diagrama && (
+      <>
+        <div class="flex px-4 pt-3 border-t border-line">
+          <button
+            type="button"
+            class="rounded-lg border border-line px-3 py-1.5 text-sm text-fg-soft hover:bg-hover"
+            aria-expanded="false"
+            data-sim-accion="diagrama"
+          >
+            Mostrar diagrama
+          </button>
+        </div>
+        <div class="px-2 sm:px-4 pt-3" data-sim-colas hidden />
+      </>
+    )}
+    <div
+      class:list={['p-4 flex flex-col gap-4 min-h-40', !diagrama && 'border-t border-line']}
+      data-sim-viz
+    >
       <p class="text-sm text-muted">Cargando simulación…</p>
     </div>
 

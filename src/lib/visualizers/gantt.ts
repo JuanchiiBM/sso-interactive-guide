@@ -109,10 +109,14 @@ export function renderGantt(root: HTMLElement, state: EstadoGantt): void {
   for (const tick of resultado.ticks) grid.append(el('div', 'gantt-tiempo', String(tick.t)))
 
   const panel = el('div', 'flex flex-wrap gap-x-6 gap-y-2 text-xs text-fg-soft')
+  panel.dataset.ganttPanel = ''
   if (tickActual) {
     tickActual.cpus.forEach((id, k) =>
       panel.append(
-        chip(multi ? `CPU ${k + 1}` : 'CPU', tickActual.so?.[k] ? 'SO (interrupción)' : id ? etiqueta(id) : '—'),
+        chip(
+          multi ? `CPU ${k + 1}` : 'CPU',
+          tickActual.so?.[k] ? 'SO (interrupción)' : id ? etiqueta(id) : '—',
+        ),
       ),
     )
     // con ULTs: quantum que le queda a cada KLT en CPU y la decisión de cada biblioteca
