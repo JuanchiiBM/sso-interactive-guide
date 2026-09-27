@@ -1,0 +1,51 @@
+/* Diagrama de colas con ULT sobre KLT (visualizers/colas-hilos.ts). Reusa las clases de los recorridos. */
+.colas-hilos.diagrama {
+  margin: 0;
+}
+.colas-hilos .ch-ficha circle {
+  fill: var(--c);
+}
+.colas-hilos .ch-klt rect {
+  fill: var(--surface);
+  stroke: var(--fg);
+  stroke-width: 1.6;
+}
+.diagrama.colas-hilos .ch-klt text {
+  fill: var(--fg);
+}
+.diagrama.colas-hilos .ch-t {
+  text-anchor: end;
+  font-size: 12px;
+  fill: var(--fg-soft);
+}
+.ch-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.ch-leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.ch-ley-klt,
+.ch-ley-hilo {
+  display: inline-block;
+  flex: none;
+  width: 0.95rem;
+  height: 0.8rem;
+  border: 1.5px solid var(--fg);
+  border-radius: 3px;
+  background: var(--surface);
+}
+.ch-ley-hilo {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--p1);
+}

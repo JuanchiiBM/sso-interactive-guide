@@ -25,22 +25,6 @@ export interface Ficha {
   title?: string
 }
 
-/**
- * Zona extra del diagrama (la aportan `zonasHilos` y cía.): se dibuja en SVG debajo del flujo del SO.
- * `cola` = casilleros con el frente a la derecha; `recurso` = caja con las fichas adentro.
- */
-export interface Zona {
-  titulo: string
-  fichas: Ficha[]
-  tipo?: 'cola' | 'recurso'
-  /** Texto chico al pie (quantum, dispositivo, etc.). */
-  pie?: string
-  /** Zonas con el mismo grupo van en la misma fila. */
-  grupo?: string
-  /** Borde resaltado en este paso (el resto del diagrama queda tenue si algo se resalta). */
-  resaltar?: boolean
-}
-
 export const SVG_NS = 'http://www.w3.org/2000/svg'
 export const RADIO_FICHA = 13
 

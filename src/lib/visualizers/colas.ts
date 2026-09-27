@@ -8,11 +8,7 @@ import type {
 } from '@lib/simuladores/planificacion/tipos'
 import { esc, lienzo, texto } from '@lib/diagramas/svg'
 import { moverFichas, type Ficha, type FichaUbicada } from './colas-dom'
-// namespace: `renderColasHilos` llega con la rama de hilos; hasta el merge es undefined
-import * as hilos from './colas-hilos'
-const { renderColasHilos } = hilos as unknown as {
-  renderColasHilos?: (root: HTMLElement, state: EstadoGantt) => boolean
-}
+import { renderColasHilos } from './colas-hilos'
 import { quantumPorTick, rafagaRestante, type QuantumCpu } from './colas-derivar'
 
 export interface ContextoColas {
@@ -762,7 +758,7 @@ export function renderColas(
   config?: ConfigPlanificacion,
 ): void {
   // con ULTs, el lienzo entero es el de colas-hilos.ts
-  if (renderColasHilos?.(root, state)) return
+  if (renderColasHilos(root, state)) return
   const { resultado, hasta } = state
   if (!resultado.ticks.length) return root.replaceChildren()
   ultimo.set(root, { state, config })
