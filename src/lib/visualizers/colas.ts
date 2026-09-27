@@ -2,7 +2,7 @@
 import { etiquetaHilo, type EstadoGantt } from '@lib/simuladores/planificacion/pasos'
 import type { Tick } from '@lib/simuladores/planificacion/tipos'
 import { el, repintarAnimado, zona, type Ficha, type Zona } from './colas-dom'
-import { zonasHilos } from './colas-hilos'
+import { renderColasHilos, zonasHilos } from './colas-hilos'
 
 export interface ContextoColas {
   state: EstadoGantt
@@ -12,6 +12,8 @@ export interface ContextoColas {
 }
 
 export function renderColas(root: HTMLElement, state: EstadoGantt): void {
+  // con ULTs, el lienzo entero es el de colas-hilos.ts
+  if (renderColasHilos(root, state)) return
   const { resultado, procesos, hasta } = state
   const tick = resultado.ticks[hasta ?? resultado.ticks.length - 1]
   if (!tick) return root.replaceChildren()
