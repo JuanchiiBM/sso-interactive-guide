@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
 tags: [contenido, ejercicios]
-actualizado: 2026-09-25
+actualizado: 2026-09-27
 ---
 
 # Formato de un Ejercicio
@@ -69,4 +69,8 @@ Si el enunciado usa un término que **no aparece en la teoría del sitio** (p. e
 procesador" en Planificación Ej. 3), el ejercicio lleva `nota:` (markdown) con la explicación.
 Se muestra como bloque **Nota** entre el enunciado y "Resolución". Regla del dueño: vale para
 los ejercicios de **guía**; explicar el concepto sin resolver el ejercicio.
+
+⚠️ Lo mismo vale para lo que la **solución** usa sin que el enunciado lo dé: el `id` implícito de
+cada instancia (Sinc. 13, `turno[id]`) no estaba en la guía y el alumno no podía adivinarlo. La
+`nota` del desafío (escala de los tests) no alcanza: queda escondida junto al editor.
 
