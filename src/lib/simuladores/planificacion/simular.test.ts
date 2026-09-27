@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { simularPlanificacion } from './simular'
+import { explicarDesempate, simularPlanificacion } from './simular'
 import type { ProcesoInput } from './tipos'
 
 const gantt = (r: ReturnType<typeof simularPlanificacion>) =>
@@ -106,5 +106,57 @@ describe('simularPlanificacion', () => {
     })
     // A usa E/S 1-4, B espera el dispositivo y lo usa 4-7
     expect(gantt(r)).toBe('AB--A--B')
+  })
+})
+
+describe('explicación del desempate en el texto del paso', () => {
+  it('distintos motivos: cita la regla de la cátedra', () => {
+    const texto = explicarDesempate(
+      [
+        { id: 'A', origen: 'desalojo' },
+        { id: 'B', origen: 'io' },
+      ],
+      'la cola de listos',
+    )
+    expect(texto).toBe(
+      'A (fin de quantum) y B (fin de E/S) entran a la vez a la cola de listos; por el desempate de la cátedra (fin de quantum > fin de E/S > llegada), queda A → B.',
+    )
+  })
+
+  it('mismo motivo: por nombre; uno solo: nada', () => {
+    const juntos = [
+      { id: 'A', origen: 'nuevo' as const },
+      { id: 'B', origen: 'nuevo' as const },
+    ]
+    expect(explicarDesempate(juntos, 'la cola de listos')).toContain(
+      'a igual motivo van por nombre: A → B',
+    )
+    expect(explicarDesempate(juntos.slice(0, 1), 'la cola de listos')).toBeNull()
+  })
+
+  it('hilos Ej. 3, t=12: explica por qué A queda antes que B', () => {
+    const r = simularPlanificacion({
+      algoritmo: 'rr',
+      quantum: 3,
+      procesos: [
+        {
+          id: 'A',
+          hilos: [
+            { id: 'A1', llegada: 0, rafagas: [1, 4, 3] },
+            { id: 'A2', llegada: 0, rafagas: [1, 2, 2] },
+          ],
+        },
+        {
+          id: 'B',
+          hilos: [
+            { id: 'B1', llegada: 1, rafagas: [3, 2, 2] },
+            { id: 'B2', llegada: 1, rafagas: [2, 3, 3] },
+          ],
+        },
+      ],
+    })
+    expect(r.ticks[12].eventos.join(' ')).toContain(
+      'A (fin de quantum) y B (fin de E/S) entran a la vez',
+    )
   })
 })
