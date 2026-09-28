@@ -25,11 +25,12 @@ export interface DesafioGantt extends Desafio {
   bloquear: () => void
 }
 
-/** `alternativas`: otros Gantts igual de válidos (elecciones arbitrarias); acierta si coincide con alguno. */
+/** `alternativas`: otros Gantts igual de válidos; `dadoHasta`: instantes que da el enunciado (bloqueados). */
 export function crearDesafioGantt(
   root: HTMLElement,
   pasos: Step<EstadoGantt>[],
   alternativas: ResultadoPlanificacion[] = [],
+  dadoHasta = 0,
 ): DesafioGantt {
   const { resultado } = pasos[0].state
   const { total, esperadas } = grillasDesafio([resultado, ...alternativas], pasos[0].state.procesos)
@@ -95,6 +96,10 @@ export function crearDesafioGantt(
         e.preventDefault()
         if (id !== FILA_SO) alternar(id, t, 'io')
       })
+      if (t < dadoHasta) {
+        celda.disabled = true
+        celda.dataset.dado = ''
+      }
       celdas.set(`${id}:${t}`, celda)
       grid.append(celda)
     }
@@ -107,8 +112,15 @@ export function crearDesafioGantt(
     grid.append(n)
   }
   root.replaceChildren(pinceles, grid)
+  for (const p of procesos) for (let t = 0; t < dadoHasta; t++) set(p, t, esperadas[0][p][t])
+  // el tramo dado no puntúa: vacío en las dos grillas, porcentajeGantt lo saltea
+  const sinDado = (g: GrillaGantt): GrillaGantt =>
+    Object.fromEntries(
+      Object.entries(g).map(([p, m]) => [p, m.map((x, t) => (t < dadoHasta ? null : x))]),
+    )
 
   function alternar(id: string, t: number, tipo: Pincel) {
+    if (t < dadoHasta) return
     const nueva: Marca = respuesta[id][t] === tipo ? null : tipo
     // cada CPU atiende a uno solo: marcarla en un proceso la saca de los demás en ese instante
     if (nueva && nueva !== 'io') {
@@ -138,10 +150,10 @@ export function crearDesafioGantt(
       return { ok: true, mensaje }
     },
     limpiar() {
-      for (const p of procesos) for (let t = 0; t < total; t++) set(p, t, null)
+      for (const p of procesos) for (let t = dadoHasta; t < total; t++) set(p, t, null)
     },
-    respuesta: () => respuesta,
-    esperadas,
+    respuesta: () => sinDado(respuesta),
+    esperadas: esperadas.map(sinDado),
     bloquear() {
       for (const celda of celdas.values()) celda.disabled = true
       for (const b of pinceles.querySelectorAll('button')) b.disabled = true

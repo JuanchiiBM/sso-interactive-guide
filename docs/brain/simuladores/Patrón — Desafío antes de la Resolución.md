@@ -2,7 +2,7 @@
 tipo: patron
 aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice]
 tags: [patron, simuladores, ux]
-actualizado: 2026-09-25
+actualizado: 2026-09-27
 ---
 # Patrón — Desafío antes de la Resolución
 
@@ -34,6 +34,10 @@ Progreso por navegador en `src/lib/progreso.ts` (`so:resuelto:<path>#<id>`).
   (`grillasDesafio` en `verificar.ts`), para que su largo no delate cuándo termina el Gantt (issue #7).
   Las esperadas se rellenan con vacías: pintar de más da incorrecto, y en simulacros las celdas
   vacías en ambas no cuentan para `porcentajeGantt`. La resolución paso a paso no cambia de ancho.
+- **"Complete el Gantt"** (Gantt parcial dado en el enunciado, Hilos Ej. 10): `dadoHasta: N` en la
+  simulación precarga los instantes `t < N` desde la esperada y los bloquea (`data-dado`). "Limpiar"
+  no los borra y en simulacros **no puntúan** (`respuesta`/`esperadas` salen con ese tramo vacío),
+  si no, dejarlo en blanco ya sumaba. La tabla del enunciado queda igual (es la de la guía).
 
 ## Multiple choice (teóricos / prácticos no-Gantt)
 - `preguntas:` en el frontmatter (ver [[Formato de un Ejercicio]]), componente `MultipleChoice.astro`.

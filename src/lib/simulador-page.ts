@@ -32,8 +32,8 @@ const SIMULADORES: Record<string, Registro> = {
     pasos: (c: ConfigPlanificacion) => pasosPlanificacion(c),
     render: (root, s: EstadoGantt) => renderGantt(root, s),
     colas: (root, s: EstadoGantt, c: ConfigPlanificacion) => renderColas(root, s, c),
-    desafio: (root, pasos: Step<EstadoGantt>[], c: ConfigPlanificacion) =>
-      crearDesafioGantt(root, pasos, variantesPlanificacion(c).slice(1)),
+    desafio: (root, pasos: Step<EstadoGantt>[], c: ConfigPlanificacion & { dadoHasta?: number }) =>
+      crearDesafioGantt(root, pasos, variantesPlanificacion(c).slice(1), c.dadoHasta),
   },
   codigo: {
     pasos: (c: ConfigCodigo) => pasosCodigo(c),

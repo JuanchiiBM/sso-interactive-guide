@@ -46,6 +46,8 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
     kind: z.literal('planificacion'),
     /** Inciso que resuelve, ej. "a. Con desalojo". */
     etiqueta: z.string().optional(),
+    /** "Complete el Gantt": los instantes t < dadoHasta vienen marcados y bloqueados en el desafío. */
+    dadoHasta: z.number().int().positive().optional(),
     algoritmo: z.enum([
       'fifo',
       'sjf',
