@@ -141,6 +141,9 @@ Corrige esa injusticia de RR contra los I/O bound con **dos colas FIFO**:
 
 La cola común solo se atiende cuando la auxiliar está vacía. En la práctica, al proceso I/O bound se le "respeta" el quantum que le había sobrado.
 
+- Si el proceso **agotó** su quantum (aunque después se bloquee), no le sobra nada: vuelve a la cola **común**.
+- **No hay inanición**: desde la auxiliar solo se usa el remanente, que se va achicando, así que los I/O bound no pueden acaparar la CPU y la cola común siempre termina atendiéndose.
+
 ```recorrido vrr-cola-auxiliar
 
 ```
@@ -214,7 +217,15 @@ Algunas aclaraciones:
 
 - En **SJF/SRT/HRRN** el orden de llegada no decide nada, porque se comparan ráfagas o ratios. Solo sirve para romper empates de ese criterio.
 - En **VRR**, el proceso que vuelve de E/S va a la cola **auxiliar**, así que no compite en ese desempate con los de la cola común.
-- En cada evento conviene preguntarse qué hizo intervenir al SO: una syscall, una interrupción de clock o una interrupción de E/S. La guía pide pensarlo explícitamente.
+- En cada evento conviene preguntarse qué hizo intervenir al SO. La guía lo pide explícitamente, y los parciales preguntan "¿en qué instantes hay syscalls / interrupciones?":
+
+| Evento del Gantt                                                                | Qué es                                                      |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Vence el quantum (del SO)                                                       | Interrupción de **clock**                                   |
+| Termina una E/S                                                                 | Interrupción del **dispositivo**                            |
+| Crear o terminar un proceso o KLT, pedir E/S, `wait`/`signal`                   | **Syscall**                                                 |
+| Un ULT pide E/S o hace una syscall                                              | Syscall, que pasa antes por el **wrapper** de la biblioteca |
+| Vence el "quantum" de la biblioteca, crea o termina un ULT (y el proceso sigue) | Solo la **biblioteca**: el SO no se entera                  |
 
 ### Supuestos de la guía para armar los Gantt
 
@@ -285,7 +296,7 @@ Con **α = 0,5**, que es el valor que usa la guía, las dos dan exactamente lo m
 
 **12. V o F: si un sistema sufre inversión de prioridades, se soluciona pasando a Virtual Round Robin.**
 
-> El resumen la da como **Verdadera**. Inversión de prioridades es cuando un proceso de baja prioridad retiene un recurso que necesita uno de alta prioridad, y el de baja no ejecuta porque siempre hay otros antes. Con VRR todos reciben quantum en algún momento, así que el de baja prioridad termina ejecutando y libera el recurso. Ojo: en rigor, VRR no tiene prioridades explícitas, así que lo que hace es eliminar el escenario más que "solucionar" el problema.
+> El resumen la da como **Verdadera**: con VRR todos reciben quantum, así que el de baja prioridad termina ejecutando y libera el recurso. Pero eso elimina el escenario (VRR no tiene prioridades) en lugar de solucionarlo. En las resoluciones de 1C2026, la solución que pide la cátedra es la **herencia de prioridades** (ver _Inversión de prioridades_ en Sincronización).
 
 **13. ¿Qué implica usar un planificador sin desalojo en un sistema de tiempo compartido?**
 

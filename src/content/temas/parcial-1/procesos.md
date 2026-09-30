@@ -182,6 +182,11 @@ Todo ese trabajo es **overhead**: tiempo de CPU que no avanza ningún proceso de
 
 No hay que confundirlo con el **cambio de contexto** en sí, que es más general. También hay cambio de contexto cuando se atiende una interrupción o una syscall, y en esos casos no necesariamente cambia el proceso.
 
+**Cómo contarlos en un parcial:**
+
+- Un cambio de proceso tiene **como mínimo 2 cambios de modo** (usuario → kernel para entrar al SO, kernel → usuario para darle la CPU al nuevo) y cambios de contexto (guardar el del saliente, cargar el del entrante).
+- Si mientras se atiende una interrupción llega otra de mayor prioridad, se guarda **otro contexto** (el del manejador que se interrumpe), pero **no hay otro cambio de modo**: ya se está en kernel. Hasta que empieza a atenderse la segunda van **2 cambios de contexto y 1 de modo**.
+
 ```recorrido cambio-proceso
 
 ```

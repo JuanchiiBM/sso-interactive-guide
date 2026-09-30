@@ -144,9 +144,20 @@ lock = false;
 
 ```
 
+### Comparación de las soluciones
+
+| Solución                     | ¿Espera activa?                    | ¿La puede usar un proceso de usuario? | ¿Sirve en multiprocesador? |
+| ---------------------------- | ---------------------------------- | ------------------------------------- | -------------------------- |
+| Peterson / Dekker            | Sí                                 | Sí                                    | Sí                         |
+| Deshabilitar interrupciones  | **No**: nadie espera, nadie entra  | No (instrucción privilegiada)         | No                         |
+| Test-and-set                 | Sí                                 | Sí                                    | Sí                         |
+| Semáforo con cola de bloqueo | No (solo en el interior de `wait`) | Sí, vía syscalls                      | Sí                         |
+
+**¿Espera activa o bloqueo?** La espera activa conviene si la SC es **corta** y hay **varios procesadores**: el que espera gira unos ciclos en otra CPU mientras el dueño termina, y eso cuesta menos que bloquearlo y despertarlo (dos cambios de contexto). En monoprocesador, o con la CPU muy cargada y SC largas, conviene el bloqueo: girar solo le quita CPU al proceso que tiene que liberar la SC.
+
 ## Semáforos
 
-Un **semáforo** es una estructura del SO con un **contador entero** y una **cola de procesos bloqueados**. Se usa con dos syscalls atómicas:
+Un **semáforo** es una estructura del SO con un **contador entero** y una **cola de procesos bloqueados**. Se usa con dos syscalls atómicas. Tienen que ser del SO porque, además de la atomicidad, bloquear y despertar procesos solo lo puede hacer el kernel:
 
 ```c
 struct semaforo {
@@ -229,13 +240,25 @@ Tienen que ser **atómicos**: si no lo fueran, el propio contador del semáforo 
 
 En cualquier caso, la espera activa que pueda quedar se limita a las pocas instrucciones de `wait` y `signal`, no a toda la sección crítica.
 
+### Inversión de prioridades
+
+Con un planificador **por prioridades**, los semáforos pueden invertir el orden: un proceso de **alta** prioridad queda bloqueado en un `wait` por un recurso que retiene uno de **baja**, y uno de prioridad **media** (que no usa el recurso) le gana la CPU al de baja. En la práctica, el de media termina antes que el de alta.
+
+```text
+t=0  B (baja) hace wait(R) y entra a la SC
+t=1  A (alta) hace wait(R) → se bloquea
+t=2  M (media) llega y desaloja a B → A sigue esperando a que M termine
+```
+
+La solución es la **herencia de prioridades**: mientras B retiene un recurso que espera A, B ejecuta con la prioridad de A. M ya no lo desaloja, B sale rápido de la SC y, con el `signal`, vuelve a su prioridad original.
+
 ## Reglas de oro para los ejercicios
 
 Las da la guía de ejercicios de la cátedra:
 
 - **Cada requerimiento suele ser un semáforo.**
 - **Nunca** inicializar un semáforo con un valor negativo.
-- Un **mutex por cada recurso compartido**.
+- Un **mutex por cada recurso compartido**. Excepción: si los semáforos de orden ya garantizan que nunca hay dos procesos a la vez sobre esa variable, el mutex sobra.
 - Los semáforos que sincronizan tareas suelen **empezar en 0**.
 - **El orden de los `wait` importa; el de los `signal`, no.**
 - Para poner un **tope de M instancias**: un `wait` **justo antes** de depositar una nueva instancia; el semáforo empieza en **M**.
@@ -294,7 +317,7 @@ Un **monitor** es una construcción del lenguaje, parecida a una clase, que enca
 
 **4. V o F: aun bien usados, los semáforos pueden causar problemas con planificadores por prioridad.**
 
-> Verdadero. Un proceso de alta prioridad puede quedar bloqueado en un `wait` esperando un `signal` que tiene que hacer uno de baja prioridad, que casi nunca obtiene la CPU. Es la **inversión de prioridades**.
+> Verdadero. Un proceso de alta prioridad puede quedar bloqueado en un `wait` esperando un `signal` que tiene que hacer uno de baja prioridad, que casi nunca obtiene la CPU. Es la **inversión de prioridades**, y se soluciona con **herencia de prioridades**.
 
 **5. ¿Qué problema resuelve un mutex? ¿Hay otra forma? ¿Qué indica un valor negativo?**
 
@@ -330,6 +353,6 @@ Un **monitor** es una construcción del lenguaje, parecida a una clase, que enca
 
 **13. ¿Qué implica que un semáforo tenga espera activa? Ventajas y desventajas.**
 
-> Que, en lugar de bloquear al proceso, `wait` lo deja en un bucle consultando el valor (por ejemplo, implementado con test-and-set). La ventaja es que funciona: da mutua exclusión y progreso, y para esperas muy cortas se evita el costo de bloquear y desbloquear. La desventaja es que desperdicia CPU mientras espera.
+> Que, en lugar de bloquear al proceso, `wait` lo deja en un bucle consultando el valor (por ejemplo, implementado con test-and-set). La ventaja es que, si la SC es corta y hay varios procesadores, esperar unos ciclos cuesta menos que bloquear y desbloquear. La desventaja es que desperdicia CPU mientras espera, y en monoprocesador demora al proceso que tiene que liberar la SC.
 
 _Fuente: Sistemas Operativos for Dummies (págs. 48–62) y Guía de Ejercicios de Sincronización v.2C2026._

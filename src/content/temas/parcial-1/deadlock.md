@@ -33,8 +33,10 @@ Los recursos se **piden, se usan y se liberan**. Si no están disponibles, el pr
 | -------------------------- | ------------------------------------------------------------------------------------------------------- | ------------- |
 | **Deadlock**               | Los procesos quedan **bloqueados** esperándose entre sí y nada cambia.                                  | No            |
 | **Livelock**               | Los procesos **cambian de estado todo el tiempo** en respuesta a los otros, pero ninguno progresa.      | Sí            |
-| **Inanición (starvation)** | A un proceso se le niega un recurso indefinidamente mientras **los demás sí avanzan**.                  | Los demás, sí |
+| **Inanición (starvation)** | A un proceso se le niega un recurso indefinidamente, aunque no forme parte de un ciclo.                 | Los demás, sí |
 | **Espera activa**          | Un proceso espera dentro de un bucle consultando una condición. Es una forma de esperar, no un bloqueo. | Sí            |
+
+En los parciales, solo los procesos **del ciclo** están en deadlock. Un proceso bloqueado que espera algo del ciclo **sin retener nada** que el ciclo necesite no está en deadlock: sufre **inanición**.
 
 ## Grafo de asignación de recursos
 
@@ -92,8 +94,8 @@ Las tres primeras son **necesarias** pero no alcanzan. Con las **cuatro**, se pr
 
 Se ataca una de las condiciones:
 
-- **Mutua exclusión**: en general **no se puede evitar**, porque hay recursos que por naturaleza no se comparten (una impresora, una escritura).
-- **Retención y espera**: el proceso pide **todos** sus recursos juntos, y si falta alguno no se le da ninguno. Tiene un costo: recursos tomados mucho tiempo sin usarse, poca eficiencia y posible **inanición** de quien necesita muchos recursos.
+- **Mutua exclusión**: en general **no se puede evitar**, porque hay recursos que por naturaleza no se comparten (una impresora, una escritura). Sí se elimina en recursos **compartibles**, como los de **solo lectura**: si nadie los modifica, no hace falta el acceso exclusivo (ni su semáforo).
+- **Retención y espera**: el proceso pide **todos** sus recursos juntos, y si falta alguno no se le da ninguno. Tiene un costo: recursos tomados mucho tiempo sin usarse, poca eficiencia y posible **inanición** de quien necesita muchos recursos. Otra variante: pedirlos **de a uno**, usar cada uno y liberarlo antes de pedir el siguiente, así nunca se retiene uno mientras se espera otro.
 - **Sin desalojo → permitir el desalojo**: si un proceso que tiene recursos pide otro y queda bloqueado, se le pueden quitar los que tiene para dárselos a otro. Solo sirve para recursos cuyo estado se puede guardar y restaurar.
 - **Espera circular**: se **numeran los recursos** y se exige pedirlos siempre en **orden creciente**. Así no se puede cerrar un ciclo.
 
@@ -175,13 +177,13 @@ Se asume que el deadlock es raro y que el costo de prevenirlo, evitarlo o detect
 
 ### Comparación rápida
 
-|                             | Prevención                                         | Evasión                                      | Detección                       |
-| --------------------------- | -------------------------------------------------- | -------------------------------------------- | ------------------------------- |
-| **¿Hay deadlock?**          | Nunca                                              | Nunca                                        | Puede ocurrir                   |
-| **Cuándo actúa**            | En el diseño o en cada solicitud, por reglas fijas | En **cada** solicitud (simulación)           | Periódicamente                  |
-| **Overhead**                | Bajo o medio, según la regla                       | Muy alto                                     | Bajo, más el costo de recuperar |
-| **Flexibilidad al asignar** | Baja                                               | Baja: rechaza lo que deja un estado inseguro | Alta: no controla nada          |
-| **Información previa**      | No                                                 | Sí, las necesidades máximas                  | No                              |
+|                             | Prevención                                         | Evasión                                | Detección                       |
+| --------------------------- | -------------------------------------------------- | -------------------------------------- | ------------------------------- |
+| **¿Hay deadlock?**          | Nunca                                              | Nunca                                  | Puede ocurrir                   |
+| **Cuándo actúa**            | En el diseño o en cada solicitud, por reglas fijas | En **cada** solicitud (simulación)     | Periódicamente                  |
+| **Overhead**                | Bajo o medio, según la regla                       | Muy alto                               | Bajo, más el costo de recuperar |
+| **Flexibilidad al asignar** | Baja: reglas fijas                                 | Media: solo exige declarar los máximos | Alta: no controla nada          |
+| **Información previa**      | No                                                 | Sí, las necesidades máximas            | No                              |
 
 ## Preguntas de parcial
 
@@ -227,7 +229,7 @@ Se asume que el deadlock es raro y que el costo de prevenirlo, evitarlo o detect
 
 **11. Compare evasión y detección.**
 
-> La evasión se ejecuta en **cada solicitud**, tiene overhead muy alto y poca flexibilidad, porque rechaza pedidos que dejarían un estado inseguro. Como nunca hay deadlock, sirve para sistemas críticos. La detección se ejecuta periódicamente, tiene overhead bajo y asigna con total libertad. A cambio, el deadlock ocurre, y recuperarse (matando o expropiando) puede costar mucho.
+> La evasión se ejecuta en **cada solicitud**, tiene overhead muy alto y una flexibilidad intermedia: más que la prevención, porque no impone reglas de cómo pedir (solo exige declarar los máximos), y menos que la detección, porque rechaza los pedidos que dejarían un estado inseguro. Como nunca hay deadlock, sirve para sistemas críticos. La detección se ejecuta periódicamente, tiene overhead bajo y asigna con total libertad. A cambio, el deadlock ocurre, y recuperarse (matando o expropiando) puede costar mucho.
 
 **12. V o F: con el banquero, si se detecta un deadlock se pueden desalojar recursos.**
 
