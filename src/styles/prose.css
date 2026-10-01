@@ -74,6 +74,11 @@
   border: 1px solid var(--line);
   overflow-x: auto;
 }
+/* los `pre` de marked (frontmatter) no pasan por Shiki y no traen fondo propio */
+.prose pre:not(.astro-code) {
+  background: var(--surface);
+  color: var(--fg);
+}
 .prose table {
   width: 100%;
   border-collapse: collapse;
