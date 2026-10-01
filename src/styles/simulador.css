@@ -131,6 +131,16 @@
     border-color 160ms ease,
     background-color 160ms ease;
 }
+.mc-texto code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--surface-3);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+.mc-texto strong {
+  color: var(--fg);
+}
 .mc-opcion:hover {
   background: var(--hover);
 }

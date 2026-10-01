@@ -11,3 +11,6 @@ const md = new Marked({
 })
 
 export const markdownAHtml = (fuente: string) => md.parse(fuente) as Promise<string>
+
+/** Variante inline (sin `<p>`), para textos cortos como las opciones de un multiple choice. */
+export const markdownInlineAHtml = (fuente: string) => md.parseInline(fuente) as Promise<string>

@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
 tags: [contenido, ejercicios]
-actualizado: 2026-09-27
+actualizado: 2026-10-01
 ---
 
 # Formato de un Ejercicio
@@ -36,6 +36,9 @@ preguntas:
     justificacion: |
       Markdown completo (listas, `código`, ```grafo). Se ve recién al acertar.
 ```
+El `enunciado` de una pregunta también es markdown de bloque (usar `|` si lleva código o párrafos);
+`texto` y `explicacion` de las opciones, markdown inline (`código`, **negrita**). Los renderiza
+`markdownAHtml` / `markdownInlineAHtml` de `src/lib/markdown/marked.ts`; sus `pre` no pasan por Shiki.
 Ver [[Patrón — Desafío antes de la Resolución]].
 
 **Código de varios procesos lado a lado:** envolver en `<div class="codigo-columnas">` con líneas en
