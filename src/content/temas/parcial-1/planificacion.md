@@ -38,11 +38,11 @@ Con multiprogramación hay varios procesos queriendo usar la CPU al mismo tiempo
 
 ## Tipos de planificadores
 
-| Planificador      | Decide                                                         | Transiciones que maneja                                        | ¿Afecta la multiprogramación?                          |
-| ----------------- | -------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| **Largo plazo**   | Qué procesos se admiten en el sistema.                         | New → Ready, → Exit                                            | **Sí**: admitir la sube, finalizar la baja.            |
-| **Mediano plazo** | Qué procesos se sacan a disco o se traen de vuelta (swapping). | Ready ↔ Ready/Susp, Blocked ↔ Blocked/Susp                     | **Sí**: el swap out la baja, el swap in la sube.       |
-| **Corto plazo**   | Cuál de los procesos en Ready ejecuta ahora.                   | Ready → Running (dispatch), Running → Ready (timeout/desalojo) | **No**: trabaja solo con procesos que ya están en RAM. |
+| Planificador      | Decide                                                                            | Transiciones que maneja                                        | ¿Afecta la multiprogramación?                          |
+| ----------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| **Largo plazo**   | Qué procesos se admiten, buscando una mezcla de CPU e I/O bound.                  | New → Ready, → Exit                                            | **Sí**: admitir la sube, finalizar la baja.            |
+| **Mediano plazo** | Qué procesos van a disco o vuelven (swapping), según la RAM libre y la prioridad. | Ready ↔ Ready/Susp, Blocked ↔ Blocked/Susp                     | **Sí**: el swap out la baja, el swap in la sube.       |
+| **Corto plazo**   | Cuál de los procesos en Ready ejecuta ahora, según el algoritmo.                  | Ready → Running (dispatch), Running → Ready (timeout/desalojo) | **No**: trabaja solo con procesos que ya están en RAM. |
 
 El de corto plazo es el que se ejecuta más seguido. Interviene con cada interrupción, syscall o señal que pueda cambiar quién debe usar la CPU, y por eso tiene que ser muy liviano. Tiene dos piezas: el **dispatcher**, que le entrega la CPU al proceso elegido, y el **cambio de contexto**.
 
@@ -74,6 +74,8 @@ Fórmulas que se usan en los ejercicios:
 - **Tiempo de respuesta**: el tiempo que tarda el proceso en dar su primera respuesta. Por convención, esa primera respuesta es su primera E/S.
 - **Throughput**: cantidad de procesos que terminan por unidad de tiempo.
 - **Uso de CPU**: porcentaje del tiempo en que la CPU estuvo ocupada. Cuanto más alto, mejor.
+
+Para comparar algoritmos: el **throughput** sirve para sistemas **batch**; el **tiempo de espera** y el de **respuesta**, para sistemas **interactivos**.
 
 > **Nota:** el tiempo de espera cuenta solo el tiempo pasado en la **cola de Ready**. Si el proceso hizo E/S, al restar solo la CPU también se estaría contando el tiempo bloqueado. En un Gantt lo más seguro es sumar directamente los intervalos en Ready.
 
@@ -184,17 +186,17 @@ No tiene una única definición: **las reglas exactas las fija el enunciado**. G
 
 ## Tabla comparativa
 
-| Algoritmo               | Desalojo        | Criterio de selección              | Quantum       | Inanición                                                        | Overhead        | Observaciones                                                    |
-| ----------------------- | --------------- | ---------------------------------- | ------------- | ---------------------------------------------------------------- | --------------- | ---------------------------------------------------------------- |
-| **FIFO**                | No              | Orden de llegada                   | No            | No en sentido estricto, pero un proceso puede monopolizar la CPU | Bajo            | Perjudica a los procesos cortos que llegan después de uno largo. |
-| **SJF / SPN**           | No              | Ráfaga más corta                   | No            | Sí                                                               | Medio (estimar) | Empate: FIFO.                                                    |
-| **SRT**                 | Sí              | Menor tiempo restante              | No            | Sí                                                               | Medio-alto      | Empate: sigue el que ejecutaba.                                  |
-| **RR**                  | Sí (por clock)  | FIFO + quantum                     | Sí            | No                                                               | Medio           | Favorece a los CPU bound y perjudica a los I/O bound.            |
-| **VRR**                 | Sí (por clock)  | FIFO, con la cola auxiliar primero | Sí            | No                                                               | Alto            | Mejora la situación de los I/O bound.                            |
-| **HRRN**                | No              | Mayor `(w + s) / s`                | No            | No (aging)                                                       | Alto            | Favorece a los procesos cortos que esperaron mucho.              |
-| **Prioridades**         | Opcional        | Prioridad fija                     | No            | Sí                                                               | Bajo-medio      | Se soluciona con aging.                                          |
-| **Colas multinivel**    | Según el diseño | Cola de mayor prioridad no vacía   | Según la cola | Sí                                                               | Medio           | La prioridad es estática.                                        |
-| **Feedback multinivel** | Sí              | Nivel de la cola, que es dinámico  | Por cola      | Puede haber, salvo con aging                                     | Alto            | Las reglas las fija el enunciado.                                |
+| Algoritmo               | Desalojo        | Criterio de selección              | Quantum       | Inanición                                                        | Overhead        | Observaciones                                                       |
+| ----------------------- | --------------- | ---------------------------------- | ------------- | ---------------------------------------------------------------- | --------------- | ------------------------------------------------------------------- |
+| **FIFO**                | No              | Orden de llegada                   | No            | No en sentido estricto, pero un proceso puede monopolizar la CPU | Bajo            | Favorece a los CPU bound; perjudica a los cortos y a los I/O bound. |
+| **SJF / SPN**           | No              | Ráfaga más corta                   | No            | Sí                                                               | Medio (estimar) | Empate: FIFO.                                                       |
+| **SRT**                 | Sí              | Menor tiempo restante              | No            | Sí                                                               | Medio-alto      | Empate: sigue el que ejecutaba.                                     |
+| **RR**                  | Sí (por clock)  | FIFO + quantum                     | Sí            | No                                                               | Medio           | Favorece a los CPU bound y perjudica a los I/O bound.               |
+| **VRR**                 | Sí (por clock)  | FIFO, con la cola auxiliar primero | Sí            | No                                                               | Alto            | Mejora la situación de los I/O bound.                               |
+| **HRRN**                | No              | Mayor `(w + s) / s`                | No            | No (aging)                                                       | Alto            | Favorece a los procesos cortos que esperaron mucho.                 |
+| **Prioridades**         | Opcional        | Prioridad fija                     | No            | Sí                                                               | Bajo-medio      | Se soluciona con aging.                                             |
+| **Colas multinivel**    | Según el diseño | Cola de mayor prioridad no vacía   | Según la cola | Sí                                                               | Medio           | La prioridad es estática.                                           |
+| **Feedback multinivel** | Sí              | Nivel de la cola, que es dinámico  | Por cola      | Puede haber, salvo con aging                                     | Alto            | Las reglas las fija el enunciado.                                   |
 
 ## Criterios de desempate de la cátedra
 
@@ -243,6 +245,8 @@ El resumen y la guía escriben el estimador con el α en lugares distintos:
 | Guía de ejercicios | `T(i) = T(i−1) · α + R(i−1) · (1 − α)` (α pondera la **estimación** anterior) |
 
 Con **α = 0,5**, que es el valor que usa la guía, las dos dan exactamente lo mismo: `EST = (REAL + EST_anterior) / 2`. Si en un examen aparece otro α, hay que usar la fórmula tal como la escribe el enunciado.
+
+Los extremos, con la fórmula del Resumen: con **α = 0** la estimación nunca cambia (se queda con la inicial) y con **α = 1** es siempre la última ráfaga real. Con la fórmula de la guía es al revés. Para darle más peso a la estimación anterior, α tiende a 0 en la del Resumen y a 1 en la de la guía.
 
 ## Preguntas de parcial
 

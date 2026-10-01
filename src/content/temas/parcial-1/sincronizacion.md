@@ -56,16 +56,18 @@ Ejecutados uno después del otro, el resultado es `a = 0`. Si una interrupción 
 
 ```
 
+> Con un planificador **sin desalojo** en monoprocesador, una interrupción no provoca un cambio de proceso en el medio de la SC: el proceso sigue hasta que hace una syscall. Con desalojo, la condición de carrera puede aparecer en cualquier instrucción.
+
 > Solo hay que sincronizar si al menos uno **escribe**. Dos procesos que únicamente leen el mismo dato no generan condición de carrera.
 
 ### Requisitos de una buena solución
 
-| Requisito              | Significa que…                                                                                                                                      |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Mutua exclusión**    | Nunca hay dos procesos a la vez dentro de la SC del mismo recurso.                                                                                  |
-| **Progreso**           | Si la SC está libre y alguien quiere entrar, puede hacerlo. Un proceso que está fuera de la SC no puede impedirlo, y quien sale tiene que "avisar". |
-| **Espera limitada**    | Ningún proceso espera para siempre para entrar.                                                                                                     |
-| **Velocidad relativa** | La solución no puede suponer nada sobre cuánto tarda cada proceso, porque en cualquier momento puede llegar una interrupción.                       |
+| Requisito              | Significa que…                                                                                                                                      | Cómo lo cumple un semáforo                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **Mutua exclusión**    | Nunca hay dos procesos a la vez dentro de la SC del mismo recurso.                                                                                  | Solo uno logra el `wait`; el resto se bloquea.                        |
+| **Progreso**           | Si la SC está libre y alguien quiere entrar, puede hacerlo. Un proceso que está fuera de la SC no puede impedirlo, y quien sale tiene que "avisar". | Solo pueden demorar a uno los que también hicieron `wait`.            |
+| **Espera limitada**    | Ningún proceso espera para siempre para entrar.                                                                                                     | La cola de bloqueados se despierta en orden (FIFO) con cada `signal`. |
+| **Velocidad relativa** | La solución no puede suponer nada sobre cuánto tarda cada proceso, porque en cualquier momento puede llegar una interrupción.                       | Funciona igual sea cual sea la velocidad de cada proceso.             |
 
 Además, la SC tiene que ser **lo más chica posible** y durar un tiempo finito. Un proceso puede tener varias SC.
 
@@ -239,6 +241,8 @@ signal(impresoras);
 Tienen que ser **atómicos**: si no lo fueran, el propio contador del semáforo tendría una condición de carrera. Para eso el SO los implementa con alguna de las técnicas anteriores: deshabilitar interrupciones (puede hacerlo porque corre en modo kernel, aunque solo sirve en monoprocesador) o test-and-set. No es obligatorio deshabilitar interrupciones.
 
 En cualquier caso, la espera activa que pueda quedar se limita a las pocas instrucciones de `wait` y `signal`, no a toda la sección crítica.
+
+En un Gantt: si `wait`/`signal` deshabilitan interrupciones y el fin de quantum cae en el medio de uno, el desalojo se **posterga** hasta que la operación termina.
 
 ### Inversión de prioridades
 

@@ -24,7 +24,7 @@ Un **deadlock** (interbloqueo) aparece cuando un grupo de procesos queda trabado
 
 Los recursos se **piden, se usan y se liberan**. Si no están disponibles, el proceso se bloquea. Se distinguen dos tipos:
 
-- **Reutilizables**: después de usarse se liberan y otro los puede usar (CPU, memoria, archivos, semáforos, dispositivos). Son los que aparecen en los problemas típicos de deadlock.
+- **Reutilizables**: después de usarse se liberan y otro los puede usar (CPU, memoria, archivos, semáforos, dispositivos). Son los que aparecen en los problemas típicos de deadlock. En un semáforo de **orden**, el recurso lo "retiene" lógicamente el proceso que tiene que hacer el `signal`.
 - **Consumibles**: se producen y se consumen una sola vez (mensajes, señales, interrupciones).
 
 ### No confundir
@@ -63,6 +63,19 @@ resaltar-ciclo
 - **Sin ciclos**: no hay deadlock.
 - **Con un ciclo y todos los recursos del ciclo con una sola instancia**: **hay** deadlock.
 - **Con un ciclo y recursos con varias instancias**: **puede o no** haber deadlock. Para saberlo hay que correr el algoritmo de detección.
+
+Ejemplo de ciclo **con** deadlock aunque R2 tenga 2 instancias: las dos están asignadas (una a P1 y otra a P2), así que no queda ninguna libre para P1, y P2 espera R1, que tiene P1.
+
+```grafo
+procesos: P1, P2
+recursos: R1, R2=2
+R1 -> P1
+R2 -> P1
+R2 -> P2
+P1 -> R2
+P2 -> R1
+resaltar-ciclo
+```
 
 ```recorrido grafo-pedido-a-pedido
 
@@ -156,10 +169,12 @@ No se restringe la asignación: si el recurso está libre, se da. Cada cierto ti
 
 Opciones, de la más drástica a la más fina:
 
-- Terminar a **todos** los procesos involucrados.
-- **Retroceder** los procesos a un punto de control (checkpoint) anterior. Es complejo.
-- Terminar procesos **de a uno** hasta que se rompa el deadlock, volviendo a correr la detección después de cada uno.
-- **Expropiar recursos** de a uno hasta que se rompa el deadlock.
+| Medida                                | Ventaja                      | Desventaja                                                                                      |
+| ------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| Terminar a **todos** los involucrados | Simple                       | Caro: se pierde el trabajo de todos, aunque quizá alcanzaba con uno.                            |
+| **Retroceder** a un checkpoint        | No se pierde todo el trabajo | Complejo: hay que guardar checkpoints, y el deadlock puede volver a darse.                      |
+| Terminar **de a uno**                 | Pierde menos trabajo         | Hay que elegir víctima y volver a correr la detección después de cada una.                      |
+| **Expropiar recursos** de a uno       | No mata a nadie              | Hay que poder retroceder al proceso a un estado desde donde reanudar; puede provocar inanición. |
 
 Para elegir a la **víctima** se usan criterios como estos:
 
@@ -245,6 +260,6 @@ Se asume que el deadlock es raro y que el costo de prevenirlo, evitarlo o detect
 
 **15. ¿Cómo diferenciaría un deadlock de un livelock mirando el sistema?**
 
-> En un deadlock los procesos están **bloqueados** y no consumen CPU. En un livelock están **ejecutando**, cambiando de estado sin progresar, y consumen CPU. Es la pista del ejercicio 9 de la guía: un livelock afecta a otros procesos que compiten por la CPU, aunque usen recursos distintos. Un deadlock, en cambio, no los afecta.
+> En un deadlock los procesos están **bloqueados** y no consumen CPU. En un livelock están **ejecutando**, cambiando de estado sin progresar, y consumen CPU. Es la pista del ejercicio 9 de la guía: un livelock afecta a otros procesos que compiten por la CPU, aunque usen recursos distintos. Un deadlock, en cambio, no los afecta. Por eso el livelock suele ser **más difícil de detectar**: desde afuera, los procesos parecen estar trabajando.
 
 _Fuente: Sistemas Operativos for Dummies (págs. 63–70) y Guía de Ejercicios de Deadlock v.2C2026._
