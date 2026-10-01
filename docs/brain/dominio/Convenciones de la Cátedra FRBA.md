@@ -2,7 +2,7 @@
 tipo: dominio
 aliases: [convenciones, cátedra, catedra, desempate, tie-break, simultaneidad, reglas de oro, semáforos, utn, frba, parciales, resoluciones]
 tags: [dominio, catedra]
-actualizado: 2026-09-23
+actualizado: 2026-09-30
 ---
 
 # Convenciones de la Cátedra FRBA
@@ -53,12 +53,16 @@ Implementado en `DESEMPATE_DEFAULT` de `simular.ts`. Confirmado por las resoluci
 - Tope de M instancias: WAIT antes de depositar, inicializado en M. Contar instancias: SIGNAL después
   de depositar, WAIT antes de consumir, inicializado en 0.
 - En parciales: el valor negativo de un semáforo = cantidad de bloqueados en él.
+- Un mutex sobra si los semáforos de orden ya impiden el acceso simultáneo (resoluciones 1C2026).
+- Inversión de prioridades → **herencia de prioridades** (1C2026). El Resumen dice "pasar a VRR":
+  la teoría del sitio da la de la cátedra y menciona la del Resumen.
 
 ## Deadlock
 
 Livelock, deadlock, inanición y espera activa son conceptos distintos; 4 estrategias: prevención,
 evasión, detección y recupero, no hacer nada. En las resoluciones, solo los procesos del **ciclo**
 están en deadlock; un bloqueado que espera algo del ciclo sin retener nada "sufre inanición".
+Flexibilidad: prevención baja, **evasión media** (solo exige declarar máximos), detección alta.
 
 ## Formato de respuestas
 

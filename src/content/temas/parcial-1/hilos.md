@@ -48,7 +48,7 @@ Consecuencias directas:
 
 ## Hilos de kernel (KLT)
 
-El **SO conoce los hilos**: los crea, los destruye y los planifica mediante syscalls. El planificador de corto plazo elige entre KLT, sin importar a qué proceso pertenece cada uno.
+El **SO conoce los hilos**: los crea, los destruye y los planifica mediante syscalls. El planificador de corto plazo elige entre KLT, sin importar a qué proceso pertenece cada uno. Ojo: que los gestione el SO no significa que corran en modo kernel. El código de un KLT es del proceso y se ejecuta en **modo usuario**.
 
 | Ventajas                                                                                  | Desventajas                                                                                                                                 |
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -95,6 +95,7 @@ Un proceso puede tener varios KLT y, sobre cada uno, varios ULT. Así se busca l
 - El SO no ve los ULT: el **quantum es del proceso (o del KLT)** y se consume ejecute el ULT que ejecute. Si un ULT termina o se bloquea y la biblioteca pasa a otro, el quantum **no se reinicia**.
 - Cuando vence el quantum, el SO desaloja al KLT entero y **la biblioteca no se entera**: cuando el KLT vuelve a la CPU, sigue ejecutando el **mismo ULT** (salvo que la biblioteca use un algoritmo con desalojo y haya llegado un ULT que lo desplace).
 - Un ULT que llega mientras tanto entra a la cola **de la biblioteca**, no a la cola de Ready del SO.
+- **Cuándo interviene la biblioteca** (los parciales preguntan esos instantes): cuando un ULT pasa por un wrapper (por ejemplo, para pedir E/S) y cuando replanifica sus ULT según su algoritmo (vence su "quantum", termina un ULT, uno desaloja a otro). Nada de eso es una interrupción: la biblioteca no usa el clock del hardware.
 
 ```recorrido quantum-ult
 
@@ -109,6 +110,8 @@ Un proceso puede tener varios KLT y, sobre cada uno, varios ULT. Así se busca l
 | **Si una syscall bloquea…**        | Se bloquea todo el proceso (sin jacketing) | Se bloquea solo ese hilo                  | Se bloquea solo ese proceso |
 | **Quién planifica**                | La biblioteca, dentro del proceso          | El SO                                     | El SO                       |
 | **Memoria**                        | Compartida                                 | Compartida                                | Separada, con aislamiento   |
+
+> **Qué usar según el requisito** (pregunta típica de servidor con N CPUs): si un error no tiene que afectar al resto → **procesos** separados; si se quiere un algoritmo de planificación propio → **ULTs** con su biblioteca; si se busca paralelismo → varios **KLTs** (o varios procesos). Los requisitos se combinan: por ejemplo, varios procesos, cada uno con KLTs y ULTs encima.
 
 ## Preguntas de parcial
 

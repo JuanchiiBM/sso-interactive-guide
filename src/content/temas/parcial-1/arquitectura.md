@@ -17,6 +17,14 @@ Antes de meternos con el sistema operativo conviene repasar el hardware sobre el
 | **Módulos de E/S**          | Conectan la computadora con discos, red, teclado, etc.                                                          |
 | **Bus**                     | Mueve información entre CPU, memoria y E/S. Se divide en bus de **datos**, de **direcciones** y de **control**. |
 
+Hay tres técnicas para hacer E/S, de la que más CPU gasta a la que menos:
+
+| Técnica                | Cómo funciona                                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------- |
+| **Programada**         | La CPU pide la operación y consulta el estado del dispositivo en un bucle (espera activa).         |
+| **Por interrupciones** | La CPU pide la operación y sigue con otra cosa; el dispositivo interrumpe al terminar cada dato.   |
+| **DMA**                | Un controlador mueve el bloque entero entre el dispositivo y la RAM; interrumpe una vez, al final. |
+
 ## Registros
 
 Los registros son la memoria más rápida que existe, y está dentro del procesador. Hay dos familias:
@@ -81,12 +89,14 @@ Una **interrupción** es un aviso por hardware de que ocurrió un evento (termin
 
 ### Clasificaciones
 
-| Criterio     | Tipos                                                                                                                                                                           |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Origen       | **Hardware** (externas a la CPU) / **Software** (las genera la propia CPU al ejecutar, como una división por cero).                                                             |
-| Postergables | **Enmascarables** (se pueden ignorar por un rato, no son críticas) / **No enmascarables** (críticas, se atienden ya, como las fallas de hardware).                              |
-| Momento      | **Sincrónicas** (consecuencia de la instrucción que se ejecuta) / **Asincrónicas** (llegan en cualquier momento desde afuera).                                                  |
-| Causa        | **De E/S** (terminó un evento de un dispositivo), **de clock** (sirve para desalojar al proceso y es la base de la multiprogramación), **fallas de hardware**, **excepciones**. |
+| Criterio     | Tipos                                                                                                                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Origen       | **Hardware** (externas a la CPU) / **Software** (las genera la propia CPU al ejecutar una instrucción, como una división por cero; no las genera el SO).                                       |
+| Postergables | **Enmascarables** (se pueden ignorar por un rato, no son críticas) / **No enmascarables** (críticas, se atienden ya, como las fallas de hardware).                                             |
+| Momento      | **Sincrónicas** (consecuencia de la instrucción que se ejecuta: división por cero, fallo de página) / **Asincrónicas** (llegan en cualquier momento desde afuera: fin de quantum, fin de E/S). |
+| Causa        | **De E/S** (terminó un evento de un dispositivo), **de clock** (sirve para desalojar al proceso y es la base de la multiprogramación), **fallas de hardware**, **excepciones**.                |
+
+En los parciales, **pedir** una E/S cuenta como syscall, no como interrupción. La interrupción llega después, cuando el dispositivo termina.
 
 Las **excepciones** vienen de errores o situaciones anómalas del programa, como un fallo de página. El resumen de la cátedra las ubica como las de mayor prioridad. Se dividen en:
 

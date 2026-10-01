@@ -152,7 +152,7 @@ Es el paso de modo usuario a kernel o al revés. Reglas clave:
 
 **6. V o F: si se está ejecutando una syscall y llega una interrupción, se espera a que termine la syscall porque es código del SO.**
 
-> Falso. Las interrupciones se chequean al final de cada instrucción, sin importar si el código es del SO o de un usuario. Se atiende la interrupción y después se retoma la syscall.
+> Falso. Las interrupciones se chequean al final de cada instrucción, sin importar si el código es del SO o de un usuario. Se atiende la interrupción y después se retoma la syscall. La resolución también acepta Verdadero con una condición: si la syscall deshabilitó las interrupciones (por ejemplo, para garantizar mutua exclusión), la interrupción espera a que se vuelvan a habilitar.
 
 **7. ¿Qué relación hay entre syscalls, modos de ejecución e instrucciones privilegiadas?**
 
