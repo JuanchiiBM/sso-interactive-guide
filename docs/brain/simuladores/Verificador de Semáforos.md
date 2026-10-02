@@ -1,8 +1,8 @@
 ---
 tipo: servicio
-aliases: [semáforos, semaforos, wait, signal, semaphore, sincronización, verificador, model checking, intercalaciones, tests, leetcode, verificarSemaforos]
+aliases: [índice desconocido, alias, ocultos, indicesSugeridos, semáforos, semaforos, wait, signal, semaphore, sincronización, verificador, model checking, intercalaciones, tests, leetcode, verificarSemaforos]
 tags: [simulador, sincronizacion, deadlock]
-actualizado: 2026-09-26
+actualizado: 2026-10-02
 ---
 # Verificador de Semáforos
 
@@ -108,9 +108,16 @@ leen), el `motivo` tiene que explicar eso.
 | `efecto: {'cajas[id_asent]': 1}` + `variables: {'cajas[0]': 0, …}` | contadores **por índice** para tests `rango` | Sinc. 24 |
 | `cotas: {semaforos, variables}`    | topes propios cuando un contador crece sin límite (≥ valores iniciales) | Sinc. 24 |
 | `bolsas: [pendientes, 'turnos[0]']` + `pone`/`saca` | listas que **llevan datos** (ids) entre procesos: `pone: {pendientes: 'id'}`, `saca: {validados: 'cafe.idCliente'}` (se prueban todos los valores) | Sinc. 29–31 |
-| `aliasId: ['getId()']`             | otros nombres de `id` usables como índice (`id()` ya viene) | Sinc. 28–30 |
+| `aliasId: ['getId()']`             | otros nombres de `id` usables como índice (`id()` ya viene); si hay, se sugieren en vez de `id`/`id()` | Sinc. 24–30 |
+| `alias: {'pedido->cliente': idCliente}` o `{'ticket.idCarrera': {Corredor: carrera, Terminal: id}}` | expresiones del enunciado (campos de struct, `->`/`.`) que valen como otro índice, global o por proceso | Sinc. 27, 30 |
+| `ocultos: [carrera]`               | locales del modelo que valen como índice pero **no se sugieren** | Sinc. 29, 30 |
 | local llamada `id` / `'cafe.idCliente'` / `'id_agente(pr)'` | una local puede tener cualquier nombre, incluso una expresión del enunciado; la local **gana** sobre el id de la instancia | Sinc. 30, 31 |
 
+- **Sugerencia de "Índice desconocido"** (`indicesSugeridos`): solo lo que sale del enunciado. Las
+  `variables` del modelo son contadores de los tests (`enCola`, `stock[0]`…): siguen valiendo como
+  índice pero **nunca** se listan, porque spoilean cómo se verifica. Regla del dueño: si el enunciado da
+  una expresión que un alumno usaría como índice (`pedido.cliente`, `getID()`), se acepta con `alias` /
+  `aliasId`; si el modelo necesita una local que el enunciado no nombra, va a `ocultos`.
 - Índice fuera de rango = **error de ejecución** (`ejecucion: true`, UI: "Falla al ejecutar"), no
   de sintaxis.
 - La simetría se decide **por proceso**: si el código, las acciones (`[id]`, `asignaId`) o un

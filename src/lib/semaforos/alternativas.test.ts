@@ -343,7 +343,7 @@ describe('Maratón: cada semáforo tiene un test que lo exige', { timeout: 30_00
   it('un solo semáforo de llamado deja posicionarse a quien no llamaron', () => {
     const mal = solucion
       .replace('llamado[CORREDORES] = 0', 'llamado = 0')
-      .replace('wait(llamado[ticket.número]);', 'wait(llamado);')
+      .replace('wait(llamado[ticket.numero]);', 'wait(llamado);')
       .replace('signal(llamado[numLlamar]);', 'signal(llamado);')
     expect(fallidos(mal, d)).toContain('El corredor 0 se posiciona cuando llaman a su número')
   })

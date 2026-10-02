@@ -190,6 +190,16 @@ export function explorar(
   const valorIndice = (expr: string, j: number, e: Estado, linea: number): number => {
     const x = expr.trim()
     if (/^\d+$/.test(x)) return Number(x)
+    const alias = ej.alias?.[x]
+    if (alias != null) {
+      const destino = typeof alias === 'string' ? alias : alias[instancias[j].nombre]
+      if (destino == null)
+        throw new ErrorEjecucion(
+          `En ejecución: "${x}" no tiene valor en ${instancias[j].nombre}`,
+          linea,
+        )
+      return valorIndice(destino, j, e, linea)
+    }
     // una local puede llamarse `id` (la terminal de Maratón): gana sobre el id de la instancia
     const kl = idxLocal.get(x)
     if (kl != null) return e.locs[j * locales.length + kl]

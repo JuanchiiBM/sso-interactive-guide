@@ -82,6 +82,10 @@ export interface EjercicioSemaforos {
   bolsas?: string[]
   /** Otros nombres para `id` que el alumno puede usar como índice, ej. `getId()`. */
   aliasId?: string[]
+  /** Otros nombres de un índice que da el enunciado: `{ 'pedido->cliente': 'idCliente' }` o por proceso. */
+  alias?: Record<string, string | Record<string, string>>
+  /** Locales del modelo que valen como índice pero no se sugieren (no salen del enunciado). */
+  ocultos?: string[]
   /** Topes de exploración propios (por defecto 12 y 8) cuando un contador puede crecer sin límite. */
   cotas?: { semaforos?: number; variables?: number }
   tests: TestSemaforos[]
