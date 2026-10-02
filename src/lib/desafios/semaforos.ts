@@ -33,6 +33,7 @@ function guardarBorrador(clave: string, texto: string | null): void {
 interface Codigo {
   get: () => string
   set: (t: string) => void
+  bloquear: () => void
 }
 
 /** Monta CodeMirror sobre el textarea (que queda de respaldo si no carga) y avisa cada cambio. */
@@ -46,6 +47,9 @@ function montarEditor(
     get: () => editor.value,
     set: (t) => {
       editor.value = t
+    },
+    bloquear: () => {
+      editor.readOnly = true
     },
   }
   editor.value = valor
@@ -62,6 +66,8 @@ function montarEditor(
     })
     codigo.get = cm.getValue
     codigo.set = cm.setValue
+    codigo.bloquear = cm.bloquear
+    if (editor.readOnly) cm.bloquear()
   })
   return codigo
 }
@@ -145,6 +151,7 @@ export function crearSemaforosExamen(box: HTMLElement): ItemExamen {
     },
     revelar() {
       box.classList.add('sem-bloqueado')
+      codigo.bloquear()
       $<HTMLElement>('[data-sem-accion="restablecer"]', box)?.setAttribute('hidden', '')
       if (resultado) pintar(salida, resultado.verificacion)
       if (resultado?.seccionCriticaDeMas) {
