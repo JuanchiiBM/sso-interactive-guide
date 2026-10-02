@@ -23,6 +23,7 @@
   "packageManager": "pnpm@11.20.0",
   "dependencies": {
     "@astrojs/markdown-satteri": "0.3.4",
+    "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/language": "^6.12.4",
     "@codemirror/lint": "^6.9.7",

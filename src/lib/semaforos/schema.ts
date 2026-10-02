@@ -112,6 +112,8 @@ export const desafioSemaforosSchema = z.object({
     .optional(),
   constantes: z.record(z.string(), z.number()).optional(),
   aliasId: z.array(z.string()).optional(),
+  alias: z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())])).optional(),
+  ocultos: z.array(z.string()).optional(),
   bolsas: z.array(z.string()).optional(),
   cotas: z
     .object({ semaforos: z.number().int().min(1), variables: z.number().int().min(1) })

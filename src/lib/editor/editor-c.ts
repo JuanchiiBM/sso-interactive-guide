@@ -1,10 +1,11 @@
 /** Editor de código C (CodeMirror 6) con colores del tema y linter. Se importa lazy. */
 import { basicSetup } from 'codemirror'
+import { indentWithTab } from '@codemirror/commands'
 import { cpp } from '@codemirror/lang-cpp'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { linter, lintGutter, type Diagnostic } from '@codemirror/lint'
-import { EditorState } from '@codemirror/state'
-import { Decoration, EditorView, MatchDecorator, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view'
+import { Compartment, EditorState } from '@codemirror/state'
+import { Decoration, EditorView, MatchDecorator, ViewPlugin, keymap, type DecorationSet, type ViewUpdate } from '@codemirror/view'
 import { tags as t } from '@lezer/highlight'
 
 export interface ErrorLinea {
@@ -15,6 +16,8 @@ export interface ErrorLinea {
 export interface EditorC {
   getValue: () => string
   setValue: (texto: string) => void
+  /** Solo lectura: se puede seleccionar y scrollear, no editar. */
+  bloquear: () => void
 }
 
 const resaltado = HighlightStyle.define([
@@ -85,6 +88,7 @@ export function crearEditorC(
     { delay: 400 },
   )
 
+  const edicion = new Compartment()
   const view = new EditorView({
     parent: host,
     state: EditorState.create({
@@ -98,6 +102,9 @@ export function crearEditorC(
         lintGutter(),
         lintExt,
         EditorState.tabSize.of(2),
+        // Tab indenta; Esc y después Tab sale del editor (accesibilidad)
+        keymap.of([indentWithTab]),
+        edicion.of([]),
         EditorView.updateListener.of((u) => {
           if (u.docChanged) opts.alCambiar(u.state.doc.toString())
         }),
@@ -108,5 +115,7 @@ export function crearEditorC(
   return {
     getValue: () => view.state.doc.toString(),
     setValue: (texto) => view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: texto } }),
+    bloquear: () =>
+      view.dispatch({ effects: edicion.reconfigure([EditorState.readOnly.of(true), EditorView.editable.of(false)]) }),
   }
 }

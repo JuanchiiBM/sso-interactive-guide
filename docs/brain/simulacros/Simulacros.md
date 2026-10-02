@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [simulacros, simulacro, parciales simulados, examen, modo examen, nota, cronómetro, parcial real, ItemExamen, crearMCExamen, crearSemaforosExamen, crearSimuladorExamen, puntaje, banda]
 tags: [moc, simulacros, examen]
-actualizado: 2026-09-25
+actualizado: 2026-10-02
 ---
 
 # Simulacros
@@ -53,6 +53,10 @@ interface ItemExamen {
 }
 // crearMCExamen(box) · crearSemaforosExamen(box) · crearSimuladorExamen(host)
 ```
+
+Bloquear al revelar **no** es `pointer-events: none`: rompe el scroll del editor (que tiene altura
+máxima) y no deja ver lo que uno escribió. El de semáforos usa el solo lectura de CodeMirror
+(`EditorC.bloquear()`).
 
 Un tipo interactivo nuevo tiene que implementar su `crearXExamen`, sumar su `data-item-tipo` en la
 página y en `crearItem` de `examen.ts`, y entrar en `referencia.test.ts`.

@@ -309,10 +309,9 @@
   vertical-align: middle;
 }
 
-/* Editor de semáforos de un simulacro ya finalizado: se ve pero no se edita */
+/* Editor de semáforos de un simulacro ya finalizado: solo lectura (lo bloquea CodeMirror), scrolleable */
 .sem-bloqueado .sem-editor-host,
 .sem-bloqueado [data-sem-editor] {
-  pointer-events: none;
   opacity: 0.75;
 }
 

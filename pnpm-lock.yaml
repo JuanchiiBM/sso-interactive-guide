@@ -11,6 +11,9 @@ importers:
       '@astrojs/markdown-satteri':
         specifier: 0.3.4
         version: 0.3.4
+      '@codemirror/commands':
+        specifier: ^6.11.1
+        version: 6.11.1
       '@codemirror/lang-cpp':
         specifier: ^6.0.3
         version: 6.0.3

@@ -117,16 +117,27 @@ export function unirCondicionales(lineas: string[]): string[] {
   return out
 }
 
-/** Nombres válidos como índice de un array de semáforos. */
+/** Índices que salen del enunciado: los únicos que se sugieren en un error. */
+export function indicesSugeridos(ej: EjercicioSemaforos): Set<string> {
+  const ocultos = new Set(ej.ocultos ?? [])
+  return new Set([
+    // si el enunciado da su propia función de id (`getId()`), se sugiere esa
+    ...(ej.aliasId?.length ? ej.aliasId : ['id', 'id()']),
+    ...(ej.locales ?? []).filter((l) => !ocultos.has(l)),
+    ...Object.keys(ej.alias ?? {}),
+    ...Object.keys(ej.constantes ?? {}),
+    ...Object.keys(ej.funciones ?? {}),
+  ])
+}
+
+/** Nombres válidos como índice; las `variables` del modelo valen pero no se sugieren (son de los tests). */
 export function indicesValidos(ej: EjercicioSemaforos): Set<string> {
   return new Set([
     'id',
     'id()',
-    ...(ej.aliasId ?? []),
-    ...(ej.locales ?? []),
+    ...indicesSugeridos(ej),
+    ...(ej.ocultos ?? []),
     ...Object.keys(ej.variables ?? {}),
-    ...Object.keys(ej.constantes ?? {}),
-    ...Object.keys(ej.funciones ?? {}),
   ])
 }
 
@@ -145,6 +156,7 @@ export function parsear(
     ej.procesos.map((p) => [identificador(p.nombre).toLowerCase(), p.nombre]),
   )
   const indices = indicesValidos(ej)
+  const sugeridos = indicesSugeridos(ej)
   const valorDe = (s: string) => (/^-?\d+$/.test(s) ? Number(s) : ej.constantes?.[s])
   let actual: Programa['procesos'][number] | null = null
   let trasCiclo = false
@@ -262,7 +274,7 @@ export function parsear(
       }
       const ref: RefSemaforo = { nombre: op[2], ...(op[3] != null ? { indice: op[3] } : {}) }
       if (ref.indice != null && !/^\d+$/.test(ref.indice) && !indices.has(ref.indice)) {
-        const validos = [...indices].join(', ')
+        const validos = [...sugeridos].join(', ')
         error(
           linea,
           `Índice desconocido "${ref.indice}" (podés usar un número${validos ? ` o: ${validos}` : ''})`,
