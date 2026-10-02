@@ -39,6 +39,8 @@ preguntas:
 El `enunciado` de una pregunta también es markdown de bloque (usar `|` si lleva código o párrafos);
 `texto` y `explicacion` de las opciones, markdown inline (`código`, **negrita**). Los renderiza
 `markdownAHtml` / `markdownInlineAHtml` de `src/lib/markdown/marked.ts`; sus `pre` no pasan por Shiki.
+**Identificadores del código sin tildes ni ñ** (`numero`, `diseno`, `almacen`): CodeMirror y el
+resaltado de C cortan el token en la letra acentuada. En la prosa sí van con tilde.
 Ver [[Patrón — Desafío antes de la Resolución]].
 
 **Código de varios procesos lado a lado:** envolver en `<div class="codigo-columnas">` con líneas en
