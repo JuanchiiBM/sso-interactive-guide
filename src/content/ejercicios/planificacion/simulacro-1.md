@@ -245,6 +245,27 @@ preguntas:
       vuelve a la cola común.
     - **Tiempo de respuesta promedio:** VRR mejora a RR porque favorece a los I/O bound. En FIFO puede
       verse muy perjudicado: un proceso que vuelve de E/S espera detrás de un CPU bound.
+- enunciado: '(1P 2C2026 TM, single choice iv) El tiempo de espera de un proceso representa el tiempo en
+    que el proceso:'
+  opciones:
+  - texto: Está suspendido
+    explicacion: Estar suspendido (en disco) no es esperar la CPU en la cola de Ready.
+  - texto: No está en ejecución
+    explicacion: 'Incluye el tiempo bloqueado esperando E/S, que no cuenta como espera.'
+  - texto: Está bloqueado
+    explicacion: El tiempo bloqueado (esperando un evento o una E/S) no es tiempo de espera.
+  - texto: Ninguna de las anteriores
+    explicacion: Correcta.
+  correcta: 3
+  justificacion: |
+    El **tiempo de espera** es el tiempo que el proceso pasa en la **cola de Ready**: listo para ejecutar,
+    esperando que el planificador de corto plazo le dé la CPU.
+
+    - **a)** y **c)** No cuentan: suspendido o bloqueado, el proceso no podría usar la CPU aunque estuviera
+      libre.
+    - **b)** "No está en ejecución" es más amplio: suma el tiempo bloqueado y el suspendido.
+
+    Por eso la respuesta es **d) Ninguna de las anteriores**.
 ---
 
 Simulacro con preguntas de teoría de parciales anteriores (2024–2026) sobre **planificación con y sin desalojo y la comparación entre FIFO, RR y VRR**, agrupadas por

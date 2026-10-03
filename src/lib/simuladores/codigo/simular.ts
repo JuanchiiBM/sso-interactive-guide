@@ -15,9 +15,10 @@ export function parsearCodigo(codigo: string, config: ConfigCodigo): ProgramaCod
   let inicioCiclo: number | null = null
   const porDefecto = config.duracion ?? 1
   for (const cruda of codigo.split('\n')) {
-    const m = cruda.match(/^(.*?)(?:\/\/\s*(\d+)[^\n]*)?$/)!
+    const m = cruda.match(/^(.*?)(?:\/\/\s*(\d+)\s*(E\/S|I\/O|IO)?[^\n]*)?$/i)!
     const linea = m[1].trim().replace(/;$/, '').trim()
     const duracion = m[2] != null ? Number(m[2]) : undefined
+    const esIO = m[3] != null
     if (!linea || linea === '{' || linea === '}') continue
     if (RE_CICLO.test(linea)) {
       inicioCiclo = sentencias.length
@@ -30,6 +31,9 @@ export function parsearCodigo(codigo: string, config: ConfigCodigo): ProgramaCod
     } else if ((s = linea.match(/^(get|release)\s*\(\s*(\w+)\s*\)$/i))) {
       const tipo = s[1].toLowerCase() as 'get' | 'release'
       sentencias.push({ tipo, recurso: s[2], texto: linea, duracion: duracion ?? porDefecto })
+    } else if (esIO) {
+      // `// N E/S`: bloquea N sin usar CPU, como un sleep (sin cola de dispositivo)
+      sentencias.push({ tipo: 'sleep', bloqueo: duracion!, texto: linea, duracion: 0, io: true })
     } else if ((s = linea.match(/^sleep\s*\(\s*(\d+)/i))) {
       sentencias.push({
         tipo: 'sleep',
@@ -57,6 +61,8 @@ interface Proc {
   estado: EstadoProceso
   /** Hasta cuándo duerme (sleep). */
   despierta?: number
+  /** El sleep en curso es una E/S (solo cambia el texto de los eventos). */
+  porIO?: boolean
   bloqueoEn?: string
   fin?: number
   primeraCpu?: number
@@ -169,8 +175,10 @@ export function simularCodigo(config: ConfigCodigo): ResultadoPlanificacion {
     } else if (s.tipo === 'sleep') {
       if (s.bloqueo > 0) {
         p.despierta = t + s.bloqueo
+        p.porIO = s.io
         bloquear(p, 'sleep')
-        eventos.push(`${p.id} hace ${s.texto}: bloqueado hasta t=${p.despierta}.`)
+        const que = s.io ? 'E/S' : 'bloqueado'
+        eventos.push(`${p.id} hace ${s.texto}: ${que} hasta t=${p.despierta}.`)
         p.pc++
         normalizarPc(p)
         return
@@ -289,7 +297,7 @@ export function simularCodigo(config: ConfigCodigo): ResultadoPlanificacion {
     for (const p of procs) {
       if (p.estado === 'bloqueado' && p.bloqueoEn === 'sleep' && p.despierta === t) {
         despertar(p.id, true)
-        eventos.push(`${p.id} termina su sleep.`)
+        eventos.push(`${p.id} termina su ${p.porIO ? 'E/S' : 'sleep'}.`)
       }
     }
     listos.push(...despertados)

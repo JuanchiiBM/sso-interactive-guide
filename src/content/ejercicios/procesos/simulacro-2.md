@@ -219,6 +219,23 @@ preguntas:
     - También puede incluirse el **PCB** (con los recursos del proceso, como los archivos abiertos).
 
     Lo propio de cada hilo es su **stack** y su contexto de ejecución, guardados en su TCB.
+- enunciado: '(1P 2C2026 TM, single choice iii) La parte de la imagen de un proceso que debe estar siempre
+    en RAM aun cuando se swapea el mismo es:'
+  opciones:
+  - texto: Código
+    explicacion: Al suspender el proceso, el código va a disco con el resto de la imagen.
+  - texto: PCB
+    explicacion: Correcta.
+  - texto: Stack
+    explicacion: El stack también se puede llevar a disco al suspender.
+  - texto: Ninguna de las anteriores
+    explicacion: La b) es correcta.
+  correcta: 1
+  justificacion: |
+    Al suspender un proceso (swap out), el planificador de mediano plazo lleva a disco su código, datos, heap
+    y stack, pero el **PCB queda en memoria**: el SO lo necesita para saber que el proceso existe, en qué
+    estado está (Ready/Suspended o Blocked/Suspended), dónde quedó su imagen y para poder traerlo de vuelta
+    (swap in).
 ---
 
 Simulacro con preguntas de teoría de parciales anteriores (primeros parciales y recuperatorios, 2024 a 2026) sobre imagen del proceso, PCB, fork y cambios de modo y de contexto, agrupadas por tema. Cada pregunta indica entre paréntesis el examen de donde sale.

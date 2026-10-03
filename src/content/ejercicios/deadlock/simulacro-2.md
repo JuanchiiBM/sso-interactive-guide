@@ -315,6 +315,41 @@ preguntas:
     Es un **livelock**: los procesos siguen ejecutándose (usan CPU y cambian de estado) pero ninguno puede progresar,
     por ejemplo porque se ceden mutuamente un recurso una y otra vez. Se diferencia del **deadlock** en que en este
     último los procesos quedan bloqueados esperando, sin consumir CPU.
+- enunciado: |
+    (1P 2C2026 TM, desarrollo 5) Hay 2 procesos (P1 y P2) y 2 recursos (R1 y R2), y el SO sabe que ambos
+    procesos podrían solicitar ambos recursos durante su ejecución. P1 ya tiene asignado R1, P2 recién
+    comienza y R2 está libre. P2 solicita R2 y el SO lo **bloquea**, dándole la CPU a P1.
+
+    ¿Por qué el SO pudo haber tomado la decisión de bloquear a P2?
+  opciones:
+  - texto: Detectó un deadlock entre P1 y P2 y bloqueó a P2 como medida de recuperación
+    explicacion: 'No hay deadlock: P2 no retiene nada y R2 estaba libre. Además, la detección no niega
+      asignaciones.'
+  - texto: Aplica prevención de la espera circular y P2 pidió los recursos en un orden prohibido
+    explicacion: 'P2 no retiene ningún recurso: pedir R2 primero no viola ningún orden.'
+  - texto: 'Aplica evasión (banquero): asignarle R2 a P2 dejaría al sistema en un estado inseguro, aunque
+      R2 esté libre'
+    explicacion: Correcta.
+  - texto: El planificador de corto plazo eligió a P1 por tener mayor prioridad, y por eso bloqueó a P2
+    explicacion: El planificador de corto plazo desaloja a Ready; el bloqueo viene de negar la solicitud
+      del recurso.
+  correcta: 2
+  justificacion: |
+    Que el SO **conozca las necesidades máximas** es la condición de la **evasión**. Antes de conceder un
+    pedido, el banquero simula la asignación y verifica que el estado resultante sea **seguro**.
+
+    | | Asignado | Máximo | Pendiente |
+    |---|---|---|---|
+    | P1 | R1 | R1, R2 | R2 |
+    | P2 | — | R1, R2 | R1, R2 |
+
+    - **Antes del pedido** (disponible: R2): P1 puede obtener R2, terminar y liberar todo; después termina
+      P2. Existe la secuencia segura ⟨P1, P2⟩.
+    - **Si le diera R2 a P2** (disponible: nada): P1 retiene R1 y puede pedir R2; P2 retiene R2 y puede
+      pedir R1. Ninguno puede asegurar que termina: **estado inseguro** (podría haber deadlock).
+
+    Por eso no se concede: P2 queda bloqueado esperando R2 aunque esté libre, y P1 sigue ejecutando hasta
+    terminar y liberar sus recursos. No se desaloja nada.
 ---
 
 Este simulacro reúne preguntas de **teoría** de parciales anteriores (2024 a 2026) sobre **deadlock**: evasión y detección, recuperación y deadlock contra livelock. Cada pregunta indica entre paréntesis de qué examen e ítem sale.

@@ -321,6 +321,25 @@ preguntas:
 
     La **ventaja** es que no requiere implementar ni ejecutar algoritmos que agreguen overhead durante la asignación de
     recursos (como el banquero de la evasión) ni cuando ya hay un deadlock (como la detección y recuperación).
+- enunciado: (1P 2C2026 TM, respuesta breve 1d) Un SO implementa una política por la cual los procesos solicitan
+    **todos** los recursos que necesitarán antes de comenzar su ejecución. ¿Qué condición necesaria para la
+    ocurrencia de deadlock está atacando?
+  opciones:
+  - texto: Mutua exclusión
+    explicacion: Los recursos siguen siendo exclusivos; solo cambia cuándo se piden.
+  - texto: Sin desalojo
+    explicacion: Atacarla sería permitir quitarle recursos a un proceso; esta política no quita nada.
+  - texto: Retención y espera
+    explicacion: Correcta.
+  - texto: Espera circular
+    explicacion: Se ataca numerando los recursos y pidiéndolos en orden creciente.
+  correcta: 2
+  justificacion: |
+    Si un proceso recibe **todos** sus recursos de una vez antes de empezar (y si falta alguno no recibe
+    ninguno), nunca retiene un recurso mientras espera otro: se elimina la **retención y espera**.
+
+    El costo: recursos asignados mucho tiempo antes de usarse (poca eficiencia) y posible inanición de los
+    procesos que necesitan muchos recursos.
 ---
 
 Este simulacro reúne preguntas de **teoría** de parciales anteriores (2024 a 2026) sobre **deadlock**: condiciones necesarias y comparación entre prevención, evasión y detección. Cada pregunta indica entre paréntesis de qué examen e ítem sale.

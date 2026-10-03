@@ -195,6 +195,24 @@ preguntas:
     Con prioridades, si siguen llegando procesos más prioritarios, un proceso de baja prioridad puede
     quedar en ready **indefinidamente**: eso es **starvation** (inanición). Se soluciona con **aging**,
     aumentando la prioridad de los procesos a medida que esperan.
+- enunciado: (1P 2C2026 TM, respuesta breve 1b) ¿Qué técnica permite evitar la inanición (starvation)
+    producida por un algoritmo de planificación de corto plazo por prioridades?
+  opciones:
+  - texto: Agregar desalojo por prioridad
+    explicacion: 'Con desalojo los más prioritarios entran todavía antes: la inanición sigue (o empeora).'
+  - texto: Herencia de prioridades
+    explicacion: Es la solución a la inversión de prioridades con semáforos, no a la inanición.
+  - texto: Usar un quantum más grande
+    explicacion: El quantum es de Round Robin; no cambia el orden por prioridad.
+  - texto: Envejecimiento (aging)
+    explicacion: Correcta.
+  correcta: 3
+  justificacion: |
+    El **envejecimiento (aging)** aumenta la prioridad de un proceso a medida que espera en Ready. Tarde o
+    temprano el proceso postergado supera en prioridad a los que siguen llegando y obtiene la CPU, así que
+    no queda esperando indefinidamente.
+
+    Es la misma idea que usa HRRN: su ratio `(w + s) / s` crece con el tiempo de espera `w`.
 ---
 
 Simulacro con preguntas de teoría de parciales anteriores (2024–2026) sobre **I/O bound, HRRN, SJF/SRT, colas multinivel y prioridades**, agrupadas por

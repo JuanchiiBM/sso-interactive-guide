@@ -84,7 +84,7 @@ preguntas:
     El de **mediano plazo** también interviene: al suspender procesos (swap out) el grado de multiprogramación **disminuye**, y cuando los procesos suspendidos vuelven a memoria principal (swap in), **aumenta**.
 
     El de corto plazo no lo modifica: solo decide qué proceso de los que están listos usa la CPU.
-- enunciado: (1P 2C2025 TM) Sobre los planificadores de largo, mediano y corto plazo, ¿cuál de estas afirmaciones
+- enunciado: (1P 2C2025 TM; 1P 2C2026 TM, desarrollo 3) Sobre los planificadores de largo, mediano y corto plazo, ¿cuál de estas afirmaciones
     es correcta?
   opciones:
   - texto: El de largo plazo maneja Ready → Running y es el único planificador que modifica el grado de
@@ -215,6 +215,30 @@ preguntas:
     | **Suspended/Ready → Ready** | Sí | Planificador de mediano plazo | Hay memoria disponible y se sube el grado de multiprogramación |
     | **Running → Blocked** | Sí | Ningún planificador | El proceso se bloquea esperando el resultado de una E/S |
     | **Ready → Blocked** | No | — | Para bloquearse el proceso tiene que estar ejecutando |
+- enunciado: (1P 2C2026 TM, desarrollo 3) ¿Cuándo interviene cada planificador (largo, mediano y corto plazo)
+    y cómo afectan sus decisiones al grado de multiprogramación?
+  opciones:
+  - texto: 'Corto: en cada interrupción, y baja el grado al desalojar un proceso a Ready. Largo: solo al
+      arrancar el sistema. Mediano: al terminar un proceso, para subir el grado'
+    explicacion: El desalojo a Ready no saca al proceso de memoria, así que el grado no cambia.
+  - texto: 'Largo: al crearse un proceso (o al liberarse lugar), y admitir sube el grado. Mediano: ante falta
+      de memoria o mucha carga suspende (baja el grado) y al liberarse reanuda (lo sube). Corto: muy seguido,
+      sin cambiar el grado'
+    explicacion: Correcta.
+  - texto: 'Largo: en cada fin de quantum, para decidir quién ejecuta. Mediano: al crearse un proceso. Corto:
+      ante falta de memoria, bajando el grado'
+    explicacion: Están mezclados los roles de los tres planificadores.
+  - texto: 'Los tres intervienen solo cuando un proceso termina, y los tres suben o bajan el grado por igual'
+    explicacion: Cada uno interviene ante eventos distintos, y el de corto plazo no modifica el grado.
+  correcta: 1
+  justificacion: |
+    | Planificador | Objetivo | Cuándo interviene | Grado de multiprogramación |
+    |---|---|---|---|
+    | **Largo plazo** | Admitir procesos (New → Ready), decidir cuántos y cuáles entran, buscando una buena mezcla de CPU e I/O bound | Al crearse un proceso, o cuando uno termina y hay lugar para admitir otro | Lo **sube** al admitir (y baja al finalizar un proceso) |
+    | **Mediano plazo** | Suspender y reanudar procesos (swap out / swap in) | Cuando falta memoria o la carga es alta; cuando se libera memoria o baja la carga | Lo **baja** al suspender y lo **restablece** al reanudar |
+    | **Corto plazo** | Elegir de Ready quién usa la CPU (dispatcher) | Muy seguido: interrupciones, bloqueos, fin de quantum, syscalls | **No** lo cambia: trabaja con procesos que ya están en memoria |
+
+    El de corto plazo es el más frecuente y tiene que ser muy liviano; el de largo plazo, el menos frecuente.
 ---
 
 Simulacro con preguntas de teoría de parciales anteriores (primeros parciales y recuperatorios, 2024 a 2026) sobre estados de los procesos, planificadores y grado de multiprogramación, agrupadas por tema. Cada pregunta indica entre paréntesis el examen de donde sale.

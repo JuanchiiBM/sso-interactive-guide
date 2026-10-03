@@ -71,8 +71,8 @@ function gantt(sim: Simulacion): number {
 }
 
 describe('la resolución de referencia saca 10 en cada simulacro', { timeout: 120_000 }, () => {
-  it('están los 13 parciales', () => {
-    expect(parciales).toHaveLength(13)
+  it('están los 14 parciales', () => {
+    expect(parciales).toHaveLength(14)
   })
 
   it.each(parciales.map((p) => ({ titulo: p.titulo, parcial: p })))('$titulo', ({ parcial }) => {

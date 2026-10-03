@@ -15,6 +15,8 @@ aliases:
     condición de carrera,
     productor consumidor,
     test and set,
+    swap,
+    spinlock,
     Peterson,
   ]
 ---
@@ -142,6 +144,8 @@ lock = false;
 - Sigue teniendo **espera activa**.
 - La puede usar un proceso de usuario, porque no es una instrucción privilegiada.
 
+Otra instrucción atómica equivalente es **swap** (o _exchange_): intercambia un registro con una posición de memoria en un solo paso. Para tomar el lock se intercambia un `true` con él y se repite mientras lo leído siga en `true`. Tiene las mismas propiedades que test-and-set.
+
 ```recorrido test-and-set
 
 ```
@@ -155,7 +159,7 @@ lock = false;
 | Test-and-set                 | Sí                                 | Sí                                    | Sí                         |
 | Semáforo con cola de bloqueo | No (solo en el interior de `wait`) | Sí, vía syscalls                      | Sí                         |
 
-**¿Espera activa o bloqueo?** La espera activa conviene si la SC es **corta** y hay **varios procesadores**: el que espera gira unos ciclos en otra CPU mientras el dueño termina, y eso cuesta menos que bloquearlo y despertarlo (dos cambios de contexto). En monoprocesador, o con la CPU muy cargada y SC largas, conviene el bloqueo: girar solo le quita CPU al proceso que tiene que liberar la SC.
+**¿Espera activa o bloqueo?** La espera activa conviene si la SC es **corta** y hay **varios procesadores**: el que espera gira unos ciclos en otra CPU mientras el dueño termina, y eso cuesta menos que bloquearlo y despertarlo (dos cambios de contexto). Un lock con espera activa se llama **spinlock**, y el kernel lo usa en lugares donde no puede bloquearse. En monoprocesador, o con la CPU muy cargada y SC largas, conviene el bloqueo: girar solo le quita CPU al proceso que tiene que liberar la SC.
 
 ## Semáforos
 
@@ -181,6 +185,8 @@ signal(s) {             // también llamado V() o up()
 - `wait` **puede bloquear**; `signal` **nunca bloquea**.
 - Como el proceso bloqueado duerme en una cola en lugar de dar vueltas, **no hay espera activa** (a nivel del usuario).
 - La cola de bloqueados se atiende en **FIFO** por convención. Es lo más justo y es lo que se asume en los ejercicios.
+
+**Con espera activa o con bloqueo.** Lo anterior es un semáforo **con bloqueo**: si `wait` no puede seguir, el proceso pasa a **Blocked** en la cola del semáforo y libera la CPU, y un `signal` lo pasa a Ready. Un semáforo **con espera activa** no tiene cola: `wait` gira en un bucle consultando el valor hasta que sea positivo. El proceso sigue en Running, gastando CPU (y su quantum) sin avanzar.
 
 ### Qué significa el valor
 

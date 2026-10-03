@@ -2,12 +2,12 @@
 tipo: modulo
 aliases: [simulacros, simulacro, parciales simulados, examen, modo examen, nota, cronómetro, parcial real, ItemExamen, crearMCExamen, crearSemaforosExamen, crearSimuladorExamen, puntaje, banda]
 tags: [moc, simulacros, examen]
-actualizado: 2026-10-02
+actualizado: 2026-10-03
 ---
 
 # Simulacros
 
-Cada parcial real (13, del 1er parcial) como un examen con reloj: teoría y práctica juntas, sin
+Cada parcial real (14, del 1er parcial) como un examen con reloj: teoría y práctica juntas, sin
 feedback hasta **Finalizar**, con nota y el mejor resultado guardado en el navegador.
 
 **Ubicación:**
