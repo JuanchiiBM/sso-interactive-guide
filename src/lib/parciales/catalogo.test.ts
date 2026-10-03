@@ -54,8 +54,8 @@ describe('citas de examen', () => {
   })
 })
 
-describe('los 13 parciales del relevamiento', () => {
-  it('son 13, en orden cronológico', () => {
+describe('los 14 parciales del relevamiento', () => {
+  it('son 14, en orden cronológico', () => {
     expect(parciales.map((p) => p.codigo)).toEqual([
       '1P 1C2024 TM',
       '1P 1C2024 TT',
@@ -70,6 +70,7 @@ describe('los 13 parciales del relevamiento', () => {
       '1P 1C2026 TT',
       '1R 1C2026 TM',
       '1R 1C2026 TT',
+      '1P 2C2026 TM',
     ])
   })
 

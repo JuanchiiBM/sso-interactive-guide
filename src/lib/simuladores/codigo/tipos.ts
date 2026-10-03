@@ -5,7 +5,7 @@ export interface ProcesoCodigo {
   llegada: number
   /** Solo con prioridades: menor número = más prioridad. */
   prioridad?: number
-  /** Una sentencia por línea; `// 3` al final fija su duración. Admite un `while(true){ … }`. */
+  /** Una sentencia por línea; `// 3` fija su duración y `// 3 E/S` la hace E/S. Admite un `while(true){ … }`. */
   codigo: string
 }
 
@@ -31,7 +31,7 @@ export interface ConfigCodigo {
 export type Sentencia =
   | { tipo: 'wait' | 'signal'; sem: string; texto: string; duracion: number }
   | { tipo: 'get' | 'release'; recurso: string; texto: string; duracion: number }
-  | { tipo: 'sleep'; bloqueo: number; texto: string; duracion: number }
+  | { tipo: 'sleep'; bloqueo: number; texto: string; duracion: number; io?: boolean }
   | { tipo: 'detectar'; texto: string; duracion: number }
   | { tipo: 'accion'; texto: string; duracion: number }
 

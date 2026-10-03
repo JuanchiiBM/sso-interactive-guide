@@ -44,7 +44,7 @@ Con multiprogramación hay varios procesos queriendo usar la CPU al mismo tiempo
 | **Mediano plazo** | Qué procesos van a disco o vuelven (swapping), según la RAM libre y la prioridad. | Ready ↔ Ready/Susp, Blocked ↔ Blocked/Susp                     | **Sí**: el swap out la baja, el swap in la sube.       |
 | **Corto plazo**   | Cuál de los procesos en Ready ejecuta ahora, según el algoritmo.                  | Ready → Running (dispatch), Running → Ready (timeout/desalojo) | **No**: trabaja solo con procesos que ya están en RAM. |
 
-El de corto plazo es el que se ejecuta más seguido. Interviene con cada interrupción, syscall o señal que pueda cambiar quién debe usar la CPU, y por eso tiene que ser muy liviano. Tiene dos piezas: el **dispatcher**, que le entrega la CPU al proceso elegido, y el **cambio de contexto**.
+El de largo plazo interviene cuando se crea un proceso o cuando termina uno y queda lugar para admitir otro. El de mediano plazo, cuando falta memoria o la carga es alta (suspende) y cuando se libera memoria (reanuda). El de corto plazo es el que se ejecuta más seguido. Interviene con cada interrupción, syscall o señal que pueda cambiar quién debe usar la CPU, y por eso tiene que ser muy liviano. Tiene dos piezas: el **dispatcher**, que le entrega la CPU al proceso elegido, y el **cambio de contexto**.
 
 ```recorrido tipos-planificadores
 

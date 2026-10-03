@@ -262,6 +262,24 @@ preguntas:
 
     Es la misma idea que el ejercicio de 1P 1C2026 TM (32 procesadores), con el aislamiento por tipo de
     petición en lugar de por error fatal.
+- enunciado: '(1P 2C2026 TM, single choice ii) Es necesario involucrar al SO para poder compartir una variable
+    global entre:'
+  opciones:
+  - texto: Proceso padre y proceso hijo
+    explicacion: Correcta.
+  - texto: KLTs
+    explicacion: Los KLTs de un mismo proceso ya comparten las variables globales, sin intervención del SO.
+  - texto: ULTs
+    explicacion: Los ULTs de un mismo proceso comparten la memoria del proceso directamente.
+  - texto: Ninguna de las anteriores
+    explicacion: La a) es correcta.
+  correcta: 0
+  justificacion: |
+    - **Padre e hijo** son procesos distintos: con `fork()` el hijo recibe una **copia** de la imagen del
+      padre, y cada uno modifica la suya. Para compartir una variable necesitan un mecanismo del SO (por
+      ejemplo, memoria compartida pedida con syscalls).
+    - **KLTs y ULTs** de un mismo proceso comparten código, datos (globales) y heap: la variable global ya es
+      la misma para todos, sin intervención del SO (lo que hace falta es sincronizar el acceso).
 ---
 
 Simulacro con preguntas de teoría de parciales anteriores (2024–2026) sobre **procesos, KLTs y ULTs, y cómo combinarlos para diseñar un servidor**, agrupadas por

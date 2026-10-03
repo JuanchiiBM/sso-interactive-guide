@@ -206,6 +206,46 @@ preguntas:
     Es la arquitectura **microkernel**: en modo kernel queda solo lo mínimo (manejo de interrupciones, E/S básica, comunicación entre procesos, planificación) y el resto de los servicios corre como procesos en modo usuario.
 
     A cambio de ser más flexible, mantenible y tolerante a fallas, tiene más overhead: los servicios se comunican por mensajes a través del kernel.
+- enunciado: (1P 2C2026 TM, respuesta breve 1a) ¿Cómo se llama el mecanismo por el cual un proceso de usuario
+    puede solicitar recursos administrados por el SO?
+  opciones:
+  - texto: Interrupción
+    explicacion: 'Las interrupciones las genera el hardware (o un error); el proceso no las usa para pedir
+      servicios.'
+  - texto: Llamada al sistema (syscall)
+    explicacion: Correcta.
+  - texto: Cambio de contexto
+    explicacion: Es lo que hace el SO al cambiar de proceso, no un pedido del proceso.
+  - texto: Wrapper de la biblioteca del sistema
+    explicacion: 'El wrapper es código de usuario: por dentro termina invocando a la syscall, que es el
+      mecanismo real.'
+  correcta: 1
+  justificacion: |
+    La **syscall** (llamada al sistema) es la interfaz que da el SO para que un proceso le pida un servicio
+    o un recurso que solo él administra (E/S, memoria, crear procesos, semáforos). Es la única vía controlada:
+    produce el cambio a modo kernel y el SO ejecuta la operación en nombre del proceso.
+
+    Los wrappers (`fopen`, `printf`) facilitan su uso, pero por dentro invocan a la syscall (`open`, `write`).
+- enunciado: '(1P 2C2026 TM, single choice i) Un proceso necesita usar una syscall para poder:'
+  opciones:
+  - texto: Utilizar la CPU
+    explicacion: 'La CPU se la da el planificador; ejecutar sus propias instrucciones no requiere pedir
+      nada.'
+  - texto: Escribir en la memoria
+    explicacion: Escribir en su propio espacio de memoria son instrucciones comunes, no privilegiadas.
+  - texto: Escribir en el disco
+    explicacion: Correcta.
+  - texto: Ninguna de las anteriores
+    explicacion: La c) es correcta.
+  correcta: 2
+  justificacion: |
+    El acceso a los dispositivos de E/S (el disco) usa **instrucciones privilegiadas** y es un recurso que
+    administra el SO, así que el proceso tiene que pedírselo con una syscall (por ejemplo `write`).
+
+    - **a)** Usar la CPU no requiere syscall: el proceso ejecuta sus instrucciones cuando el planificador de
+      corto plazo lo elige.
+    - **b)** Escribir en **su propia** memoria (variables, stack, heap ya reservado) son instrucciones no
+      privilegiadas; la protección de memoria solo interviene si se sale de su espacio.
 ---
 
 Simulacro con preguntas de teoría de parciales anteriores (primeros parciales y recuperatorios, 2024 a 2026) sobre syscalls, wrappers, modos de ejecución y arquitecturas de kernel, agrupadas por tema. Cada pregunta indica entre paréntesis el examen de donde sale.

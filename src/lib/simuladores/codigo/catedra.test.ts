@@ -222,3 +222,42 @@ describe('Gantt de código vs. resoluciones oficiales de la cátedra', () => {
     )
   })
 })
+
+// Sin resolución oficial: la traza se resolvió a mano (ver sincronizacion/ej-39.md).
+describe('1P 2C2026 TM · Ej. 4 (posts, RR Q=3, E/S sin cola de dispositivo)', () => {
+  const persona = (id: string) => ({
+    id,
+    llegada: 0,
+    codigo:
+      'While(1) {\nwait(mutexPosts)\np = generarPost() // 2 E/S\npostear(p, posts)\nsignal(mutexPosts)\nsignal(hayPosts)\n}',
+  })
+  const analizador = {
+    id: 'A',
+    llegada: 0,
+    codigo:
+      'While(1) {\nwait(mutexPosts)\nwait(hayPosts)\np = obtenerPost(posts) // 1\ninfo = procesar(p) // 1\nguardarResultado(info) // 3 E/S\nsignal(mutexPosts)\n}',
+  }
+  const base = {
+    algoritmo: 'rr' as const,
+    quantum: 3,
+    duracion: 2,
+    atomicas: true,
+    semaforos: { mutexPosts: 1, hayPosts: 0 },
+  }
+  const car = { P1: '1', P2: '2', A: 'A' }
+
+  it('i) Ready = P1, A, P2: A guarda el primer resultado en t=21', () => {
+    const c = { ...base, hasta: 21, procesos: [persona('P1'), analizador, persona('P2')] }
+    expect(gantt(c, car)).toBe('11AA221111AA1111AA---')
+    expect(bloqueados(c, 20)).toEqual(['P1', 'A', 'P2'])
+  })
+
+  it('ii) Ready = A, P1, P2: deadlock en t=8 (A retiene el mutex esperando hayPosts)', () => {
+    const c = { ...base, procesos: [analizador, persona('P1'), persona('P2')] }
+    const r = simularCodigo(c)
+    expect(gantt(c, car)).toBe('AAAA1122')
+    expect(r.ticks.at(-1)!.eventos.join(' ')).toMatch(
+      /A \(en hayPosts\), P1 \(en mutexPosts\), P2 \(en mutexPosts\) quedan bloqueados/,
+    )
+  })
+})

@@ -1,8 +1,8 @@
 ---
 tipo: servicio
-aliases: [gantt de código, gantt de codigo, kind codigo, simularCodigo, sentencias con duración, semáforos con tiempo, detector de deadlock, inversión de prioridades gantt]
+aliases: [gantt de código, E/S en gantt de código, I/O, gantt de codigo, kind codigo, simularCodigo, sentencias con duración, semáforos con tiempo, detector de deadlock, inversión de prioridades gantt]
 tags: [simulador, planificacion, semaforos, deadlock]
-actualizado: 2026-09-24
+actualizado: 2026-10-03
 ---
 # Simulador de Gantt de Código
 
@@ -33,6 +33,8 @@ simulaciones:
       - { id: KLT1, llegada: 0, prioridad: 1, codigo: "Wait(a)\nsinopsis() // 3\nSignal(a)" }
 ```
 Una sentencia por línea; `// N` al final fija su duración; admite un `while(true){ … }`.
+`// N E/S` (o `I/O`, `IO`) convierte la sentencia en una **E/S de N u.t.**: 0 de CPU y bloquea N
+(`p = generarPost() // 2 E/S`, 1P 2C2026 TM Ej. 4).
 
 ## Semántica (deducida de las 7 resoluciones; no cambiar sin correr `catedra.test.ts`)
 - **wait/get consumen su duración y la condición se evalúa al final**: si no hay, se bloquea ahí.
@@ -45,6 +47,11 @@ Una sentencia por línea; `// N` al final fija su duración; admite un `while(tr
 - **Desalojo** (fin de quantum o llega uno más prioritario): corta la sentencia a la mitad y la
   retoma después, **salvo** una atómica en curso → se posterga hasta que termina. Con RR, si al
   vencer el quantum no hay otro listo, sigue el mismo con quantum nuevo.
+- **E/S** (`// N E/S`): internamente es un sleep (mismo orden al volver, después del desalojado
+  por clock), solo cambia el texto de los eventos. **No hay cola de dispositivo**: dos E/S
+  simultáneas se atienden en paralelo. En el Gantt y en el desafío se marca igual que un bloqueo
+  en un semáforo (**Bloqueado**), porque `bloqueoSincro` no distingue E/S de semáforo. Si aparece
+  un parcial con E/S que compiten por un dispositivo, hay que agregar la cola.
 - **Detector**: al terminar su sentencia busca espera circular entre procesos bloqueados en
   **recursos con dueño** (no semáforos) y mata al de **mayor tiempo restante** (ciclo = ∞),
   liberando sus recursos.

@@ -87,7 +87,7 @@ preguntas:
     un bucle. Si la CPU ya está muy cargada y las condiciones de carrera (la contención por la sección crítica) son muy
     frecuentes, esa espera activa agrega todavía más uso de CPU y agrava el problema. Con bloqueo, los procesos que
     esperan salen de la CPU y la dejan para quien puede progresar.
-- enunciado: '(1P 2C2025 TM, single choice 6) La mutua exclusión implementada con espera activa puede
+- enunciado: '(1P 2C2025 TM, single choice 6; 1P 2C2026 TM, desarrollo 4) La mutua exclusión implementada con espera activa puede
     obtener mejor performance que una variante con bloqueo si:'
   opciones:
   - texto: La sección crítica es larga y hay concurrencia
@@ -358,6 +358,59 @@ preguntas:
        desbloquearlos (pasarlos a ready), y cambiar el estado de un proceso es algo que solo puede hacer el kernel.
 
     Por eso son **syscalls**.
+- enunciado: (1P 2C2026 TM, respuesta breve 1c) Nombre una instrucción atómica de hardware que permita
+    implementar mecanismos de exclusión mutua.
+  opciones:
+  - texto: Test-and-set (TSL); también vale swap/exchange
+    explicacion: Correcta.
+  - texto: '`wait()` de un semáforo'
+    explicacion: Es una syscall del SO, no una instrucción del procesador (por dentro puede usar test-and-set).
+  - texto: Algoritmo de Peterson
+    explicacion: Es una solución de software, con variables y un bucle, no una instrucción de hardware.
+  - texto: Un `load` del lock seguido de un `store`
+    explicacion: 'Son dos instrucciones: una interrupción entre leer y escribir deja entrar a los dos.'
+  correcta: 0
+  justificacion: |
+    **Test-and-set** (TSL) lee una variable y la pone en `true` en **un solo paso indivisible**, así que dos
+    procesos no pueden ver el lock libre a la vez, incluso en multiprocesadores. **Swap** (exchange), que
+    intercambia un registro con una posición de memoria atómicamente, sirve igual.
+
+    ```c
+    while (test_and_set(&lock));  // espera activa
+    /* sección crítica */
+    lock = false;
+    ```
+
+    Las dos tienen **espera activa** y las puede usar un proceso de usuario (no son privilegiadas).
+- enunciado: (1P 2C2026 TM, desarrollo 4) ¿Qué ocurre con un proceso que ejecuta `wait()` y no puede continuar,
+    si el semáforo está implementado con **espera activa** y si está implementado con **bloqueo**?
+  opciones:
+  - texto: 'Espera activa: sigue en ejecución, en un bucle que consulta el valor, y consume CPU sin avanzar.
+      Bloqueo: pasa a Blocked en la cola del semáforo y libera la CPU hasta que un `signal` lo despierte'
+    explicacion: Correcta.
+  - texto: 'Espera activa: pasa a Blocked y libera la CPU. Bloqueo: queda en un bucle consultando el valor
+      hasta que pueda entrar'
+    explicacion: Están invertidas.
+  - texto: 'Espera activa: vuelve a la cola de Ready y reintenta cuando lo vuelvan a planificar. Bloqueo:
+      queda en Ready con menor prioridad'
+    explicacion: Con espera activa no cede la CPU por sí mismo; con bloqueo va a la cola del semáforo, no
+      a Ready.
+  - texto: 'En los dos casos pasa a Blocked; la diferencia es que con espera activa el SO lo despierta cada
+      cierto tiempo para que vuelva a consultar el valor'
+    explicacion: 'Con espera activa no se bloquea: gira en la CPU consultando el valor.'
+  correcta: 0
+  justificacion: |
+    | | Espera activa | Bloqueo |
+    |---|---|---|
+    | Qué hace `wait()` si no puede seguir | Entra en un bucle que consulta el valor del semáforo | Bloquea al proceso y lo encola en la cola del semáforo |
+    | Estado del proceso | Sigue en Running (o vuelve a Ready al vencer su quantum) | Blocked |
+    | CPU | La consume sin progresar | La libera para otro proceso |
+    | Cómo sigue | Cuando ve el valor disponible, entra | Un `signal` lo pasa a Ready (cambios de contexto) |
+
+    **¿Cuándo conviene la espera activa?** En un **multiprocesador** con secciones críticas **muy cortas**
+    (los *spinlocks*): el que espera gira unos ciclos en otra CPU mientras el dueño termina, y eso cuesta menos
+    que bloquearlo y despertarlo (dos cambios de contexto). También dentro del kernel, en lugares donde no se
+    puede bloquear. En monoprocesador, o con secciones críticas largas, conviene el bloqueo.
 ---
 
 Este simulacro reúne preguntas de **teoría** de parciales anteriores (2024 a 2026) sobre **sincronización**: espera activa, soluciones de hardware y semáforos. Cada pregunta indica entre paréntesis de qué examen e ítem sale.
