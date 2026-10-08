@@ -1,6 +1,6 @@
 /** Consultas a las content collections, agrupadas para navegación (solo build/SSR). */
 import { getCollection, type CollectionEntry } from 'astro:content'
-import { armarParciales, type Parcial } from '@lib/parciales/catalogo'
+import { armarParciales, ocultarExamenes, type Parcial } from '@lib/parciales/catalogo'
 
 export type Tema = CollectionEntry<'temas'>
 export type Ejercicio = CollectionEntry<'ejercicios'>
@@ -16,7 +16,7 @@ export async function getTemas(parcial?: 1 | 2): Promise<Tema[]> {
 }
 
 export async function getEjercicios(): Promise<Ejercicio[]> {
-  const ejercicios = await getCollection('ejercicios')
+  const ejercicios = ocultarExamenes(await getCollection('ejercicios'))
   return ejercicios.sort((a, b) => compararNumero(a.data.fuente.numero, b.data.fuente.numero))
 }
 

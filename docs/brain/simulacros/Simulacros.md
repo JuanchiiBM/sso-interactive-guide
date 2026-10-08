@@ -1,13 +1,13 @@
 ---
 tipo: modulo
-aliases: [simulacros, simulacro, parciales simulados, examen, modo examen, nota, cronómetro, parcial real, ItemExamen, crearMCExamen, crearSemaforosExamen, crearSimuladorExamen, puntaje, banda]
+aliases: [simulacros, simulacro, parciales simulados, examen, modo examen, nota, cronómetro, parcial real, ItemExamen, crearMCExamen, crearSemaforosExamen, crearSimuladorExamen, puntaje, banda, ocultar, oculto, EXAMENES_OCULTOS, ocultarExamenes, examen no publicado]
 tags: [moc, simulacros, examen]
-actualizado: 2026-10-03
+actualizado: 2026-10-08
 ---
 
 # Simulacros
 
-Cada parcial real (14, del 1er parcial) como un examen con reloj: teoría y práctica juntas, sin
+Cada parcial real (13 publicados + 1 oculto, del 1er parcial) como un examen con reloj: teoría y práctica juntas, sin
 feedback hasta **Finalizar**, con nota y el mejor resultado guardado en el navegador.
 
 **Ubicación:**
@@ -34,6 +34,24 @@ No hay un archivo por parcial: se arma solo desde lo que ya está cargado.
 - Orden: teoría y práctica por tema (el orden de `getTemas`), los parciales cronológicos.
 - `firmaParcial` es un hash de la composición: si cambia el contenido de un parcial, el resultado
   guardado deja de valer (la card vuelve a "Sin rendir").
+
+## Exámenes ocultos
+
+Un examen que la cátedra todavía no publicó se carga igual, pero se lista en `EXAMENES_OCULTOS`
+(`src/lib/parciales/catalogo.ts`). `getEjercicios()` pasa todo por `ocultarExamenes`, así que el
+build no genera nada de ese examen:
+
+- los ejercicios de parcial cuya fuente es **solo** de exámenes ocultos no tienen página;
+- las preguntas de simulacro que citan **solo** exámenes ocultos se sacan de su `simulacro-N`;
+- las que citan además otro examen se quedan, sin el tramo oculto del prefijo
+  (`(1P 2C2025 TM; 1P 2C2026 TM, desarrollo 3)` → `(1P 2C2025 TM)`);
+- su simulacro desaparece del listado.
+
+Para publicarlo, sacarlo de la lista. Hoy está oculto `1P 2C2026 TM`.
+
+Los tests (`catalogo.test.ts`, `referencia.test.ts`) leen el contenido **sin** ocultar: el examen
+oculto se sigue verificando (sigue sacando 10). ⚠️ Solo lo saca del sitio: el markdown sigue en el
+repo, y el repo es público.
 
 ⚠️ **Nombres:** los ejercicios `simulacro-N` son la teoría de parciales en la sección Ejercicios; la
 sección Simulacros son los exámenes armados. Es un choque de nombres conocido y sin resolver.
