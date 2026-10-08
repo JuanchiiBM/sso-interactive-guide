@@ -1,0 +1,73 @@
+/* Buscador (SiteSearch.astro + lib/buscador/cliente.ts): diálogo, resultados y coincidencias */
+.buscador {
+  width: min(40rem, calc(100vw - 2rem));
+  margin: 10dvh auto auto;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.875rem;
+  background: var(--surface-2);
+  color: var(--fg);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--surface) 70%, transparent);
+}
+.buscador::backdrop {
+  background: color-mix(in srgb, var(--surface) 65%, transparent);
+  backdrop-filter: blur(2px);
+}
+.buscador input[type='search']::-webkit-search-cancel-button {
+  display: none;
+}
+.buscador-item {
+  display: block;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--fg-soft);
+}
+.buscador-item[aria-selected='true'],
+.buscador-item:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+.buscador-item[aria-selected='true'] {
+  outline: 1px solid var(--accent);
+}
+.buscador-pagina {
+  margin-top: 0.25rem;
+}
+.buscador-grupo {
+  margin: 0.75rem 0.75rem 0.25rem;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.buscador-titulo {
+  font-family: var(--font-heading);
+  color: var(--fg);
+}
+.buscador-destino {
+  color: var(--fg-soft);
+}
+.buscador-tipo {
+  margin-left: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.45rem;
+  font-size: 11px;
+  color: var(--muted);
+}
+.buscador-extracto {
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+.buscador-extracto mark {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.buscador-seccion {
+  margin-left: 1rem;
+  border-left: 1px solid var(--line);
+  border-radius: 0 0.5rem 0.5rem 0;
+}

@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [arquitectura, architecture, flujo, pipeline, estructura]
 tags: [moc, arquitectura]
-actualizado: 2026-09-23
+actualizado: 2026-10-08
 ---
 
 # Arquitectura
@@ -24,9 +24,10 @@ flowchart LR
 - [[Decisión — Tokens semánticos para modo claro y oscuro]] — cómo se tematiza.
 - [[Decisión — SVG propio en el sitio, mermaid solo en el brain]] — visuales del sitio.
 - [[Content Collections Temas y Ejercicios]] — rutas, ids y queries (`lib/catalogo.ts`).
+- [[Buscador (Pagefind)]] — búsqueda por palabra clave sin backend: índice en build, qué se indexa.
 
 **Bootstrap de cliente:** `src/scripts/client.ts` se importa una vez desde `Layout.astro` y arranca
-tema, sidebar mobile, simuladores (`[data-simulador]`) y multiple choice (`[data-mc]`).
+tema, sidebar mobile, simuladores (`[data-simulador]`), multiple choice (`[data-mc]`) y el buscador.
 
 **Visuales estáticos** (grafos, diagramas) se generan como SVG **en build**: ver
 [[Decisión — SVG propio en el sitio, mermaid solo en el brain]].

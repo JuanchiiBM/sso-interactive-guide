@@ -1,0 +1,49 @@
+---
+/** Buscador del sitio: un <dialog> que consulta el índice de Pagefind (lib/buscador/cliente.ts). */
+---
+
+<dialog data-buscador class="buscador" aria-label="Buscar en el sitio">
+  <div class="flex items-center gap-2 border-b border-line px-4">
+    <svg
+      class="size-4 shrink-0 text-muted"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7"></circle>
+      <path stroke-linecap="round" d="m20 20-3.5-3.5"></path>
+    </svg>
+    <input
+      type="search"
+      data-buscador-input
+      role="combobox"
+      aria-expanded="false"
+      aria-controls="buscador-resultados"
+      aria-autocomplete="list"
+      placeholder="Buscar en la teoría y los ejercicios…"
+      autocomplete="off"
+      spellcheck="false"
+      class="h-12 flex-1 min-w-0 bg-transparent text-fg placeholder:text-muted outline-none"
+    />
+    <button
+      type="button"
+      data-buscador-cerrar
+      class="rounded border border-line px-1.5 py-0.5 font-mono text-[11px] text-muted hover:text-fg"
+      aria-label="Cerrar el buscador"
+    >
+      Esc
+    </button>
+  </div>
+  <p data-buscador-estado class="px-4 py-3 text-sm text-muted" aria-live="polite">
+    Escribí al menos 2 letras.
+  </p>
+  <ul
+    id="buscador-resultados"
+    data-buscador-resultados
+    role="listbox"
+    aria-label="Resultados"
+    class="max-h-[60dvh] overflow-y-auto px-2 pb-2"
+  ></ul>
+</dialog>

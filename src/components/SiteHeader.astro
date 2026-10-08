@@ -1,4 +1,5 @@
 ---
+import SiteSearch from '@components/SiteSearch.astro'
 import ThemeToggle from '@components/ThemeToggle.astro'
 import { SITE, universidadLabel } from '@lib/site'
 
@@ -39,7 +40,29 @@ const nav = [
     <span class="hidden sm:block truncate font-heading text-sm text-fg">{SITE.materia}</span>
   </a>
 
-  <nav class="ml-auto flex items-center sm:gap-1" aria-label="Secciones">
+  <button
+    type="button"
+    data-buscador-abrir
+    class="ml-auto inline-flex h-8 items-center gap-2 rounded-md border border-line px-2 sm:px-2.5 text-[13px] text-muted hover:text-fg hover:bg-hover"
+    aria-label="Buscar (Ctrl+K)"
+    aria-keyshortcuts="Control+K /"
+  >
+    <svg
+      class="size-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7"></circle>
+      <path stroke-linecap="round" d="m20 20-3.5-3.5"></path>
+    </svg>
+    <span class="hidden lg:inline">Buscar</span>
+    <kbd class="hidden lg:inline font-mono text-[11px] text-muted">Ctrl K</kbd>
+  </button>
+
+  <nav class="flex items-center sm:gap-1" aria-label="Secciones">
     {nav.map((item) => (
       <a
         href={item.href}
@@ -66,4 +89,5 @@ const nav = [
     </a>
     <ThemeToggle />
   </nav>
+  <SiteSearch />
 </header>

@@ -9,14 +9,7 @@ import {
   type OpDinamica,
   type Particion,
 } from '../memoria'
-import {
-  barraMemoria,
-  celdaM,
-  encabezados,
-  rotulo,
-  tablaM,
-  type Segmento,
-} from '../primitivas-memoria'
+import { barraMemoria, celdaM, encabezados, tablaM, type Segmento } from '../primitivas-memoria'
 import { arista, nodo } from '../primitivas-procesos'
 import { panelLeyenda } from '../primitivas-t3'
 import type { Paso, Recorrido, Variante } from '../recorrido'
