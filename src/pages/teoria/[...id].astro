@@ -24,8 +24,8 @@ const toc = headings.filter((h) => h.depth === 2)
 
 <Layout title={tema.data.titulo} description={tema.data.resumen} activeId={tema.id}>
   <div class="mx-auto flex max-w-[80rem] gap-10">
-    <article class="min-w-0 flex-1">
-      <p class="text-xs uppercase tracking-widest text-muted">
+    <article class="min-w-0 flex-1" data-pagefind-body data-pagefind-meta="tipo:Teoría">
+      <p data-pagefind-ignore class="text-xs uppercase tracking-widest text-muted">
         Teoría · {parcialUI(tema.data.parcial)}
       </p>
       <h1 class="mt-2 font-heading text-3xl text-fg">{tema.data.titulo}</h1>
@@ -36,7 +36,7 @@ const toc = headings.filter((h) => h.depth === 2)
       </div>
 
       {ejercicios.length > 0 && (
-        <section class="mt-14" aria-labelledby="ejercicios-del-tema">
+        <section class="mt-14" aria-labelledby="ejercicios-del-tema" data-pagefind-ignore="all">
           <h2 id="ejercicios-del-tema" class="font-heading text-xl text-fg mb-4">
             Ejercicios de este tema
           </h2>
@@ -53,6 +53,7 @@ const toc = headings.filter((h) => h.depth === 2)
       <nav
         class="mt-14 flex justify-between gap-4 border-t border-line pt-6 text-sm"
         aria-label="Navegación entre temas"
+        data-pagefind-ignore="all"
       >
         {anterior ? (
           <a href={temaHref(anterior.id)} class="text-muted hover:text-fg">

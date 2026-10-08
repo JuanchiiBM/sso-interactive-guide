@@ -4,11 +4,13 @@ import tailwindcss from '@tailwindcss/vite'
 import { satteri } from '@astrojs/markdown-satteri'
 import { bloquesSVGPlugin } from './src/lib/markdown/bloques-svg.ts'
 import { celdasACalcularPlugin } from './src/lib/markdown/celdas-a-calcular.ts'
+import { buscador } from './src/lib/buscador/integracion.ts'
 
 export default defineConfig({
   // TODO: reemplazar por el dominio final de Vercel
   site: 'https://sso-interactive-guide.vercel.app',
   devToolbar: { enabled: false },
+  integrations: [buscador()],
   trailingSlash: 'ignore',
   markdown: {
     // ```grafo y ```diagrama → SVG en build; celdas "(a calcular)" de tablas → input
