@@ -27,6 +27,8 @@ Los recursos se **piden, se usan y se liberan**. Si no están disponibles, el pr
 - **Reutilizables**: después de usarse se liberan y otro los puede usar (CPU, memoria, archivos, semáforos, dispositivos). Son los que aparecen en los problemas típicos de deadlock. En un semáforo de **orden**, el recurso lo "retiene" lógicamente el proceso que tiene que hacer el `signal`.
 - **Consumibles**: se producen y se consumen una sola vez (mensajes, señales, interrupciones).
 
+El resumen de la cátedra distingue además los recursos **gestionados por el SO**, que el desarrollador usa sin administrar, de los **no gestionados** por el SO: es en estos últimos donde se puede dar el deadlock.
+
 ### No confundir
 
 | Situación                  | ¿Qué pasa?                                                                                              | ¿Consume CPU? |

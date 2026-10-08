@@ -2,7 +2,7 @@
 tipo: dominio
 aliases: [convenciones, cátedra, catedra, desempate, tie-break, simultaneidad, reglas de oro, semáforos, utn, frba, parciales, resoluciones]
 tags: [dominio, catedra]
-actualizado: 2026-09-30
+actualizado: 2026-10-08
 ---
 
 # Convenciones de la Cátedra FRBA
@@ -63,6 +63,24 @@ Livelock, deadlock, inanición y espera activa son conceptos distintos; 4 estrat
 evasión, detección y recupero, no hacer nada. En las resoluciones, solo los procesos del **ciclo**
 están en deadlock; un bloqueado que espera algo del ciclo sin retener nada "sufre inanición".
 Flexibilidad: prevención baja, **evasión media** (solo exige declarar máximos), detección alta.
+
+## Memoria (PPTs Memoria Real y Memoria Virtual)
+
+- **Reemplazo:** los PF de la carga inicial **cuentan** ("3 PF + N PF = total"). Tabla: una fila por
+  marco, columna inicial con "–", "PF" abajo de cada fallo y el puntero marcado en FIFO y clock.
+  Secuencia de clase `2 3 2 1 5 2 4 5 3 2 5 2` con 3 marcos: Óptimo 6, LRU 7, Clock 8, FIFO 9.
+- **Clock:** entra con U = 1, el puntero va al marco siguiente, un acierto no lo mueve. Se anota
+  "2 U". **Clock mejorado:** pasada 1 busca (0,0) sin tocar bits; pasada 2 busca (0,1) bajando U.
+- **Segmentación:** la columna "límite" es la **dirección final** del segmento, no el tamaño;
+  `DF > límite` ⇒ segmentation fault. Direcciones en **hexa**.
+- **Accesos a memoria:** 2 en todos los esquemas, 3 en segmentación paginada; jerárquica = niveles + 1.
+- **Page fault:** 1 acceso a disco con marco libre o víctima con M = 0; 2 con víctima modificada.
+- **Asignación fija + reemplazo global = "No es posible".**
+- **Compartición:** la tabla resumen solo marca aptas paginación y segmentación paginada
+  (segmentación pura con "x"); la teoría lo aclara.
+- Errata de la PPT: en el ejemplo de particionamiento dinámico los inicios de la tabla están corridos;
+  el recorrido usa los tamaños. Las PPTs y el resumen **no** traen EAT, working set, PFF ni el
+  ejemplo de Belady: en la teoría van marcados como "Complemento (Stallings)".
 
 ## Formato de respuestas
 

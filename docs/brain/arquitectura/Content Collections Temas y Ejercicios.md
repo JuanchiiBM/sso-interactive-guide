@@ -2,7 +2,7 @@
 tipo: componente
 aliases: [content collections, colecciones, catalogo, getCatalogo, temas, ejercicios, rutas, ids, astro content]
 tags: [componente, contenido, rutas]
-actualizado: 2026-09-23
+actualizado: 2026-10-08
 ---
 
 # Content Collections Temas y Ejercicios
@@ -20,7 +20,12 @@ actualizado: 2026-09-23
 ```ts
 import { getCatalogo, temaHref, ejercicioHref } from '@lib/catalogo'
 const catalogo = await getCatalogo(1) // [{ tema, ejercicios }] del 1er parcial, ordenado
+const porParcial = await getCatalogoPorParcial() // [{ numero, temas }], solo parciales con temas
+parcialUI(2) // '2do parcial'
 ```
+
+La home, el sidebar y el índice de teoría agrupan por parcial con `getCatalogoPorParcial`: un tema
+con `parcial: 2` aparece solo. El índice de ejercicios sigue mostrando solo el 1er parcial.
 
 **Gotchas:**
 

@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [tema, teoría, teoria, resumen, formato tema, preguntas de parcial]
 tags: [contenido, teoria]
-actualizado: 2026-09-25
+actualizado: 2026-10-08
 ---
 
 # Formato de un Tema de Teoría
@@ -32,5 +32,7 @@ Estructura del cuerpo:
   para ejercicios. Lo vigila `src/lib/markdown/formulas.test.ts` (ignora bloques de código y campos `codigo`/`solucion`).
 - Cierre: `## Preguntas de parcial` (pregunta en negrita + respuesta en `>`) y una línea de fuente.
 
-**Redacción:** con palabras propias sobre el Resumen SO (Sistemas Operativos for Dummies); el repo es público.
+**Redacción:** con palabras propias sobre el Resumen SO (Sistemas Operativos for Dummies) y las PPTs de la cátedra; el repo es público.
+Lo que no está en esas fuentes y se agrega desde la bibliografía va en un `>` que empieza con
+**Complemento (Stallings):**, para no presentarlo como contenido de la cátedra.
 **Conectado con:** [[Contenido]], [[Fuentes y Derechos del Material]]

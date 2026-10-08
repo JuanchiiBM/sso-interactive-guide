@@ -2,7 +2,7 @@
 tipo: componente
 aliases: [recorrido, recorridos, paso a paso, stepper, diagrama interactivo, gráfico interactivo, animación, ficha, RECORRIDOS, renderRecorrido, initRecorridos, midudev]
 tags: [componente, contenido, svg, interactivo]
-actualizado: 2026-09-26
+actualizado: 2026-10-08
 ---
 # Recorridos paso a paso
 
@@ -90,6 +90,9 @@ los junta con `import.meta.glob` (un id repetido falla en build).
 - `primitivas-t3.ts`: `panelLeyenda`, `celda` (celda de Gantt con las clases `ge-*` del sitio), `eje`, `chip`,
   `anchoTexto`.
 - `siete-estados.ts` (dibujo de 7 estados), `banquero.ts` y `deteccion.ts` (algoritmos puros, testeados).
+- `primitivas-memoria.ts`: `barraMemoria` (barra con segmentos y fragmentación), `celdaM`, `tablaM`,
+  `encabezados`, `rotulo`. `recorrido-reemplazo.ts` genera recorridos de reemplazo enteros. Ver
+  [[Recorridos de Memoria]] (incluye la técnica de fotogramas).
 
 ## Gotchas
 
