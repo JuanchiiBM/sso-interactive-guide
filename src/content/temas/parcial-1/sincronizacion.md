@@ -120,7 +120,7 @@ interesado[i] = false;
 
 ### Deshabilitar interrupciones
 
-`deshabilitar interrupciones → SC → habilitar interrupciones`. Sin interrupciones no hay cambio de contexto, así que nadie se mete en el medio.
+`deshabilitar interrupciones → SC → habilitar interrupciones`. Sin interrupciones no hay cambio de contexto, así que nadie se mete en el medio. Ojo: solo se pueden deshabilitar las **enmascarables**; las no enmascarables (fallas de hardware) siguen llegando.
 
 - **Problemas**: es una instrucción **privilegiada**, así que no está disponible para procesos de usuario (solo para el SO). Si el proceso falla dentro de la SC, las interrupciones quedan apagadas. Degrada el sistema y **no sirve en multiprocesadores**, porque solo afecta a una CPU.
 

@@ -85,7 +85,7 @@ En esa etapa, la CPU:
 
 ## Interrupciones
 
-Una **interrupción** es un aviso por hardware de que ocurrió un evento (terminó una E/S, venció el quantum, hubo un error…). Siempre se atiende **en modo kernel**, porque la rutina de atención es código del SO. Todas las interrupciones terminan siendo atendidas en algún momento.
+Una **interrupción** es un aviso por hardware de que ocurrió un evento (terminó una E/S, venció el quantum, hubo un error…) que obliga a la CPU a dejar lo que está haciendo para atenderlo. Puede venir de un módulo de E/S, de la memoria o de la propia CPU. Al cortar un programa se guardan sus registros: eso es el **contexto de ejecución** del proceso, que después se restaura para que siga como si nada. Siempre se atiende **en modo kernel**, porque la rutina de atención es código del SO. Todas las interrupciones terminan siendo atendidas en algún momento.
 
 ### Clasificaciones
 
@@ -126,6 +126,14 @@ Las **excepciones** vienen de errores o situaciones anómalas del programa, como
 ```recorrido atencion-interrupcion
 
 ```
+
+### Vector de interrupciones
+
+> **Complemento (Stallings):** el resumen no lo detalla.
+
+¿Cómo sabe la CPU a qué dirección saltar? Cada tipo de interrupción tiene un número, y el **vector de interrupciones** es una tabla en memoria, armada por el SO al arrancar, que asocia cada número con la dirección de su **rutina de atención** (ISR, _interrupt service routine_). El dispositivo (o la CPU, en una excepción) indica el número y el hardware carga en el PC la dirección que dice esa entrada.
+
+Las **syscalls** entran al kernel por el mismo camino: el wrapper ejecuta una instrucción especial (un _trap_, como `INT 0x80` o `SYSCALL`) que se comporta como una interrupción de software. La CPU pasa a modo kernel y salta a la rutina del SO, que con el número de syscall busca en la **tabla de syscalls** qué hacer (ver [Sistemas operativos](/teoria/parcial-1/sistemas-operativos/)). Por eso un proceso de usuario nunca salta a código del kernel por su cuenta: solo entra por las puertas que dejó el SO.
 
 ### Interrupciones múltiples
 

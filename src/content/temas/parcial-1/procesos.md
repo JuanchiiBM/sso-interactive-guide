@@ -104,6 +104,10 @@ Agrega dos estados cuyas estructuras están en **disco** en lugar de RAM. Solo e
 
 Los procesos entran y salen de estos estados por decisión del planificador de mediano plazo (swapping). Si un proceso Blocked/Suspended recibe su evento, pasa a Ready/Suspended: sigue en disco, pero ya no espera nada.
 
+También existe la transición **New → Ready/Suspended**: si ya hay demasiados procesos en Ready, uno recién creado se admite directamente suspendido. Su PCB existe, pero la imagen queda en disco hasta que el planificador de mediano plazo lo traiga.
+
+Con [memoria virtual](/teoria/parcial-2/memoria-virtual/) estos estados casi no se usan: en lugar de sacar procesos enteros, cada proceso tiene una parte en RAM y otra en disco.
+
 ```recorrido estados-suspendidos
 
 ```

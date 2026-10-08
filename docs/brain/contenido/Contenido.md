@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [contenido, teoría, teoria, ejercicios, markdown, guías]
 tags: [moc, contenido]
-actualizado: 2026-09-26
+actualizado: 2026-10-08
 ---
 
 # Contenido
@@ -16,6 +16,7 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 - [[Celdas a calcular en enunciados]] — celdas `(a calcular)` de tablas → campo para anotar.
 - [[Fuentes y Derechos del Material]] — de dónde sale cada cosa y qué no se sube.
 - [[Content Collections Temas y Ejercicios]] — cómo se cargan y rutean.
+- [[Recorridos de Memoria]] — algoritmos y generadores de los diagramas de memoria.
 
 ## Inventario 1er parcial
 
@@ -27,3 +28,10 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 | Deadlock       | 9          | Guía Deadlock v.2C2026                 |
 
 Las tres guías cierran con un link a Google Forms de "ejercicios avanzados" que no está en los PDFs.
+
+## Inventario 2do parcial
+
+| Tema | Ejercicios | Fuente |
+| --- | --- | --- |
+| Memoria real | 0 (solo teoría) | PPT Memoria Real + Resumen SO págs. 71–84 |
+| Memoria virtual | 0 (solo teoría) | PPT Memoria Virtual + Resumen SO págs. 85–99 |

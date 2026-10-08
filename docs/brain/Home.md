@@ -3,7 +3,7 @@ tipo: home
 aliases: [home, índice, indice, brain, cerebro, vault]
 tags: [moc, home]
 alcance: sso-interactive-guide/**
-actualizado: 2026-09-25
+actualizado: 2026-10-08
 ---
 
 # Brain — SO Interactivo (UTN FRBA)

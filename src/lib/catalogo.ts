@@ -37,6 +37,18 @@ export async function getParciales(): Promise<Parcial[]> {
   )
 }
 
+export const PARCIALES = [1, 2] as const
+export const parcialUI = (n: 1 | 2) => (n === 1 ? '1er parcial' : '2do parcial')
+
+/** El catálogo partido por parcial, sin los parciales que todavía no tienen temas. */
+export async function getCatalogoPorParcial() {
+  const catalogo = await getCatalogo()
+  return PARCIALES.map((numero) => ({
+    numero,
+    temas: catalogo.filter((c) => c.tema.data.parcial === numero),
+  })).filter((p) => p.temas.length > 0)
+}
+
 export const temaHref = (id: string) => `/teoria/${id}/`
 export const simulacroHref = (id: string) => `/simulacros/${id}/`
 export const ejercicioHref = (id: string) => `/ejercicios/${id}/`

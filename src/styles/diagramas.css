@@ -968,3 +968,130 @@ rect.t3p-ref {
 }
 
 /* fin tanda 3 · procesos, planificación, hilos y sincronización */
+
+/* separador para que las secciones se mergeen por separado */
+
+/* ── Recorridos · memoria real y virtual ── */
+/* primitivas-memoria.ts: barra de memoria (procesos, huecos, SO), celdas de tablas y grilla de reemplazo */
+.rm-seg {
+  --c: var(--fg-soft);
+}
+.rm-seg.rm-so {
+  --c: var(--muted);
+}
+.rm-seg.rm-p1 {
+  --c: var(--p1);
+}
+.rm-seg.rm-p2 {
+  --c: var(--p2);
+}
+.rm-seg.rm-p3 {
+  --c: var(--p3);
+}
+.rm-seg.rm-p4 {
+  --c: var(--p4);
+}
+.rm-seg.rm-p5 {
+  --c: var(--p5);
+}
+.rm-seg.rm-p6 {
+  --c: var(--p6);
+}
+.rm-seg.rm-p7 {
+  --c: var(--p7);
+}
+.rm-seg > rect:first-child {
+  fill: color-mix(in srgb, var(--c) 24%, var(--surface));
+  stroke: var(--c);
+  stroke-width: 1.4;
+}
+.rm-seg.rm-hueco > rect:first-child {
+  fill: var(--surface-2);
+  stroke: var(--line-strong);
+  stroke-dasharray: 4 3;
+}
+.rm-frag {
+  fill: color-mix(in srgb, var(--bad) 16%, var(--surface));
+  stroke: var(--bad);
+  stroke-dasharray: 3 3;
+}
+.diagrama .rm-etq {
+  font-size: 12px;
+  font-weight: 600;
+}
+.diagrama .rm-hueco .rm-etq {
+  fill: var(--muted);
+  font-weight: 400;
+}
+.diagrama .rm-etq.rm-chica {
+  font-size: 10px;
+}
+.diagrama .rm-marca {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.rm-celda rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.1;
+}
+.rm-celda.rm-ref rect {
+  fill: var(--surface-2);
+}
+.diagrama .rm-celda text {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.recorrido .rm-celda.rc-on:not(.rm-grilla, .rc-ok, .rc-mal, .rc-aviso) rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+.diagrama .rm-enc {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--muted);
+}
+.diagrama .rm-rotulo {
+  text-anchor: end;
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--fg-soft);
+}
+.diagrama .rm-pf {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--bad);
+}
+.diagrama .rm-puntero {
+  font-size: 11px;
+  fill: var(--warn);
+}
+.diagrama .rm-resumen {
+  font-size: 12.5px;
+  font-weight: 600;
+  fill: var(--fg-soft);
+}
+.diagrama .rm-nota {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.diagrama .rm-mono {
+  font-family: var(--font-mono);
+}
+.rm-sel rect {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.rm-curva {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+.rm-eje {
+  stroke: var(--line-strong);
+  stroke-width: 1.2;
+}
+
+/* fin memoria real y virtual */

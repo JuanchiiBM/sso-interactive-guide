@@ -1,6 +1,12 @@
 ---
 /** Sidebar estático: temas del parcial con sus ejercicios. JS solo para el drawer mobile. */
-import { getCatalogo, temaHref, ejercicioHref, rotuloEjercicio } from '@lib/catalogo'
+import {
+  getCatalogoPorParcial,
+  parcialUI,
+  temaHref,
+  ejercicioHref,
+  rotuloEjercicio,
+} from '@lib/catalogo'
 import { clavesEjercicio } from '@lib/progreso'
 
 interface Props {
@@ -8,7 +14,7 @@ interface Props {
 }
 
 const { activeId } = Astro.props
-const catalogo = await getCatalogo(1)
+const porParcial = await getCatalogoPorParcial()
 ---
 
 <div
@@ -43,58 +49,71 @@ const catalogo = await getCatalogo(1)
   </div>
 
   <nav class="px-2 py-4">
-    <p class="px-2 mb-2 text-[11px] uppercase tracking-wider text-muted">1er parcial</p>
-    {catalogo.map(({ tema, ejercicios }, i) => {
-      const temaActivo = activeId === tema.id
-      const abierto = temaActivo || ejercicios.some((e) => e.id === activeId)
-      return (
-        <details class="group mb-0.5" open={abierto}>
-          <summary class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer list-none text-sm text-fg-soft hover:bg-hover hover:text-fg [&::-webkit-details-marker]:hidden">
-            <span class="font-mono text-[11px] text-muted w-4">{i + 1}</span>
-            <span class="flex-1 truncate">{tema.data.titulo}</span>
-            <span class="text-[10px] text-muted">{ejercicios.length || ''}</span>
-            <svg
-              class="size-3 text-muted transition-transform group-open:rotate-90"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              aria-hidden="true"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6" />
-            </svg>
-          </summary>
-          <ul class="ml-6 border-l border-line pl-2 py-1">
-            <li>
-              <a
-                href={temaHref(tema.id)}
-                class:list={[
-                  'block px-2 py-1 rounded text-[13px]',
-                  temaActivo ? 'text-accent bg-accent-soft' : 'text-muted hover:text-fg',
-                ]}
-                aria-current={temaActivo ? 'page' : undefined}
-              >
-                Teoría
-              </a>
-            </li>
-            {ejercicios.map((e) => (
-              <li>
-                <a
-                  href={ejercicioHref(e.id)}
-                  class:list={[
-                    'ej-link block px-2 py-1 rounded text-[13px] truncate data-resuelto:text-ok',
-                    activeId === e.id ? 'text-accent bg-accent-soft' : 'text-muted hover:text-fg',
-                  ]}
-                  aria-current={activeId === e.id ? 'page' : undefined}
-                  data-claves={clavesEjercicio(ejercicioHref(e.id), e.data).join('|')}
+    {porParcial.map(({ numero, temas }, k) => (
+      <>
+        <p
+          class:list={[
+            'px-2 mb-2 text-[11px] uppercase tracking-wider text-muted',
+            k > 0 && 'mt-5',
+          ]}
+        >
+          {parcialUI(numero)}
+        </p>
+        {temas.map(({ tema, ejercicios }, i) => {
+          const temaActivo = activeId === tema.id
+          const abierto = temaActivo || ejercicios.some((e) => e.id === activeId)
+          return (
+            <details class="group mb-0.5" open={abierto}>
+              <summary class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer list-none text-sm text-fg-soft hover:bg-hover hover:text-fg [&::-webkit-details-marker]:hidden">
+                <span class="font-mono text-[11px] text-muted w-4">{i + 1}</span>
+                <span class="flex-1 truncate">{tema.data.titulo}</span>
+                <span class="text-[10px] text-muted">{ejercicios.length || ''}</span>
+                <svg
+                  class="size-3 text-muted transition-transform group-open:rotate-90"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  aria-hidden="true"
                 >
-                  {rotuloEjercicio(e.data.fuente.numero)} · {e.data.titulo}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )
-    })}
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6" />
+                </svg>
+              </summary>
+              <ul class="ml-6 border-l border-line pl-2 py-1">
+                <li>
+                  <a
+                    href={temaHref(tema.id)}
+                    class:list={[
+                      'block px-2 py-1 rounded text-[13px]',
+                      temaActivo ? 'text-accent bg-accent-soft' : 'text-muted hover:text-fg',
+                    ]}
+                    aria-current={temaActivo ? 'page' : undefined}
+                  >
+                    Teoría
+                  </a>
+                </li>
+                {ejercicios.map((e) => (
+                  <li>
+                    <a
+                      href={ejercicioHref(e.id)}
+                      class:list={[
+                        'ej-link block px-2 py-1 rounded text-[13px] truncate data-resuelto:text-ok',
+                        activeId === e.id
+                          ? 'text-accent bg-accent-soft'
+                          : 'text-muted hover:text-fg',
+                      ]}
+                      aria-current={activeId === e.id ? 'page' : undefined}
+                      data-claves={clavesEjercicio(ejercicioHref(e.id), e.data).join('|')}
+                    >
+                      {rotuloEjercicio(e.data.fuente.numero)} · {e.data.titulo}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )
+        })}
+      </>
+    ))}
   </nav>
 </aside>
