@@ -41,8 +41,13 @@ en el build y la búsqueda corre en el navegador, que baja solo los pedazos del 
 Pagefind pone muy arriba las páginas cortas con la palabra en el título: buscar "interrupciones" daba
 tres ejercicios (17,5) antes que Repaso de arquitectura (7,6). Se probó `ranking.pageLength` (de 0,75
 a 0) y casi no cambia. **Decisión:** se agrupa: primero "Teoría" (hasta 4) y después "Ejercicios"
-(hasta 6), cada grupo en el orden de Pagefind. Las secciones de un tema se eligen primero por
-nombrar lo buscado (sin tildes, por raíz) y después por cantidad de coincidencias.
+(hasta 6), cada grupo en el orden de Pagefind.
+
+**Cada resultado lleva a su mejor sección**, con el extracto de esa sección (`Repaso de arquitectura ›
+Interrupciones`), y abajo hasta 2 secciones más. Orden de las secciones: primero la que **se llama**
+como lo buscado (sin tildes; singular y plural cuentan igual), después las que lo mencionan en el
+título, y después las de más coincidencias. Antes el resultado principal mostraba el extracto de una
+sección pero linkeaba al principio de la página.
 
 ## Gotchas
 
@@ -51,6 +56,8 @@ nombrar lo buscado (sin tildes, por raíz) y después por cantidad de coincidenc
 - **Las tildes no importan:** "semaforos" encuentra "semáforos".
 - **Lo oculto no aparece:** lo que filtra `getEjercicios` (ver [[Simulacros]], exámenes ocultos) no
   llega a `dist/`, así que tampoco al índice.
+- **El anillo de foco del input** lo apaga una regla en `global.css`: el `:focus-visible` global está
+  fuera de las capas y le gana a cualquier utilidad o a `buscador.css` (capa `components`).
 - **Tamaño:** `dist/pagefind` pesa ~1,2 MB, pero cada búsqueda baja unos pocos KB.
 
 **Conectado con:** [[Arquitectura]], [[Decisión — Astro SSG sin backend ni React]]

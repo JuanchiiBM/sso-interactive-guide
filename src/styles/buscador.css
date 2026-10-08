@@ -44,6 +44,9 @@
   font-family: var(--font-heading);
   color: var(--fg);
 }
+.buscador-destino {
+  color: var(--fg-soft);
+}
 .buscador-tipo {
   margin-left: 0.5rem;
   border: 1px solid var(--line);

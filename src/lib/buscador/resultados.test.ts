@@ -22,29 +22,37 @@ const arquitectura = {
 }
 
 describe('armarResultado', () => {
-  it('primero las secciones que nombran lo buscado, después las de más coincidencias', () => {
+  it('lleva a la sección que se llama como lo buscado, con su extracto', () => {
     const r = armarResultado(arquitectura, 'interrupciones')
     expect(r.titulo).toBe('Repaso de arquitectura')
+    expect(r.seccion).toBe('Interrupciones')
+    expect(r.url).toBe('/teoria/parcial-1/arquitectura/#interrupciones')
+    expect(r.extracto).toBe('Interrupciones')
     expect(r.secciones.map((s) => s.titulo)).toEqual([
       'Qué pasa cuando llega una interrupción',
-      'Interrupciones',
       'Preguntas de parcial',
     ])
   })
 
-  it('compara sin tildes ni mayúsculas', () => {
-    const r = armarResultado(arquitectura, 'INTERRUPCION')
-    expect(r.secciones[0].titulo).toBe('Qué pasa cuando llega una interrupción')
+  it('singular, sin tilde y en mayúsculas cuenta igual', () => {
+    expect(armarResultado(arquitectura, 'INTERRUPCION').seccion).toBe('Interrupciones')
   })
 
-  it('sin título ni secciones usa la URL', () => {
-    const r = armarResultado({ url: '/x/', excerpt: '', meta: {} })
+  it('si ningún título la nombra, gana la sección con más coincidencias', () => {
+    expect(armarResultado(arquitectura, 'psw').seccion).toBe(
+      'Qué pasa cuando llega una interrupción',
+    )
+  })
+
+  it('sin secciones lleva al principio de la página', () => {
+    const r = armarResultado({ url: '/x/', excerpt: 'e', meta: {} })
     expect(r).toEqual({
       titulo: '/x/',
       url: '/x/',
+      seccion: '',
       tipo: '',
       fuente: '',
-      extracto: '',
+      extracto: 'e',
       secciones: [],
     })
   })

@@ -17,6 +17,8 @@ export interface Seccion {
 export interface Resultado {
   titulo: string
   url: string
+  /** La sección a la que lleva el resultado (vacío = el principio de la página). */
+  seccion: string
   tipo: string
   /** Guía o parcial de donde sale un ejercicio. */
   fuente: string
@@ -48,29 +50,41 @@ const raices = (q: string) =>
     .filter((p) => p.length >= 3)
     .map((p) => p.slice(0, Math.max(4, p.length - 3)))
 
-/** Una página con sus mejores secciones: primero las que nombran lo buscado, después las de más coincidencias. */
+/** Qué tan bien nombra lo buscado el título de una sección: 2 = es eso, 1 = lo menciona, 0 = no. */
+function nombra(titulo: string, consulta: string): number {
+  // "interrupción" e "Interrupciones" cuentan como el mismo título
+  const singular = (x: string) =>
+    plano(x)
+      .trim()
+      .split(' ')
+      .map((w) => w.replace(/(es|s)$/, ''))
+      .join(' ')
+  if (consulta && singular(titulo) === singular(consulta)) return 2
+  return raices(consulta).some((r) => plano(titulo).includes(r)) ? 1 : 0
+}
+
+/**
+ * Una página apuntando a su mejor sección (si tiene), con hasta 2 secciones más: primero las que
+ * nombran lo buscado y después las de más coincidencias.
+ */
 export function armarResultado(d: DatoPagefind, consulta = ''): Resultado {
   const titulo = d.meta.title ?? d.url
-  const rs = raices(consulta)
-  const nombra = (t: string) => rs.some((r) => plano(t).includes(r))
-  const secciones = (d.sub_results ?? [])
-    .map((s, i) => ({ s, i }))
+  const [mejor, ...otras] = (d.sub_results ?? [])
+    .map((s, i) => ({ s, i, n: nombra(s.title, consulta) }))
     .filter(({ s }) => s.url.includes('#') && s.title !== titulo)
     .sort(
       (a, b) =>
-        Number(nombra(b.s.title)) - Number(nombra(a.s.title)) ||
-        (b.s.locations?.length ?? 0) - (a.s.locations?.length ?? 0) ||
-        a.i - b.i,
+        b.n - a.n || (b.s.locations?.length ?? 0) - (a.s.locations?.length ?? 0) || a.i - b.i,
     )
-    .slice(0, MAX_SECCIONES)
     .map(({ s }) => ({ titulo: s.title, url: s.url, extracto: s.excerpt }))
   return {
     titulo,
-    url: d.url,
+    url: mejor?.url ?? d.url,
+    seccion: mejor?.titulo ?? '',
     tipo: d.meta.tipo ?? '',
     fuente: d.meta.fuente ?? '',
-    extracto: d.excerpt,
-    secciones,
+    extracto: mejor?.extracto ?? d.excerpt,
+    secciones: otras.slice(0, MAX_SECCIONES - 1),
   }
 }
 

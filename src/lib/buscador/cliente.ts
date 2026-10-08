@@ -43,10 +43,11 @@ function pintar(r: Resultado, i: string): string {
     .filter(Boolean)
     .map((t) => `<span class="buscador-tipo">${esc(t)}</span>`)
     .join('')
+  const destino = r.seccion ? `<span class="buscador-destino"> › ${esc(r.seccion)}</span>` : ''
   const pagina = item(
     `br-${i}`,
     r.url,
-    `<span class="buscador-titulo">${esc(r.titulo)}</span>${tipo}`,
+    `<span class="buscador-titulo">${esc(r.titulo)}</span>${destino}${tipo}`,
     r.extracto,
     'buscador-pagina',
   )
