@@ -6,6 +6,7 @@ import {
   armarParciales,
   examenesDeEnunciado,
   examenesDeFuente,
+  ocultarExamenes,
   type EjercicioFuente,
 } from './catalogo'
 
@@ -112,5 +113,31 @@ describe('los 14 parciales del relevamiento', () => {
       const temas = p.practica.map(orden)
       expect(temas, p.codigo).toEqual([...temas].sort((a, b) => a - b))
     }
+  })
+})
+
+describe('exámenes ocultos', () => {
+  const visibles = ocultarExamenes(ejercicios, ['1P 2C2026 TM'])
+  const citas = visibles.flatMap((e) => [
+    ...examenesDeFuente(e.data.fuente.guia),
+    ...e.data.preguntas.flatMap((q) => examenesDeEnunciado(q.enunciado)),
+  ])
+
+  it('no queda ni un ejercicio ni una pregunta que lo cite', () => {
+    expect(citas).not.toContain('1P 2C2026 TM')
+    expect(visibles.map((e) => e.id)).not.toContain('sincronizacion/ej-38')
+  })
+
+  it('lo que también cita otro examen se queda, con esa cita sola', () => {
+    const q = visibles
+      .find((e) => e.id === 'procesos/simulacro-1')!
+      .data.preguntas.find((p) => p.enunciado.includes('Sobre los planificadores'))!
+    expect(q.enunciado).toMatch(/^\(1P 2C2025 TM\) /)
+  })
+
+  it('su parcial desaparece y los demás quedan', () => {
+    const codigos = armarParciales(visibles, TEMAS).map((p) => p.codigo)
+    expect(codigos).toHaveLength(13)
+    expect(codigos).not.toContain('1P 2C2026 TM')
   })
 })

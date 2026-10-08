@@ -48,6 +48,31 @@ export function examenesDeFuente(guia: string): string[] {
   )
 }
 
+/** Exámenes que la cátedra todavía no publicó: el contenido queda en el repo pero no sale en el sitio. */
+export const EXAMENES_OCULTOS = ['1P 2C2026 TM']
+
+/** Saca del catálogo lo que solo viene de exámenes ocultos, y borra sus citas de lo compartido. */
+export function ocultarExamenes<T extends EjercicioFuente>(
+  ejercicios: T[],
+  ocultos: string[] = EXAMENES_OCULTOS,
+): T[] {
+  const oculto = (codigo: string) => ocultos.includes(codigo)
+  const soloOcultos = (codigos: string[]) => codigos.length > 0 && codigos.every(oculto)
+  // `(1P 2C2025 TM; 1P 2C2026 TM, desarrollo 3)`: cada tramo del prefijo cita un examen
+  const sinCitasOcultas = (enunciado: string) =>
+    enunciado.replace(/^\(([^)]*)\)/, (_, prefijo: string) => {
+      const tramos = prefijo.split(';').filter((t) => !soloOcultos(examenesDeEnunciado(`(${t})`)))
+      return `(${tramos.map((t) => t.trim()).join('; ')})`
+    })
+  return ejercicios.flatMap((e) => {
+    if (!esSimulacro(e)) return soloOcultos(examenesDeFuente(e.data.fuente.guia)) ? [] : [e]
+    const preguntas = e.data.preguntas
+      .filter((q) => !soloOcultos(examenesDeEnunciado(q.enunciado)))
+      .map((q) => ({ ...q, enunciado: sinCitasOcultas(q.enunciado) }))
+    return [{ ...e, data: { ...e.data, preguntas } } as T]
+  })
+}
+
 const tituloDe = (codigo: string) => {
   const [tipo, cuatri, turno] = codigo.split(' ')
   const nombre = tipo === '1R' ? '1° Recuperatorio' : '1° Parcial'
