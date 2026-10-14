@@ -8,12 +8,18 @@ export const rutaActual = () => location.pathname.replace(/\/?$/, '/')
 /** Claves de todas las partes interactivas de un ejercicio, en el mismo formato que usa cada desafío. */
 export function clavesEjercicio(
   href: string,
-  partes: { simulaciones: unknown[]; preguntas: unknown[]; semaforos: unknown[] },
+  partes: {
+    simulaciones: unknown[]
+    preguntas: unknown[]
+    semaforos: unknown[]
+    calculos?: unknown[]
+  },
 ): string[] {
   return [
     ...partes.simulaciones.map((_, i) => `${href}#${i}`),
     ...partes.preguntas.map((_, i) => `${href}#mc-${i}`),
     ...partes.semaforos.map((_, i) => `${href}#sem-${i}`),
+    ...(partes.calculos ?? []).map((_, i) => `${href}#calc-${i}`),
   ]
 }
 

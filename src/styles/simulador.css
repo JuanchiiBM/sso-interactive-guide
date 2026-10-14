@@ -419,3 +419,52 @@
   font-weight: 600;
   fill: var(--step);
 }
+
+/* Desafío de cálculo (ver src/lib/desafios/calculo.ts) */
+.calc-campo {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem 0.8rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.calc-campo[data-ok] {
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+}
+.calc-input {
+  width: 7rem;
+  padding: 0.25em 0.5em;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+}
+.calc-input:disabled {
+  opacity: 0.4;
+}
+.calc-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.calc-fault {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.75rem;
+  color: var(--fg-soft);
+}
+.calc-fault[aria-pressed='true'] {
+  border-color: var(--bad);
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 10%, transparent);
+}
+.calc-solucion {
+  grid-column: 2;
+  justify-self: end;
+}
