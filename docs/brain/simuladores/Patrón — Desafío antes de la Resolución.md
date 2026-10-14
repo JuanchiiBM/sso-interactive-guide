@@ -1,8 +1,8 @@
 ---
 tipo: patron
-aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice]
+aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice, calculos, cálculo, CalculoDesafio, resultado exacto, fault]
 tags: [patron, simuladores, ux]
-actualizado: 2026-09-25
+actualizado: 2026-10-14
 ---
 # Patrón — Desafío antes de la Resolución
 
@@ -41,6 +41,25 @@ Progreso por navegador en `src/lib/progreso.ts` (`so:resuelto:<path>#<id>`).
 - Acierto/ver → marca correcta/incorrectas, muestra todas las explicaciones y la `justificacion`
   (markdown renderizado en build con `marked`, con los mismos bloques ```grafo / ```diagrama).
 - ⚠️ Cuidar que la correcta no sea sistemáticamente la opción más larga (regala la respuesta).
+
+## Cálculo (resultado exacto)
+Para números, direcciones o faults: **no usar multiple choice**, que regala la respuesta por
+descarte. `calculos:` en el frontmatter (ver [[Formato de un Ejercicio]]), componente
+`CalculoDesafio.astro`, cliente `src/lib/desafios/calculo.ts`, verificación pura en
+`src/lib/calculos/verificar.ts`.
+
+- **Verificar** compara todos los campos juntos y dice solo correcto o incorrecto (igual que el Gantt).
+  Al acertar, las filas se ponen en verde; "Me rindo" muestra el valor correcto al lado de cada campo.
+- **Normaliza** la entrada: decimal con coma o punto; hexa (`base: 16`) acepta `0FAFh`, `0x0FAF`,
+  `faf` y ceros a la izquierda. `unidad` es un sufijo fijo, así el número se compara exacto.
+- **Fault:** `respuesta: fault` + `fault: true` en el desafío. El botón aparece en **todos** los campos:
+  si estuviera solo donde va el fault, regalaría la respuesta. Activado, bloquea el campo; marcarlo
+  donde va un número es error aunque el número esté bien.
+- ⚠️ Respuestas hexa: YAML convierte `30000` sin comillas en número **decimal**; `esperado()` lo
+  relee como texto en base 16. Una respuesta que no se puede leer **rompe el build** (a propósito).
+- Las respuestas viajan en `data-calc-campos`, igual que `data-mc-correcta` en el MC.
+- Clave de progreso `ruta#calc-N`. Lo categórico (fault por límite vs. por permiso) sigue en MC.
+- **Pendiente:** modo examen (simulacros); hoy el componente es solo de práctica.
 
 **Ayuda:** ícono "info" junto a "Resolución" con popover nativo (`popover` + CSS anchor positioning).
 
