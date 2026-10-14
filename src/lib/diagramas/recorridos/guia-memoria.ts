@@ -38,7 +38,7 @@ export const recorridos: Record<string, Recorrido> = {
     refs: REFS_GUIA_EJ8,
     marcos: 4,
     algoritmos: ['optimo', 'fifo', 'lru', 'clock'],
-    titulo: 'Reemplazo con 4 marcos: Óptimo, FIFO, LRU y Clock',
+    titulo: 'Reemplazo con 4 frames: Óptimo, FIFO, LRU y Clock',
   }),
   'guia-mem-ej9': recorridoReemplazoEstado({
     inicial: INICIAL_GUIA_EJ9,

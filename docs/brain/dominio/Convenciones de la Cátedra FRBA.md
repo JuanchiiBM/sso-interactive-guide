@@ -66,6 +66,9 @@ Flexibilidad: prevención baja, **evasión media** (solo exige declarar máximos
 
 ## Memoria (PPTs Memoria Real y Memoria Virtual)
 
+- **Vocabulario: "frame", no "marco".** Es lo que domina en el Resumen y la PPT de Memoria Real; la
+  guía 2016 y la PPT de Virtual mezclan. Teoría, resoluciones y recorridos dicen "frame"; los
+  enunciados transcriptos quedan textuales (la guía dice "marcos" en los Ej. 7 y 8).
 - **Reemplazo:** los PF de la carga inicial **cuentan** ("3 PF + N PF = total"). Tabla: una fila por
   marco, columna inicial con "–", "PF" abajo de cada fallo y el puntero marcado en FIFO y clock.
   Secuencia de clase `2 3 2 1 5 2 4 5 3 2 5 2` con 3 marcos: Óptimo 6, LRU 7, Clock 8, FIFO 9.

@@ -44,10 +44,12 @@ Para que exista hacen falta dos cosas que ya aparecieron en memoria real:
 | Ventaja                            | Por qué                                                                  |
 | ---------------------------------- | ------------------------------------------------------------------------ |
 | Procesos más grandes que la RAM    | Solo tiene que estar en RAM lo que se usa.                               |
-| Más grado de multiprogramación     | Cada proceso ocupa menos marcos, así que entran más.                     |
+| Más grado de multiprogramación     | Cada proceso ocupa menos frames, así que entran más.                     |
 | Menos restricciones al programador | Se programa contra el espacio virtual, que alcanza para todo el proceso. |
 
 Las direcciones lógicas pasan a referirse al **espacio virtual** (son más largas) y las físicas a la memoria real. La MMU sigue traduciendo, ahora con un dato más: si la página está o no en RAM.
+
+Los bits se calculan igual que en [memoria real](/teoria/parcial-2/memoria-real/#cuántos-bits-tiene-cada-dirección), con una diferencia: la RAM **ya no limita** a la DL. La DL sale de lo que el proceso tiene que poder direccionar (`log₂` de ese tamaño) y la DF sigue saliendo del tamaño de la RAM.
 
 ## La tabla de páginas en memoria virtual
 
@@ -55,12 +57,12 @@ Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos
 
 | Campo                      | Para qué sirve                                                                              |
 | -------------------------- | ------------------------------------------------------------------------------------------- |
-| **Número de marco**        | Dónde está la página. Con P = 0 el valor no significa nada: es lo que quedó de antes.       |
+| **Número de frame**        | Dónde está la página. Con P = 0 el valor no significa nada: es lo que quedó de antes.       |
 | **Bit de presencia (P)**   | 1 si la página está en RAM. Si es 0 y se la referencia, hay **page fault**.                 |
 | **Bit de modificado (M)**  | 1 si se escribió desde que se cargó: antes de sacarla hay que actualizar su copia en disco. |
 | **Bit de uso (U)**         | Se pone en 1 cada vez que se la referencia. Lo usan clock y clock mejorado.                 |
 | **Instante de referencia** | Cuándo se usó por última vez. Lo necesita LRU.                                              |
-| **Bit de bloqueo**         | La página no se puede reemplazar (se usa, por ejemplo, para marcos del SO).                 |
+| **Bit de bloqueo**         | La página no se puede reemplazar (se usa, por ejemplo, para frames del SO).                 |
 | **Protección**             | Permisos R/W/X.                                                                             |
 
 ### Los tres casos de una referencia
@@ -72,9 +74,11 @@ Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos
 | Caso                          | Accesos a disco                         |
 | ----------------------------- | --------------------------------------- |
 | La página está (P = 1)        | 0 (2 accesos a memoria)                 |
-| Page fault con un marco libre | 1: leer la página                       |
+| Page fault con un frame libre | 1: leer la página                       |
 | Page fault, víctima con M = 0 | 1: leer la página                       |
 | Page fault, víctima con M = 1 | 2: escribir la víctima y leer la página |
+
+> **No todo fallo es un page fault.** Si la dirección cae en una página que **no existe** en el proceso (un proceso de 20 páginas que referencia la 21), no hay nada que traer del disco: es una **dirección inválida**, que el SO trata como un segmentation fault. No carga nada en memoria ni cuenta como PF.
 
 ## Atención de un page fault
 
@@ -86,8 +90,8 @@ El **page fault** (fallo de página) es una excepción que lanza la MMU cuando s
 
 1. **Se referencia memoria** y la tabla de páginas dice P = 0.
 2. **Interrupción por fallo de página:** se bloquea el proceso y, mientras tanto, otro puede usar la CPU.
-3. **Se solicita la página:** el SO elige el marco (si no hay libre, corre el algoritmo de reemplazo) y pide la página al disco.
-4. **Se carga** en el marco y el disco produce una **interrupción** para que el SO retome el control.
+3. **Se solicita la página:** el SO elige el frame (si no hay libre, corre el algoritmo de reemplazo) y pide la página al disco.
+4. **Se carga** en el frame y el disco produce una **interrupción** para que el SO retome el control.
 5. **El SO atiende la interrupción:** actualiza la tabla de páginas y pasa el proceso a **Listo**.
 6. **Se reejecuta** la instrucción que provocó el fallo.
 
@@ -116,7 +120,7 @@ Se **pagina la tabla de páginas**: una tabla externa apunta a los pedazos de la
 
 ### Tabla de páginas invertida
 
-Una **única tabla para todos los procesos**, con una entrada por **marco** (en lugar de una por página): cada entrada dice qué página de qué proceso hay en ese marco.
+Una **única tabla para todos los procesos**, con una entrada por **frame** (en lugar de una por página): cada entrada dice qué página de qué proceso hay en ese frame.
 
 ```recorrido tabla-invertida
 
@@ -128,7 +132,7 @@ Una **única tabla para todos los procesos**, con una entrada por **marco** (en 
 
 ## TLB
 
-La **TLB** (_Translation Lookaside Buffer_) es una caché de la tabla de páginas, en el hardware de la MMU. Su etiqueta es el número de página y su dato el número de marco. Es de **acceso por contenido**: no se indexa, compara la página con todas las entradas a la vez.
+La **TLB** (_Translation Lookaside Buffer_) es una caché de la tabla de páginas, en el hardware de la MMU. Su etiqueta es el número de página y su dato el número de frame. Es de **acceso por contenido**: no se indexa, compara la página con todas las entradas a la vez.
 
 ```recorrido tlb
 
@@ -136,7 +140,8 @@ La **TLB** (_Translation Lookaside Buffer_) es una caché de la tabla de página
 
 - **Hit:** la traducción sale de la TLB y el acceso cuesta 1 acceso a memoria en lugar de 2.
 - **Miss:** se pierde el tiempo de la búsqueda y se va a la tabla de páginas. Si la página está, se carga la entrada en la TLB; si no, es page fault.
-- Es muy rápida pero tiene **pocas entradas**.
+- Es muy rápida pero tiene **pocas entradas**. Cuando está llena, se elige qué entrada sacar con un algoritmo de reemplazo, igual que con las páginas (por ejemplo, FIFO).
+- **Para contar accesos:** cada referencia consulta la TLB (**1 acceso a la TLB**). Con hit hay 1 acceso a memoria; con miss, 2 (tabla + dato); y si además es page fault se suman los accesos a disco de la tabla de arriba.
 - **ASID** (identificador de espacio de direcciones): cada entrada lleva el proceso dueño. Sin ASID, la TLB se vacía en cada cambio de proceso.
 
 > **Complemento (Stallings / Silberschatz), tiempo efectivo de acceso.** Con una tasa de aciertos `α`, búsqueda en la TLB `ε` y acceso a memoria `m`:
@@ -154,7 +159,7 @@ El hardware decide si hay memoria virtual y si es con paginación, segmentación
 | **Recuperación** (fetch)    | ¿Cuándo traigo las páginas a RAM?                                  |
 | **Ubicación**               | ¿Dónde las pongo?                                                  |
 | **Reemplazo** (sustitución) | ¿A quién saco cuando no hay lugar?                                 |
-| **Conjunto residente**      | ¿Cuántos marcos le doy a cada proceso y de dónde elijo la víctima? |
+| **Conjunto residente**      | ¿Cuántos frames le doy a cada proceso y de dónde elijo la víctima? |
 | **Limpieza**                | ¿Cuándo escribo en disco las páginas modificadas?                  |
 
 ### Recuperación
@@ -166,11 +171,11 @@ Se suelen combinar: prepaging al arrancar el proceso y después bajo demanda.
 
 ### Ubicación
 
-Con paginación da lo mismo: un marco libre es igual a cualquier otro. Solo importa con **segmentación pura**, porque los segmentos miden distinto: ahí se usan primer, siguiente, mejor y peor ajuste, como en memoria real.
+Con paginación da lo mismo: un frame libre es igual a cualquier otro. Solo importa con **segmentación pura**, porque los segmentos miden distinto: ahí se usan primer, siguiente, mejor y peor ajuste, como en memoria real.
 
 ### Reemplazo
 
-Corre **solo** si hubo un page fault y no hay un marco libre para la página. Elige una **víctima** según el algoritmo. Con el **bloqueo de marcos**, las páginas con el bit de bloqueo no pueden ser víctimas. Los algoritmos se comparan por la cantidad de page faults que generan.
+Corre **solo** si hubo un page fault y no hay un frame libre para la página. Elige una **víctima** según el algoritmo. Con el **bloqueo de frames**, las páginas con el bit de bloqueo no pueden ser víctimas. Los algoritmos se comparan por la cantidad de page faults que generan.
 
 | Algoritmo          | Víctima                                                                                     | Qué necesita en la tabla                                                   |
 | ------------------ | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -184,19 +189,19 @@ Corre **solo** si hubo un page fault y no hay un marco libre para la página. El
 
 ```
 
-Con la secuencia `2 3 2 1 5 2 4 5 3 2 5 2` y 3 marcos: **Óptimo 6 PF, LRU 7, Clock 8, FIFO 9**.
+Con la secuencia `2 3 2 1 5 2 4 5 3 2 5 2` y 3 frames: **Óptimo 6 PF, LRU 7, Clock 8, FIFO 9**.
 
 **Convenciones de la cátedra para estas tablas:**
 
-- Los marcos arrancan vacíos y los fallos de la **carga inicial también cuentan** (se anota "3 PF + N PF = total").
+- Los frames arrancan vacíos y los fallos de la **carga inicial también cuentan** (se anota "3 PF + N PF = total").
 - En FIFO y clock se marca dónde queda el puntero después de cada referencia. En un **acierto el puntero no se mueve**.
-- En clock, una página que entra lo hace con U = 1, y el puntero queda en el marco **siguiente** al que se reemplazó. Se anota "2 U" si la página 2 tiene U = 1.
+- En clock, una página que entra lo hace con U = 1, y el puntero queda en el frame **siguiente** al que se reemplazó. Se anota "2 U" si la página 2 tiene U = 1.
 
 #### Clock mejorado
 
-Clasifica cada marco por (U, M), de mejor a peor víctima: **(0,0)** no usada ni modificada, **(0,1)** no usada pero modificada, **(1,0)** usada y no modificada, **(1,1)** usada y modificada.
+Clasifica cada frame por (U, M), de mejor a peor víctima: **(0,0)** no usada ni modificada, **(0,1)** no usada pero modificada, **(1,0)** usada y no modificada, **(1,1)** usada y modificada.
 
-1. Recorre los marcos y elige el primero con (0,0), **sin tocar los bits**.
+1. Recorre los frames y elige el primero con (0,0), **sin tocar los bits**.
 2. Si no hay, recorre buscando el primero con (0,1), y a medida que pasa **baja el bit de uso** de 1 a 0.
 3. Si tampoco hay, repite el paso 1 y, si hace falta, el 2. Como mucho son cuatro pasadas.
 
@@ -208,7 +213,7 @@ No reduce los page faults: lo que ahorra es **escrituras a disco**, porque evita
 
 #### Anomalía de Belady
 
-Uno esperaría que con más marcos haya menos fallos. Con **FIFO** no siempre: hay secuencias que fallan **más** con más marcos. Con `1 2 3 4 1 2 5 1 2 3 4 5`:
+Uno esperaría que con más frames haya menos fallos. Con **FIFO** no siempre: hay secuencias que fallan **más** con más frames. Con `1 2 3 4 1 2 5 1 2 3 4 5`:
 
 ```recorrido belady-3
 
@@ -218,18 +223,18 @@ Uno esperaría que con más marcos haya menos fallos. Con **FIFO** no siempre: h
 
 ```
 
-Con 3 marcos hay **9 PF** y con 4, **10 PF**. LRU y el óptimo no sufren la anomalía: con la misma secuencia, LRU pasa de 10 a 8.
+Con 3 frames hay **9 PF** y con 4, **10 PF**. LRU y el óptimo no sufren la anomalía: con la misma secuencia, LRU pasa de 10 a 8.
 
 ### Conjunto residente
 
-El **conjunto residente** son las páginas del proceso que están en RAM. Hay dos decisiones: cuántos marcos tiene cada proceso (**asignación**) y de dónde sale la víctima (**alcance**).
+El **conjunto residente** son las páginas del proceso que están en RAM. Hay dos decisiones: cuántos frames tiene cada proceso (**asignación**) y de dónde sale la víctima (**alcance**).
 
 |                                                             | Reemplazo local                  | Reemplazo global                                                                 |
 | ----------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------- |
-| **Asignación fija** (los marcos de cada proceso no cambian) | La víctima es del mismo proceso. | **No es posible**: si saca una página de otro, el proceso supera su máximo.      |
-| **Asignación variable** (los marcos pueden cambiar)         | La víctima es del mismo proceso. | La víctima puede ser de cualquiera: cada reemplazo puede afectar a otro proceso. |
+| **Asignación fija** (los frames de cada proceso no cambian) | La víctima es del mismo proceso. | **No es posible**: si saca una página de otro, el proceso supera su máximo.      |
+| **Asignación variable** (los frames pueden cambiar)         | La víctima es del mismo proceso. | La víctima puede ser de cualquiera: cada reemplazo puede afectar a otro proceso. |
 
-Con asignación fija se saca una página cuando no hay marcos libres **o** cuando el proceso ya llegó a su máximo, aunque la RAM tenga lugar. Con asignación variable se busca darle a cada proceso los marcos que minimicen sus fallos.
+Con asignación fija se saca una página cuando no hay frames libres **o** cuando el proceso ya llegó a su máximo, aunque la RAM tenga lugar. Con asignación variable se busca darle a cada proceso los frames que minimicen sus fallos.
 
 ### Limpieza
 
@@ -247,11 +252,11 @@ El problema que resuelve el bit de bloqueo, con PA de alta prioridad y PB de baj
 3. La página de PB llega y PB se desbloquea, pero no ejecuta: PA tiene más prioridad.
 4. La página de PA reemplaza a la de PB, que **nunca llegó a usarse**. PB vuelve a fallar, y puede sufrir inanición.
 
-El **bit de bloqueo de marcos** evita que se reemplace una página que todavía no se usó. También se usa para los marcos del SO.
+El **bit de bloqueo de frames** evita que se reemplace una página que todavía no se usó. También se usa para los frames del SO.
 
 ## Thrashing
 
-El **thrashing** (sobrepaginación) es cuando se pasa más tiempo atendiendo page faults que ejecutando: todo el tiempo se piden páginas que no están. Puede venir de un algoritmo de reemplazo que saca páginas que se van a usar enseguida, pero la causa típica es un **grado de multiprogramación demasiado alto**: muchos procesos, cada uno con muy pocos marcos.
+El **thrashing** (sobrepaginación) es cuando se pasa más tiempo atendiendo page faults que ejecutando: todo el tiempo se piden páginas que no están. Puede venir de un algoritmo de reemplazo que saca páginas que se van a usar enseguida, pero la causa típica es un **grado de multiprogramación demasiado alto**: muchos procesos, cada uno con muy pocos frames.
 
 ```recorrido thrashing
 
@@ -261,8 +266,8 @@ El **thrashing** (sobrepaginación) es cuando se pasa más tiempo atendiendo pag
 
 > **Complemento (Stallings / Silberschatz):** el resumen y las PPTs no los desarrollan, pero son las soluciones clásicas.
 
-- **Conjunto de trabajo** (_working set_) `W(t, Δ)`: las páginas distintas que el proceso usó en sus últimas `Δ` referencias. Es una buena estimación de su localidad: si a cada proceso se le dan los marcos de su conjunto de trabajo y no alcanzan para todos, se **suspende** alguno en lugar de seguir sumando procesos.
-- **PFF** (frecuencia de fallos de página): se mide la tasa de fallos de cada proceso. Si es muy alta se le dan más marcos; si es muy baja, se le sacan.
+- **Conjunto de trabajo** (_working set_) `W(t, Δ)`: las páginas distintas que el proceso usó en sus últimas `Δ` referencias. Es una buena estimación de su localidad: si a cada proceso se le dan los frames de su conjunto de trabajo y no alcanzan para todos, se **suspende** alguno en lugar de seguir sumando procesos.
+- **PFF** (frecuencia de fallos de página): se mide la tasa de fallos de cada proceso. Si es muy alta se le dan más frames; si es muy baja, se le sacan.
 
 ```recorrido working-set
 
@@ -300,23 +305,23 @@ La paginación hace fácil compartir memoria, y eso se aprovecha en `fork()`: en
 
 **2. V o F: la corrupción total de la tabla de páginas de un proceso no impediría que siga ejecutando, si el SO usa memoria virtual, el proceso no escribió páginas y hay RAM libre.**
 
-> **Verdadero.** El SO puede frenar el proceso, armarle una tabla nueva con todas las páginas en P = 0 y dejar que los page faults las vuelvan a traer desde el disco. Hace falta RAM libre porque los marcos viejos no se pueden identificar ni liberar, y que no haya páginas modificadas para que la copia del disco esté al día.
+> **Verdadero.** El SO puede frenar el proceso, armarle una tabla nueva con todas las páginas en P = 0 y dejar que los page faults las vuelvan a traer desde el disco. Hace falta RAM libre porque los frames viejos no se pueden identificar ni liberar, y que no haya páginas modificadas para que la copia del disco esté al día.
 
 **3. ¿Cuántos accesos a disco puede requerir un page fault?**
 
-> Uno si hay un marco libre o la víctima no está modificada (leer la página). Dos si la víctima tiene el bit de modificado en 1: hay que escribirla y después leer la nueva. Con tablas multinivel puede haber además un page fault por la propia tabla.
+> Uno si hay un frame libre o la víctima no está modificada (leer la página). Dos si la víctima tiene el bit de modificado en 1: hay que escribirla y después leer la nueva. Con tablas multinivel puede haber además un page fault por la propia tabla.
 
 **4. ¿Por qué no se puede usar reemplazo global con asignación fija?**
 
-> Porque con asignación fija cada proceso tiene un máximo de marcos. Si un proceso que ya llegó a su máximo reemplazara una página de otro, quedaría con más marcos de los permitidos.
+> Porque con asignación fija cada proceso tiene un máximo de frames. Si un proceso que ya llegó a su máximo reemplazara una página de otro, quedaría con más frames de los permitidos.
 
 **5. ¿Qué es la anomalía de Belady y qué algoritmo la sufre?**
 
-> Que al aumentar los marcos aumenten los page faults. Le pasa a FIFO: con `1 2 3 4 1 2 5 1 2 3 4 5` da 9 PF con 3 marcos y 10 PF con 4. LRU y el óptimo no la sufren.
+> Que al aumentar los frames aumenten los page faults. Le pasa a FIFO: con `1 2 3 4 1 2 5 1 2 3 4 5` da 9 PF con 3 frames y 10 PF con 4. LRU y el óptimo no la sufren.
 
 **6. ¿Qué es el thrashing y cómo lo resuelve el SO?**
 
-> Una situación en que los procesos pasan más tiempo esperando páginas que ejecutando, normalmente por un grado de multiprogramación tan alto que cada proceso tiene menos marcos que su localidad. El uso de CPU cae, y si el SO reacciona sumando procesos lo empeora. Se resuelve **bajando** el grado de multiprogramación (suspendiendo procesos) o asignando marcos según el conjunto de trabajo o la frecuencia de fallos.
+> Una situación en que los procesos pasan más tiempo esperando páginas que ejecutando, normalmente por un grado de multiprogramación tan alto que cada proceso tiene menos frames que su localidad. El uso de CPU cae, y si el SO reacciona sumando procesos lo empeora. Se resuelve **bajando** el grado de multiprogramación (suspendiendo procesos) o asignando frames según el conjunto de trabajo o la frecuencia de fallos.
 
 **7. ¿Qué gana el clock mejorado respecto del clock?**
 

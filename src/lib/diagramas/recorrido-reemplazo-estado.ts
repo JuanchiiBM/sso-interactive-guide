@@ -42,7 +42,7 @@ export function recorridoReemplazoEstado(o: OpcionesReemplazoEstado): Recorrido 
   const yPuntero = yDisco + 20
   const alto = yPuntero + 40
   const ancho = Math.max(720, x(cols) + 12)
-  const nombreMarco = (pos: number) => `M${inicial[pos].marco}`
+  const nombreMarco = (pos: number) => `F${inicial[pos].marco}`
   const refTxt = (r: RefAcceso) =>
     r.pagina == null ? '✗' : `${r.pagina} ${r.escritura ? 'E' : 'L'}`
 
@@ -58,7 +58,7 @@ export function recorridoReemplazoEstado(o: OpcionesReemplazoEstado): Recorrido 
     ),
     ...inicial.map((m, i) =>
       [
-        rotulo(X0 - 12, yFila(i) + FILA / 2, `Marco ${m.marco}`),
+        rotulo(X0 - 12, yFila(i) + FILA / 2, `Frame ${m.marco}`),
         ...Array.from({ length: cols }, (_, j) =>
           celdaM(`m${i}-${j}`, x(j), yFila(i), COL, FILA, '', { clase: 'rm-grilla' }),
         ),
@@ -194,7 +194,7 @@ export function recorridoReemplazoEstado(o: OpcionesReemplazoEstado): Recorrido 
           : 'U pasa a 1 y el puntero **no** se mueve'
       return `Acierto en el ${nombreMarco(i.paginas.indexOf(i.ref.pagina))}: ${extra}.${escribe}`
     }
-    const avanza = alg === 'clock-mejorado' ? ' El puntero pasa al marco siguiente.' : ''
+    const avanza = alg === 'clock-mejorado' ? ' El puntero pasa al frame siguiente.' : ''
     if (i.victima == null)
       return `El ${nombreMarco(i.marco!)} está libre: la página entra sin reemplazar a nadie.${escribe}${avanza}`
     const sale = `Sale la **${i.victima}** del ${nombreMarco(i.marco!)}`
