@@ -21,6 +21,13 @@ simulaciones: [] # ver [[Simulador de Planificación]]
 ---
 ```
 
+⚠️ Si `guia` lleva **coma**, va entre comillas: en `{ guia: X (2016, Rev. 1), numero: 1 }` la coma
+corta el valor y el sitio muestra "X (2016" sin error de build.
+
+**Numeración por tema:** `numero` es el número **dentro del tema** (rótulo y orden). Si el tema junta
+ejercicios salteados de una guía, el original va en la fuente:
+`guia: 'Guía de Ejercicios – Memoria (2016, Rev. 1) · Ej. 11'`.
+
 El **cuerpo** es el enunciado tal cual la guía (tablas, código, incisos). Sin resolución en el cuerpo:
 la resolución sale de `simulaciones` (Gantt) o de `preguntas` (multiple choice):
 
