@@ -1,20 +1,23 @@
 ---
 import Layout from '@layouts/Layout.astro'
 import EjercicioCard from '@components/EjercicioCard.astro'
-import { getCatalogo, temaHref } from '@lib/catalogo'
+import { getCatalogoPorParcial, parcialUI, temaHref } from '@lib/catalogo'
 
-const catalogo = (await getCatalogo(1)).filter((c) => c.ejercicios.length > 0)
+const porParcial = (await getCatalogoPorParcial())
+  .map((p) => ({ ...p, temas: p.temas.filter((c) => c.ejercicios.length > 0) }))
+  .filter((p) => p.temas.length > 0)
+const catalogo = porParcial.flatMap((p) => p.temas)
 const chip =
   'rounded-full border border-line px-3 py-1 text-xs text-fg-soft hover:bg-hover aria-pressed:border-accent aria-pressed:text-accent aria-pressed:bg-accent-soft'
 ---
 
 <Layout title="Ejercicios">
-  <h1 class="font-heading text-2xl text-fg">Ejercicios · 1er parcial</h1>
+  <h1 class="font-heading text-2xl text-fg">Ejercicios</h1>
   <p class="mt-2 text-fg-soft max-w-2xl">
-    Enunciados de las guías de la cátedra y de parciales anteriores (<span class="text-parcial"
-      >en violeta</span
-    >). Los <span class="text-accent">interactivos</span>{' '}esconden la respuesta hasta que la
-    acertás: armás el Gantt, escribís el código o elegís la opción correcta.
+    Enunciados de las guías de la cátedra y de parciales anteriores (
+    <span class="text-parcial">en violeta</span>). Los <span class="text-accent">interactivos</span>{' '}
+    esconden la respuesta hasta que la acertás: armás el Gantt, escribís el código o el resultado, o
+    elegís la opción correcta.
   </p>
 
   <div class="mt-6 flex flex-wrap gap-2" data-filtros role="group" aria-label="Filtrar ejercicios">
@@ -36,7 +39,13 @@ const chip =
     <button type="button" class={chip} data-filtro="simulador" data-valor="si" aria-pressed="false">
       Solo interactivos
     </button>
-    <button type="button" class={chip} data-filtro="dificultad" data-valor="parcial" aria-pressed="false">
+    <button
+      type="button"
+      class={chip}
+      data-filtro="dificultad"
+      data-valor="parcial"
+      aria-pressed="false"
+    >
       Solo de parcial
     </button>
     <button type="button" class={chip} data-filtro="pendiente" data-valor="si" aria-pressed="false">
@@ -44,21 +53,28 @@ const chip =
     </button>
   </div>
 
-  {catalogo.map(({ tema, ejercicios }) => (
-    <section class="mt-10" data-grupo-tema={tema.id}>
-      <h2 class="font-heading text-lg text-fg mb-3">
-        <a href={temaHref(tema.id)} class="hover:text-accent">
-          {tema.data.titulo}
-        </a>
+  {porParcial.map(({ numero, temas }) => (
+    <div data-grupo-parcial={numero}>
+      <h2 class="mt-12 border-b border-line pb-2 font-heading text-xl text-fg">
+        {parcialUI(numero)}
       </h2>
-      <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {ejercicios.map((e) => (
-          <li>
-            <EjercicioCard ejercicio={e} />
-          </li>
-        ))}
-      </ul>
-    </section>
+      {temas.map(({ tema, ejercicios }) => (
+        <section class="mt-8" data-grupo-tema={tema.id}>
+          <h3 class="font-heading text-lg text-fg mb-3">
+            <a href={temaHref(tema.id)} class="hover:text-accent">
+              {tema.data.titulo}
+            </a>
+          </h3>
+          <ul class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {ejercicios.map((e) => (
+              <li>
+                <EjercicioCard ejercicio={e} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
   ))}
   <p class="mt-10 text-sm text-muted hidden" data-sin-resultados>
     No hay ejercicios con esos filtros.

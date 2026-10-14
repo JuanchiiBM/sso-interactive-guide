@@ -23,6 +23,9 @@ export function initFiltrosEjercicios(): void {
       grupo.hidden = enGrupo === 0
       visibles += enGrupo
     }
+    for (const parcial of $$<HTMLElement>('[data-grupo-parcial]')) {
+      parcial.hidden = $$<HTMLElement>('[data-grupo-tema]', parcial).every((g) => g.hidden)
+    }
     $('[data-sin-resultados]')?.classList.toggle('hidden', visibles > 0)
   }
 
