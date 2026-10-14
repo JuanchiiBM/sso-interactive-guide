@@ -3,6 +3,8 @@ import Layout from '@layouts/Layout.astro'
 import SimuladorStage from '@components/SimuladorStage.astro'
 import MultipleChoice from '@components/MultipleChoice.astro'
 import SemaforosDesafio from '@components/SemaforosDesafio.astro'
+import CalculoDesafio from '@components/CalculoDesafio.astro'
+import ParteResolucion from '@components/ParteResolucion.astro'
 import { getEntry, render } from 'astro:content'
 import { getEjercicios, ejercicioHref, temaHref, rotuloEjercicio } from '@lib/catalogo'
 import { algoritmoUI, dificultadUI, tipoUI } from '@lib/presentacion'
@@ -21,12 +23,26 @@ export async function getStaticPaths() {
 }
 
 const { ejercicio, anterior, siguiente } = Astro.props
-const { titulo, fuente, dificultad, tipo, tags, simulaciones, preguntas, semaforos, nota } =
-  ejercicio.data
+const {
+  titulo,
+  fuente,
+  dificultad,
+  tipo,
+  tags,
+  simulaciones,
+  preguntas,
+  semaforos,
+  calculos,
+  nota,
+  encadenado,
+} = ejercicio.data
 // diagrama de colas: por ahora solo en los Gantt de la guía (no en parciales)
 const deGuia = fuente.guia.startsWith('Guía de Ejercicios')
 const notaHtml = nota ? await markdownAHtml(`**Nota:** ${nota.trim()}`) : null
-const interactivos = simulaciones.length + preguntas.length + semaforos.length
+const interactivos = simulaciones.length + preguntas.length + semaforos.length + calculos.length
+const href = ejercicioHref(ejercicio.id)
+// posición global de la parte en la página: con `encadenado`, todas menos la primera arrancan bloqueadas
+const bloqueada = (pos: number) => encadenado && pos > 0
 const tema = await getEntry(ejercicio.data.tema)
 const { Content } = await render(ejercicio)
 const dif = dificultadUI[dificultad]
@@ -35,6 +51,8 @@ const ayuda = [
     'Armá el Gantt: en cada instante marcá quién usa la CPU (click) y quién usa el dispositivo de E/S (click derecho). Dejá vacío lo que está en listos o esperando.',
   simulaciones.some((s) => s.kind === 'codigo') &&
     'Armá el Gantt: en cada instante marcá quién usa la CPU (click) y quién está bloqueado en un semáforo, un recurso o un sleep (click derecho). Dejá vacío lo que está en listos o todavía no llegó.',
+  calculos.length > 0 &&
+    'Escribí cada resultado y verificá; en hexa vale 0FAFh, 0x0FAF o faf. Si la operación falla (segmentation fault, permiso inválido), marcá "Fault" en vez de escribir un número.',
   preguntas.length > 0 &&
     'Elegí una opción por pregunta y verificá. Si fallás, te decimos por qué esa opción no es.',
   semaforos.length > 0 &&
@@ -124,19 +142,36 @@ const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
         )}
       </div>
       {interactivos > 0 ? (
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4" data-encadenado={encadenado || undefined}>
+          {calculos.map((c, i) => (
+            <ParteResolucion clave={`${href}#calc-${i}`} bloqueada={bloqueada(i)}>
+              <CalculoDesafio calculo={c} clave={String(i)} />
+            </ParteResolucion>
+          ))}
           {preguntas.map((p, i) => (
-            <MultipleChoice pregunta={p} clave={String(i)} />
+            <ParteResolucion clave={`${href}#mc-${i}`} bloqueada={bloqueada(calculos.length + i)}>
+              <MultipleChoice pregunta={p} clave={String(i)} />
+            </ParteResolucion>
           ))}
           {semaforos.map((d, i) => (
-            <SemaforosDesafio desafio={d} clave={String(i)} />
+            <ParteResolucion
+              clave={`${href}#sem-${i}`}
+              bloqueada={bloqueada(calculos.length + preguntas.length + i)}
+            >
+              <SemaforosDesafio desafio={d} clave={String(i)} />
+            </ParteResolucion>
           ))}
-          {simulaciones.map((sim) => (
-            <SimuladorStage
-              simulacion={sim}
-              titulo={etiquetaSim(sim)}
-              diagrama={deGuia && sim.kind === 'planificacion'}
-            />
+          {simulaciones.map((sim, i) => (
+            <ParteResolucion
+              clave={`${href}#${i}`}
+              bloqueada={bloqueada(calculos.length + preguntas.length + semaforos.length + i)}
+            >
+              <SimuladorStage
+                simulacion={sim}
+                titulo={etiquetaSim(sim)}
+                diagrama={deGuia && sim.kind === 'planificacion'}
+              />
+            </ParteResolucion>
           ))}
         </div>
       ) : (

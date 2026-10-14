@@ -31,6 +31,11 @@ export function controlarResolucion(opts: {
     boton.className = `ml-auto rounded-lg px-3 py-1.5 text-sm ${UI[nuevo].clase}`
   }
   pintar(estado)
+  // avisa a las partes encadenadas (encadenado.ts) que esta ya se resolvió o se rindió
+  const revelar = () => {
+    mostrar()
+    boton.dispatchEvent(new Event('so:revelado', { bubbles: true }))
+  }
 
   boton.addEventListener('click', () => {
     if (estado === 'rendirse') return pintar('confirmar')
@@ -38,14 +43,14 @@ export function controlarResolucion(opts: {
       ocultar()
       return pintar(estaResuelto(clave) ? 'ver' : 'rendirse')
     }
-    mostrar()
+    revelar()
     pintar('ocultar')
   })
 
   return {
     acerto() {
       marcarResuelto(clave)
-      mostrar()
+      revelar()
       pintar('ocultar')
     },
   }

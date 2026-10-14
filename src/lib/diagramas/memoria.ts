@@ -116,6 +116,102 @@ export function clockMejorado(estado: MarcoUM[], puntero: number) {
   throw new Error('clock mejorado: no encontró víctima')
 }
 
+// ── Reemplazo sobre un estado dado, con lectura/escritura (LRU y Clock mejorado) ──
+
+export interface MarcoEstado {
+  /** Número de marco real (1, 3, 5…); solo para mostrar. */
+  marco: number
+  pagina: number | null
+  u: boolean
+  m: boolean
+  /** Instante de la última referencia (LRU). */
+  ultimoUso: number
+}
+
+/** `pagina: null` = dirección fuera del proceso: error, no PF; el estado no cambia. */
+export interface RefAcceso {
+  pagina: number | null
+  escritura: boolean
+}
+
+export type AlgoritmoConEstado = 'lru' | 'clock-mejorado'
+
+export interface InstanteUM {
+  ref: RefAcceso
+  paginas: (number | null)[]
+  u: boolean[]
+  m: boolean[]
+  /** Posición (no número de marco) a la que apunta el puntero; null en LRU. */
+  puntero: number | null
+  fallo: boolean
+  invalida: boolean
+  /** Posición donde entró la página (null si no hubo PF). */
+  marco: number | null
+  victima: number | null
+  /** La víctima tenía M = 1: se escribe en disco antes de reemplazarla. */
+  escrita: boolean
+}
+
+export function reemplazoConEstado(
+  inicial: MarcoEstado[],
+  punteroInicial: number,
+  refs: RefAcceso[],
+  alg: AlgoritmoConEstado,
+): InstanteUM[] {
+  const marcos = inicial.map((m) => ({ ...m }))
+  const n = marcos.length
+  let puntero = punteroInicial
+  let reloj = Math.max(...marcos.map((m) => m.ultimoUso)) + 1
+
+  return refs.map((ref) => {
+    const t = reloj++
+    if (ref.pagina == null) return foto(ref, { invalida: true })
+    const ya = marcos.findIndex((m) => m.pagina === ref.pagina)
+    if (ya >= 0) {
+      Object.assign(marcos[ya], { u: true, ultimoUso: t, m: marcos[ya].m || ref.escritura })
+      return foto(ref, {})
+    }
+    const libre = Array.from({ length: n }, (_, k) => (puntero + k) % n).find(
+      (i) => marcos[i].pagina == null,
+    )
+    const marco = libre ?? elegirVictima()
+    const victima = libre == null ? marcos[marco].pagina : null
+    const escrita = libre == null && marcos[marco].m
+    Object.assign(marcos[marco], { pagina: ref.pagina, u: true, m: ref.escritura, ultimoUso: t })
+    if (alg === 'clock-mejorado') puntero = (marco + 1) % n
+    return foto(ref, { fallo: true, marco, victima, escrita })
+  })
+
+  function elegirVictima(): number {
+    if (alg === 'lru') {
+      const usos = marcos.map((m) => m.ultimoUso)
+      return usos.indexOf(Math.min(...usos))
+    }
+    const r = clockMejorado(
+      marcos.map((m) => ({ pagina: m.pagina!, u: m.u, m: m.m })),
+      puntero,
+    )
+    r.marcos.forEach((m, i) => (marcos[i].u = m.u))
+    return r.victima
+  }
+
+  function foto(ref: RefAcceso, o: Partial<InstanteUM>): InstanteUM {
+    return {
+      ref,
+      paginas: marcos.map((m) => m.pagina),
+      u: marcos.map((m) => m.u),
+      m: marcos.map((m) => m.m),
+      puntero: alg === 'clock-mejorado' ? puntero : null,
+      fallo: false,
+      invalida: false,
+      marco: null,
+      victima: null,
+      escrita: false,
+      ...o,
+    }
+  }
+}
+
 // ── Buddy system ──
 
 export interface Bloque {

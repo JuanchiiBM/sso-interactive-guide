@@ -60,14 +60,19 @@ export function recorridoReemplazo(o: OpcionesReemplazo): Recorrido {
           texto(X0 + j * COL + COL / 2, yPuntero, '', { val: `pt-${j}`, clase: 'rm-puntero' }),
         )
       : []),
-    texto(360, alto - 12, '', { val: 'resumen', clase: 'rm-resumen' }),
+    texto(Math.max(720, X0 + refs.length * COL + 12) / 2, alto - 12, '', {
+      val: 'resumen',
+      clase: 'rm-resumen',
+    }),
   ]
 
   const variantes: Variante[] = o.algoritmos.map((alg, k) => ({
     nombre: o.nombres?.[k] ?? NOMBRE[alg],
     pasos: pasosDe(alg, reemplazo(refs, n, alg)),
   }))
-  return { ancho: 720, alto, titulo: o.titulo, cuerpo, variantes }
+  // con más de 13 referencias la grilla no entra en 720 de ancho
+  const ancho = Math.max(720, X0 + refs.length * COL + 12)
+  return { ancho, alto, titulo: o.titulo, cuerpo, variantes }
 
   function pasosDe(alg: AlgoritmoReemplazo, inst: Instante[]): Paso[] {
     const celda = (i: Instante, m: number) => {

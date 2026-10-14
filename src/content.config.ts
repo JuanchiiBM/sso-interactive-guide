@@ -139,6 +139,24 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
   }),
 ])
 
+/** Resultado exacto que el alumno escribe; `respuesta: fault` si la operación tiene que fallar. */
+const calculoSchema = z.object({
+  enunciado: z.string().optional(),
+  /** Muestra el botón Fault en todos los campos (si solo estuviera donde va, regalaría la respuesta). */
+  fault: z.boolean().default(false),
+  campos: z
+    .array(
+      z.object({
+        etiqueta: z.string(),
+        respuesta: z.union([z.number(), z.string()]),
+        base: z.union([z.literal(10), z.literal(16)]).optional(),
+        unidad: z.string().optional(),
+      }),
+    )
+    .min(1),
+  justificacion: z.string(),
+})
+
 const ejercicios = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/ejercicios' }),
   schema: z.object({
@@ -156,6 +174,10 @@ const ejercicios = defineCollection({
     simulaciones: z.array(simulacionSchema).default([]),
     /** Desafíos de código con semáforos (uno por inciso). */
     semaforos: z.array(desafioSemaforosSchema).default([]),
+    /** Cada parte de la resolución se desbloquea al resolver (o rendirse en) la anterior. */
+    encadenado: z.boolean().default(false),
+    /** Desafíos de cálculo con resultado exacto (uno por inciso). */
+    calculos: z.array(calculoSchema).default([]),
     /** Aclaración (markdown) de un concepto del enunciado que la teoría no explica; va arriba de "Resolución". */
     nota: z.string().optional(),
     /** Multiple choice por inciso; la justificación (markdown) se ve recién al acertar. */

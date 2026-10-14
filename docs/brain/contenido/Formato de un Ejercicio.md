@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
 tags: [contenido, ejercicios]
-actualizado: 2026-10-01
+actualizado: 2026-10-14
 ---
 
 # Formato de un Ejercicio
@@ -21,6 +21,13 @@ simulaciones: [] # ver [[Simulador de Planificación]]
 ---
 ```
 
+⚠️ Si `guia` lleva **coma**, va entre comillas: en `{ guia: X (2016, Rev. 1), numero: 1 }` la coma
+corta el valor y el sitio muestra "X (2016" sin error de build.
+
+**Numeración por tema:** `numero` es el número **dentro del tema** (rótulo y orden). Si el tema junta
+ejercicios salteados de una guía, el original va en la fuente:
+`guia: 'Guía de Ejercicios – Memoria (2016, Rev. 1) · Ej. 11'`.
+
 El **cuerpo** es el enunciado tal cual la guía (tablas, código, incisos). Sin resolución en el cuerpo:
 la resolución sale de `simulaciones` (Gantt) o de `preguntas` (multiple choice):
 
@@ -36,6 +43,22 @@ preguntas:
     justificacion: |
       Markdown completo (listas, `código`, ```grafo). Se ve recién al acertar.
 ```
+**Resultados exactos** (números, direcciones, faults) van en `calculos`, no en `preguntas`:
+
+```yaml
+calculos:
+  - enunciado: 'Calculá la dirección física de cada dirección lógica.'
+    fault: true            # botón Fault en todos los campos
+    campos:
+      - { etiqueta: '`(0, 430)`', respuesta: 649 }
+      - { etiqueta: 'Base seg. 1', respuesta: '0FA5', base: 16 }
+      - { etiqueta: 'Fragm. interna', respuesta: 4095, unidad: bytes }
+      - { etiqueta: '`(2, 500)`', respuesta: fault }
+    justificacion: |
+      Markdown; se ve recién al acertar.
+```
+Ver [[Patrón — Desafío antes de la Resolución]] (sección Cálculo).
+
 El `enunciado` de una pregunta también es markdown de bloque (usar `|` si lleva código o párrafos);
 `texto` y `explicacion` de las opciones, markdown inline (`código`, **negrita**). Los renderiza
 `markdownAHtml` / `markdownInlineAHtml` de `src/lib/markdown/marked.ts`; sus `pre` no pasan por Shiki.
