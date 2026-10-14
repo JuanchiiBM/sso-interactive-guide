@@ -15,9 +15,12 @@ aliases:
     particionamientoDinamico,
     clockMejorado,
     fotogramas,
+    reemplazoConEstado,
+    recorridoReemplazoEstado,
+    guia-memoria,
   ]
 tags: [componente, contenido, svg, interactivo, memoria]
-actualizado: 2026-10-08
+actualizado: 2026-10-14
 ---
 
 # Recorridos de Memoria
@@ -31,8 +34,9 @@ escriben a mano: salen de algoritmos puros testeados, así que cambiar un ejempl
 | --- | --- |
 | Algoritmos puros (reemplazo, clock mejorado, buddy, particiones dinámicas, ubicación, traducción, working set) | `src/lib/diagramas/memoria.ts` + `memoria.test.ts` |
 | Generador de recorridos de reemplazo (grilla de la cátedra) | `src/lib/diagramas/recorrido-reemplazo.ts` |
+| Reemplazo desde un estado dado (marcos reales, U/M, L/E, a disco, dirección inválida) | `reemplazoConEstado` en `memoria.ts` + `recorrido-reemplazo-estado.ts` |
 | Primitivas: barra de memoria, celdas y tablas | `src/lib/diagramas/primitivas-memoria.ts` |
-| Recorridos | `recorridos/memoria-real.ts` (9), `recorridos/memoria-virtual.ts` (12) |
+| Recorridos | `recorridos/memoria-real.ts` (9), `recorridos/memoria-virtual.ts` (12), `recorridos/guia-memoria.ts` (resoluciones de la guía, con su test) |
 | Estilos | `src/styles/diagramas.css`, sección "memoria real y virtual" (`rm-*`) |
 
 **Uso:**
@@ -52,6 +56,11 @@ todas ocultas, y cada paso muestra la suya y oculta las demás. Para marcar un h
 barra (sus partes no tienen `data-el`) se superpone un contorno aparte (`rm-sel`), oculto hasta su paso.
 
 ## Gotchas
+
+- **El ancho de la grilla se adapta** a la cantidad de referencias (`max(720, …)`): con 14 refs no
+  entraba. Los recorridos de la teoría (12 refs) no cambian.
+- `reemplazoConEstado` reutiliza `clockMejorado()` para elegir la víctima: la regla de las pasadas
+  vive en un solo lugar. El puntero es una **posición** en la lista de marcos, no el número de marco.
 
 - **La grilla de reemplazo resalta todas las columnas pasadas** para que no se atenúen; por eso sus
   celdas llevan `rm-grilla`, que apaga el acento del resaltado. El paso actual se marca con clases:

@@ -2,7 +2,7 @@
 tipo: dominio
 aliases: [convenciones, cátedra, catedra, desempate, tie-break, simultaneidad, reglas de oro, semáforos, utn, frba, parciales, resoluciones]
 tags: [dominio, catedra]
-actualizado: 2026-10-08
+actualizado: 2026-10-14
 ---
 
 # Convenciones de la Cátedra FRBA
@@ -81,6 +81,18 @@ Flexibilidad: prevención baja, **evasión media** (solo exige declarar máximos
 - Errata de la PPT: en el ejemplo de particionamiento dinámico los inicios de la tabla están corridos;
   el recorrido usa los tamaños. Las PPTs y el resumen **no** traen EAT, working set, PFF ni el
   ejemplo de Belady: en la teoría van marcados como "Complemento (Stallings)".
+
+### Guía de Ejercicios de Memoria (2016)
+
+Decisiones al resolverla (no hay resolución oficial en el repo):
+
+- La guía usa **"Largo"** en las tablas de segmentos (Ej. 3 y 4): se valida `desplazamiento < largo`.
+  Donde pide "límite" (Ej. 11) se usa el de la cátedra: dirección física final.
+- Mezcla **KB/KiB/Kb**: "64Kb" (Ej. 6) se toma como 64 KiB.
+- **Dirección fuera del proceso** (Ej. 9: 172100 cae en la página 21 de un proceso de 20): error de
+  dirección inválida, **no** es PF, no carga nada y el proceso **sigue** con la referencia siguiente.
+- **Accesos con TLB** (Ej. 10): 1 a la TLB por referencia; acierto = 1 a memoria; fallo = 2 (tabla +
+  dato); PF = +1 a disco (+1 más si la víctima tiene M = 1).
 
 ## Formato de respuestas
 

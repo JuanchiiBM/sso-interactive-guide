@@ -60,6 +60,8 @@ descarte. `calculos:` en el frontmatter (ver [[Formato de un Ejercicio]]), compo
 - Las respuestas viajan en `data-calc-campos`, igual que `data-mc-correcta` en el MC.
 - Clave de progreso `ruta#calc-N`. Lo categórico (fault por límite vs. por permiso) sigue en MC.
 - **Pendiente:** modo examen (simulacros); hoy el componente es solo de práctica.
+- ⚠️ **Orden fijo en la página:** cálculos → MC → semáforos → Gantt. Un MC del inciso b) queda
+  después del cálculo del c) (Memoria virtual Ej. 2). Intercalar exigiría una lista de partes ordenada.
 
 ## Partes encadenadas (`encadenado: true`)
 Cuando una parte spoilea la anterior (Memoria Ej. 4: el MC "¿qué provoca cada fault?" delata qué

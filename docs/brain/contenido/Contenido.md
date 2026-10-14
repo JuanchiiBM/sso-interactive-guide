@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [contenido, teoría, teoria, ejercicios, markdown, guías]
 tags: [moc, contenido]
-actualizado: 2026-10-08
+actualizado: 2026-10-14
 ---
 
 # Contenido
@@ -33,5 +33,10 @@ Las tres guías cierran con un link a Google Forms de "ejercicios avanzados" que
 
 | Tema | Ejercicios | Fuente |
 | --- | --- | --- |
-| Memoria real | 0 (solo teoría) | PPT Memoria Real + Resumen SO págs. 71–84 |
-| Memoria virtual | 0 (solo teoría) | PPT Memoria Virtual + Resumen SO págs. 85–99 |
+| Memoria real | 5 | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 1–4 y 11 |
+| Memoria virtual | 6 | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 5–10 |
+
+Teoría: PPT Memoria Real + Resumen SO págs. 71–84; PPT Memoria Virtual + Resumen SO págs. 85–99.
+Los ejercicios se numeran **por tema** y el número original va en `guia: '… · Ej. N'` (ver
+[[Formato de un Ejercicio]]). Casi todos se resuelven con `calculos` (resultado exacto); ver
+[[Patrón — Desafío antes de la Resolución]].
