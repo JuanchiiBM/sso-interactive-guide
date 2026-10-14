@@ -49,6 +49,8 @@ Para que exista hacen falta dos cosas que ya aparecieron en memoria real:
 
 Las direcciones lógicas pasan a referirse al **espacio virtual** (son más largas) y las físicas a la memoria real. La MMU sigue traduciendo, ahora con un dato más: si la página está o no en RAM.
 
+Los bits se calculan igual que en [memoria real](/teoria/parcial-2/memoria-real/#cuántos-bits-tiene-cada-dirección), con una diferencia: la RAM **ya no limita** a la DL. La DL sale de lo que el proceso tiene que poder direccionar (`log₂` de ese tamaño) y la DF sigue saliendo del tamaño de la RAM.
+
 ## La tabla de páginas en memoria virtual
 
 Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos son los que aparecen en la materia:
@@ -75,6 +77,8 @@ Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos
 | Page fault con un frame libre | 1: leer la página                       |
 | Page fault, víctima con M = 0 | 1: leer la página                       |
 | Page fault, víctima con M = 1 | 2: escribir la víctima y leer la página |
+
+> **No todo fallo es un page fault.** Si la dirección cae en una página que **no existe** en el proceso (un proceso de 20 páginas que referencia la 21), no hay nada que traer del disco: es una **dirección inválida**, que el SO trata como un segmentation fault. No carga nada en memoria ni cuenta como PF.
 
 ## Atención de un page fault
 
@@ -136,7 +140,8 @@ La **TLB** (_Translation Lookaside Buffer_) es una caché de la tabla de página
 
 - **Hit:** la traducción sale de la TLB y el acceso cuesta 1 acceso a memoria en lugar de 2.
 - **Miss:** se pierde el tiempo de la búsqueda y se va a la tabla de páginas. Si la página está, se carga la entrada en la TLB; si no, es page fault.
-- Es muy rápida pero tiene **pocas entradas**.
+- Es muy rápida pero tiene **pocas entradas**. Cuando está llena, se elige qué entrada sacar con un algoritmo de reemplazo, igual que con las páginas (por ejemplo, FIFO).
+- **Para contar accesos:** cada referencia consulta la TLB (**1 acceso a la TLB**). Con hit hay 1 acceso a memoria; con miss, 2 (tabla + dato); y si además es page fault se suman los accesos a disco de la tabla de arriba.
 - **ASID** (identificador de espacio de direcciones): cada entrada lleva el proceso dueño. Sin ASID, la TLB se vacía en cada cambio de proceso.
 
 > **Complemento (Stallings / Silberschatz), tiempo efectivo de acceso.** Con una tasa de aciertos `α`, búsqueda en la TLB `ε` y acceso a memoria `m`:

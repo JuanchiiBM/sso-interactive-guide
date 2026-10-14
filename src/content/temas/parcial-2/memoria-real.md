@@ -136,7 +136,9 @@ El proceso se divide en **segmentos de tamaño variable**, según la visión del
 - Cada proceso tiene una **tabla de segmentos**, en RAM y apuntada por un registro, con el inicio y el límite de cada segmento. En los ejemplos de la cátedra el límite es la **dirección final** del segmento, no su tamaño.
 - La dirección lógica es `(segmento, desplazamiento)` y la física se calcula **sumando**: `DF = inicio + desplazamiento`. Si se pasa del límite, hay **segmentation fault**.
 - Con una DL de `x` bits de segmento y `y` de desplazamiento: hasta 2<sup>x</sup> segmentos por proceso, de hasta 2<sup>y</sup> bytes cada uno.
+- Si la tabla da el **largo** (tamaño) del segmento en lugar del límite, la validación es contra el desplazamiento: vale si `desplazamiento < largo`. Es la misma idea que el registro límite de la protección con base y límite.
 - Cada segmento puede tener permisos de **lectura (R), escritura (W) y ejecución (X)**: lo típico es código RX, datos y pila RW.
+- La MMU hace **dos chequeos**, y cualquiera que falle lanza una interrupción: primero el **límite** (si se pasa → segmentation fault) y después el **permiso** del acceso (escribir en un segmento de solo lectura → **interrupción por modo de acceso inválido**).
 - Sin fragmentación interna; con fragmentación **externa**, aunque menos que el particionamiento dinámico porque se ubican pedazos y no procesos enteros.
 
 ```recorrido traduccion-segmentacion
@@ -151,6 +153,22 @@ Tanto los procesos como la memoria se dividen en partes **del mismo tamaño**: *
 - **Fragmentación interna solo en la última página** del proceso: como mucho, el tamaño de página − 1 byte.
 - Cada acceso a un dato son **2 accesos a memoria**: uno a la tabla de páginas y otro al dato.
 - Con una DL de `x` bits de página y `y` de desplazamiento: hasta 2<sup>x</sup> páginas por proceso, de 2<sup>y</sup> bytes.
+
+### Cuántos bits tiene cada dirección
+
+La cuenta va al revés de la de arriba: de cantidades y tamaños a bits. Para numerar `N` cosas hacen falta `log₂ N` bits (si `N` no es potencia de 2, se redondea para arriba: 20 páginas piden 5 bits).
+
+| Parte                     | Bits                                                                                                                                                |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Desplazamiento**        | `log₂(tamaño de página)`. Es igual en la DL y en la DF, porque página y frame miden lo mismo.                                                       |
+| **Número de página**      | `log₂(cantidad de páginas)`; las páginas son `tamaño del espacio lógico / tamaño de página`.                                                        |
+| **Número de frame**       | `log₂(cantidad de frames)`; los frames son `tamaño de la RAM / tamaño de página`. Es también lo que ocupa el campo de frame en la tabla de páginas. |
+| **Dirección lógica (DL)** | página + desplazamiento = `log₂(tamaño del espacio lógico)`.                                                                                        |
+| **Dirección física (DF)** | frame + desplazamiento = `log₂(tamaño de la RAM)`.                                                                                                  |
+
+Ejemplo: páginas de 4 KiB (2<sup>12</sup> → 12 bits de desplazamiento), un espacio lógico de 16 páginas (4 bits) y una RAM de 256 KiB = 64 frames (6 bits). La DL tiene 4 + 12 = **16 bits** y la DF, 6 + 12 = **18 bits**.
+
+Sin memoria virtual el proceso tiene que estar **entero** en RAM, así que el espacio lógico útil nunca supera al físico: la DL es **menor o igual** que la DF, y el programa más grande que se puede ejecutar es el **menor** entre 2<sup>bits de la DL</sup> y el tamaño de la RAM. La [memoria virtual](/teoria/parcial-2/memoria-virtual/) es justamente lo que permite una DL más larga que la DF.
 
 ### Traducción
 
