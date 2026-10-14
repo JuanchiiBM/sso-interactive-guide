@@ -145,16 +145,16 @@ El proceso se divide en **segmentos de tamaño variable**, según la visión del
 
 ## Paginación
 
-Tanto los procesos como la memoria se dividen en partes **del mismo tamaño**: **páginas** en el proceso y **marcos** (frames) en la memoria. Cualquier página puede ir a cualquier marco, y no hace falta que estén en orden ni contiguas. Cada proceso tiene una **tabla de páginas** que dice en qué marco está cada página.
+Tanto los procesos como la memoria se dividen en partes **del mismo tamaño**: **páginas** en el proceso y **frames** en la memoria (la guía a veces les dice **marcos**). Cualquier página puede ir a cualquier frame, y no hace falta que estén en orden ni contiguas. Cada proceso tiene una **tabla de páginas** que dice en qué frame está cada página.
 
-- **Sin fragmentación externa:** un marco libre sirve para cualquier página.
+- **Sin fragmentación externa:** un frame libre sirve para cualquier página.
 - **Fragmentación interna solo en la última página** del proceso: como mucho, el tamaño de página − 1 byte.
 - Cada acceso a un dato son **2 accesos a memoria**: uno a la tabla de páginas y otro al dato.
 - Con una DL de `x` bits de página y `y` de desplazamiento: hasta 2<sup>x</sup> páginas por proceso, de 2<sup>y</sup> bytes.
 
 ### Traducción
 
-La página se reemplaza por el marco y el desplazamiento **se copia igual**: en binario es concatenar, no sumar. En decimal: `DF = marco × tamaño de página + desplazamiento`. Si la DL viene en decimal, `DL / tamaño de página` da el número de página y el **resto** es el desplazamiento.
+La página se reemplaza por el frame y el desplazamiento **se copia igual**: en binario es concatenar, no sumar. En decimal: `DF = frame × tamaño de página + desplazamiento`. Si la DL viene en decimal, `DL / tamaño de página` da el número de página y el **resto** es el desplazamiento.
 
 ```recorrido traduccion-paginacion
 
@@ -164,8 +164,8 @@ La página se reemplaza por el marco y el desplazamiento **se copia igual**: en 
 
 - Se pueden poner permisos por página, pero cuesta, porque la división no respeta dónde termina el código y empieza la pila.
 - Cada entrada tiene un **bit de válido/inválido** (presencia).
-- **Compartir es muy simple:** alcanza con que las tablas de dos procesos apunten al **mismo marco**, aunque sea con distinto número de página. Así se comparte una biblioteca.
-- Para saber qué marcos están libres, el SO usa una estructura aparte; lo más cómodo es un **bitmap**, un bit por marco.
+- **Compartir es muy simple:** alcanza con que las tablas de dos procesos apunten al **mismo frame**, aunque sea con distinto número de página. Así se comparte una biblioteca.
+- Para saber qué frames están libres, el SO usa una estructura aparte; lo más cómodo es un **bitmap**, un bit por frame.
 
 ## Segmentación paginada
 
@@ -185,7 +185,7 @@ No tiene fragmentación externa y los permisos se ponen bien (por segmento), per
 | **Particiones dinámicas** | Tabla de particiones + tabla de huecos                 | Muy alto si se compacta | 2                 | Externa                                       | La RAM                                  |
 | **Buddy system**          | Lista de bloques libres + tabla de ocupados            | Alto                    | 2                 | Interna y externa (poca)                      | La RAM                                  |
 | **Segmentación**          | Tabla de segmentos por proceso                         | Medio                   | 2                 | Externa                                       | La RAM                                  |
-| **Paginación**            | Tabla de páginas por proceso (+ marcos libres)         | Bajo                    | 2                 | Interna, en la última página                  | La cantidad de páginas por proceso      |
+| **Paginación**            | Tabla de páginas por proceso (+ frames libres)         | Bajo                    | 2                 | Interna, en la última página                  | La cantidad de páginas por proceso      |
 | **Segmentación paginada** | Tabla de segmentos + una tabla de páginas por segmento | Medio-alto              | 3                 | Interna, en la última página de cada segmento | La cantidad de páginas por proceso      |
 
 En la tabla de la cátedra solo la paginación y la segmentación paginada figuran como aptas para **compartir** memoria. La bibliografía también muestra segmentos compartidos; en un multiple choice, conviene seguir a la cátedra. Y en cualquier esquema, el grado de multiprogramación termina limitado por el tamaño de la RAM.
@@ -194,19 +194,19 @@ En la tabla de la cátedra solo la paginación y la segmentación paginada figur
 
 **1. ¿Qué diferencia hay entre fragmentación interna y externa? ¿Qué esquemas tienen cada una?**
 
-> La interna es memoria asignada a un proceso que no usa (y nadie más puede usar): la tienen las particiones fijas, el buddy system y la paginación (en la última página). La externa es memoria libre suficiente pero partida en huecos no contiguos: la tienen las particiones dinámicas, la segmentación y, en menor medida, el buddy system. La paginación no tiene externa porque cualquier marco libre sirve.
+> La interna es memoria asignada a un proceso que no usa (y nadie más puede usar): la tienen las particiones fijas, el buddy system y la paginación (en la última página). La externa es memoria libre suficiente pero partida en huecos no contiguos: la tienen las particiones dinámicas, la segmentación y, en menor medida, el buddy system. La paginación no tiene externa porque cualquier frame libre sirve.
 
 **2. ¿Por qué el address binding en tiempo de ejecución es el que permite reubicar procesos? ¿Quién paga su costo?**
 
 > Porque la dirección se traduce en cada acceso: si el proceso se mueve, alcanza con cambiar el registro de reubicación (o la tabla de páginas o segmentos). En compilación o en carga, la dirección física queda fija en el código. El costo de traducir lo paga el hardware (la MMU), no la CPU.
 
-**3. Con páginas de 4 KiB, ¿a qué dirección física corresponde la lógica 10832 si la página 2 está en el marco 9?**
+**3. Con páginas de 4 KiB, ¿a qué dirección física corresponde la lógica 10832 si la página 2 está en el frame 9?**
 
 > 10832 / 4096 = 2, con resto 2640: página 2, desplazamiento 2640. La física es 9 × 4096 + 2640 = 39504. En hexa: 0x2A50 → 0x9A50; el desplazamiento (0xA50) se copia igual.
 
 **4. ¿Qué diferencia la traducción en segmentación de la de paginación?**
 
-> En segmentación se suma el desplazamiento al inicio del segmento y se valida contra el límite, porque los segmentos son de tamaño variable. En paginación todas las páginas miden lo mismo, así que se reemplaza el número de página por el de marco y el desplazamiento se concatena; no puede pasarse de la página.
+> En segmentación se suma el desplazamiento al inicio del segmento y se valida contra el límite, porque los segmentos son de tamaño variable. En paginación todas las páginas miden lo mismo, así que se reemplaza el número de página por el de frame y el desplazamiento se concatena; no puede pasarse de la página.
 
 **5. ¿La compactación resuelve la fragmentación interna?**
 

@@ -25,9 +25,9 @@ const pageFault: Recorrido = {
       val: 'disco-v',
     }),
     panelLeyenda(250, 196, 170, 112, 'Memoria principal'),
-    celdaM('marco-7', 270, 216, 130, 26, 'marco 7 · otra'),
-    celdaM('marco-8', 270, 248, 130, 26, 'marco 8 · libre'),
-    celdaM('marco-9', 270, 280, 130, 26, 'marco 9 · otra'),
+    celdaM('marco-7', 270, 216, 130, 26, 'frame 7 · otra'),
+    celdaM('marco-8', 270, 248, 130, 26, 'frame 8 · libre'),
+    celdaM('marco-9', 270, 280, 130, 26, 'frame 9 · otra'),
     nodo(95, 230, 150, 54, 'Estado de P1', 'Running', { el: 'estado', val: 'estado-v' }),
     arista('M170,70 L242,70', {
       el: 'f-ref',
@@ -97,31 +97,31 @@ const pageFault: Recorrido = {
     {
       titulo: 'Solicita la página.',
       texto:
-        'El SO decide en qué marco ponerla (acá hay uno libre, el 8) y pide la página al disco: es una **E/S**, la parte lenta.',
+        'El SO decide en qué frame ponerla (acá hay uno libre, el 8) y pide la página al disco: es una **E/S**, la parte lenta.',
       resaltar: ['so', 'f-pide', 'disco', 'marco-8'],
       ocultar: ['f-pf'],
       mostrar: ['f-pide'],
-      valores: { 'so-v': 'elige el marco 8', 'disco-v': 'leyendo pág 2…' },
+      valores: { 'so-v': 'elige el frame 8', 'disco-v': 'leyendo pág 2…' },
     },
     {
       titulo: 'Se carga y avisa.',
       texto:
-        'La página queda en el marco 8 y el disco produce una **interrupción** de fin de E/S para que el SO retome el control.',
+        'La página queda en el frame 8 y el disco produce una **interrupción** de fin de E/S para que el SO retome el control.',
       resaltar: ['disco', 'f-carga', 'marco-8', 'f-irq', 'so'],
       ocultar: ['f-pide'],
       mostrar: ['f-carga', 'f-irq'],
-      valores: { 'marco-8': 'marco 8 · pág 2', 'disco-v': 'terminó', 'so-v': 'retoma el control' },
+      valores: { 'marco-8': 'frame 8 · pág 2', 'disco-v': 'terminó', 'so-v': 'retoma el control' },
       clases: { 'marco-8': 'rc-ok' },
     },
     {
       titulo: 'El SO atiende la interrupción.',
       texto:
-        'Actualiza la tabla de páginas (página 2 → marco 8, **P = 1**) y **desbloquea** a P1, que pasa a Ready. Todavía no ejecuta.',
+        'Actualiza la tabla de páginas (página 2 → frame 8, **P = 1**) y **desbloquea** a P1, que pasa a Ready. Todavía no ejecuta.',
       resaltar: ['so', 'f-act', 'tp', 'estado'],
       ocultar: ['f-carga', 'f-irq'],
       mostrar: ['f-act'],
       valores: {
-        'tp-v': 'pág 2 → marco 8 · P = 1',
+        'tp-v': 'pág 2 → frame 8 · P = 1',
         'estado-v': 'Ready',
         'so-v': 'actualizó la tabla',
       },
@@ -167,14 +167,14 @@ const casosTabla: Recorrido = {
     texto(30, 30, 'DL', { clase: 'rm-rotulo' }),
     celdaM('dl', 40, 16, 120, 28, '(3, 214)'),
     texto(140, 80, 'Tabla de páginas', { clase: 'rs-titulo' }),
-    encabezados(TP_X, 96, 60, ['marco', 'P', 'M']),
+    encabezados(TP_X, 96, 60, ['frame', 'P', 'M']),
     ...TP_INICIAL.map((_, i) => rotulo(TP_X - 8, TP_Y + i * 30 + 14, `pág ${i}`)),
     tablaM('tp', TP_X, TP_Y, 60, 30, TP_INICIAL),
     panelLeyenda(300, 70, 170, 220, 'Memoria real'),
-    celdaM('mr-1', 320, 92, 130, 28, 'marco 1 · pág 3'),
-    celdaM('mr-5', 320, 126, 130, 28, 'marco 5 · pág 0'),
-    celdaM('mr-8', 320, 160, 130, 28, 'marco 8 · libre'),
-    texto(385, 214, 'los demás marcos', { clase: 'rm-nota' }),
+    celdaM('mr-1', 320, 92, 130, 28, 'frame 1 · pág 3'),
+    celdaM('mr-5', 320, 126, 130, 28, 'frame 5 · pág 0'),
+    celdaM('mr-8', 320, 160, 130, 28, 'frame 8 · libre'),
+    texto(385, 214, 'los demás frames', { clase: 'rm-nota' }),
     texto(385, 230, 'son de otros procesos', { clase: 'rm-nota' }),
     panelLeyenda(510, 70, 190, 220, 'Memoria virtual (disco)'),
     celdaM('mv-0', 530, 110, 150, 28, 'pág 0 (vieja)'),
@@ -194,13 +194,13 @@ const casosTabla: Recorrido = {
             dl: '(3, 214)',
             ...valoresTP(TP_INICIAL),
             ...contadores(0, 0),
-            'mr-8': 'marco 8 · libre',
+            'mr-8': 'frame 8 · libre',
           },
         },
         {
           titulo: 'Lee la tabla.',
           texto:
-            'La fila 3 tiene **P = 1**: la página está en el marco 1. Leer la tabla, que está en RAM, ya es un acceso a memoria.',
+            'La fila 3 tiene **P = 1**: la página está en el frame 1. Leer la tabla, que está en RAM, ya es un acceso a memoria.',
           resaltar: ['tp-3-0', 'tp-3-1', 'tp-3-2'],
           clases: { 'tp-3-1': 'rc-ok' },
           valores: contadores(1, 0),
@@ -216,7 +216,7 @@ const casosTabla: Recorrido = {
       ],
     },
     {
-      nombre: 'PF con marco libre',
+      nombre: 'PF con frame libre',
       pasos: [
         {
           titulo: 'DL (2, 57).',
@@ -226,13 +226,13 @@ const casosTabla: Recorrido = {
             dl: '(2, 57)',
             ...valoresTP(TP_INICIAL),
             ...contadores(0, 0),
-            'mr-8': 'marco 8 · libre',
+            'mr-8': 'frame 8 · libre',
           },
         },
         {
           titulo: 'P = 0: page fault.',
           texto:
-            'La fila 2 dice marco 3, pero con **P = 0 ese número no vale** (es lo que quedó de antes). La página está en disco: page fault.',
+            'La fila 2 dice frame 3, pero con **P = 0 ese número no vale** (es lo que quedó de antes). La página está en disco: page fault.',
           resaltar: ['tp-2-0', 'tp-2-1', 'tp-2-2'],
           clases: { 'tp-2-0': 'rc-mal', 'tp-2-1': 'rc-mal' },
           valores: contadores(1, 0),
@@ -240,14 +240,14 @@ const casosTabla: Recorrido = {
         {
           titulo: 'Trae la página.',
           texto:
-            'Hay un marco libre, el 8: el SO lee la página 2 del disco ahí. **Un acceso a disco.**',
+            'Hay un frame libre, el 8: el SO lee la página 2 del disco ahí. **Un acceso a disco.**',
           resaltar: ['mv-2', 'mr-8'],
-          valores: { 'mr-8': 'marco 8 · pág 2', ...contadores(2, 1) },
+          valores: { 'mr-8': 'frame 8 · pág 2', ...contadores(2, 1) },
           clases: { 'mr-8': 'rc-ok' },
         },
         {
           titulo: 'Actualiza la tabla.',
-          texto: 'La fila 2 pasa a marco 8 con P = 1 (otro acceso a memoria, para escribirla).',
+          texto: 'La fila 2 pasa a frame 8 con P = 1 (otro acceso a memoria, para escribirla).',
           resaltar: ['tp-2-0', 'tp-2-1', 'tp-2-2'],
           valores: { 'tp-2-0': '8', 'tp-2-1': '1', ...contadores(3, 1) },
           clases: { 'tp-2-0': 'rc-ok', 'tp-2-1': 'rc-ok' },
@@ -262,25 +262,25 @@ const casosTabla: Recorrido = {
       ],
     },
     {
-      nombre: 'PF sin marco libre',
+      nombre: 'PF sin frame libre',
       pasos: [
         {
           titulo: 'DL (2, 57), sin lugar.',
           texto:
-            'Otra vez la página 2 con P = 0, pero ahora **no hay marcos libres**: hay que sacar una página del proceso.',
+            'Otra vez la página 2 con P = 0, pero ahora **no hay frames libres**: hay que sacar una página del proceso.',
           resaltar: ['dl', 'tp-2-1', 'mr-8'],
           valores: {
             dl: '(2, 57)',
             ...valoresTP(TP_INICIAL),
             ...contadores(1, 0),
-            'mr-8': 'marco 8 · ocupado',
+            'mr-8': 'frame 8 · ocupado',
           },
           clases: { 'tp-2-1': 'rc-mal' },
         },
         {
           titulo: 'Víctima modificada.',
           texto:
-            'El algoritmo de reemplazo elige la página 0 (marco 5). Tiene **M = 1**: su copia en disco está vieja, así que primero hay que **escribirla**. Primer acceso a disco.',
+            'El algoritmo de reemplazo elige la página 0 (frame 5). Tiene **M = 1**: su copia en disco está vieja, así que primero hay que **escribirla**. Primer acceso a disco.',
           resaltar: ['tp-0-0', 'tp-0-1', 'tp-0-2', 'mr-5', 'mv-0'],
           clases: { 'tp-0-2': 'rc-aviso', 'mv-0': 'rc-aviso' },
           valores: { 'mv-0': 'pág 0 (actualizada)', ...contadores(1, 1) },
@@ -288,15 +288,15 @@ const casosTabla: Recorrido = {
         {
           titulo: 'Lee la página 2.',
           texto:
-            'Ahora sí, lee la página 2 del disco en el marco 5. **Segundo acceso a disco**: escritura + lectura.',
+            'Ahora sí, lee la página 2 del disco en el frame 5. **Segundo acceso a disco**: escritura + lectura.',
           resaltar: ['mv-2', 'mr-5'],
-          valores: { 'mr-5': 'marco 5 · pág 2', ...contadores(1, 2) },
+          valores: { 'mr-5': 'frame 5 · pág 2', ...contadores(1, 2) },
           clases: { 'mr-5': 'rc-ok', 'mv-0': '' },
         },
         {
           titulo: 'Actualiza la tabla.',
           texto:
-            'La página 0 queda con P = 0; la 2 pasa a marco 5 con P = 1 y M = 0 (recién leída, todavía igual al disco).',
+            'La página 0 queda con P = 0; la 2 pasa a frame 5 con P = 1 y M = 0 (recién leída, todavía igual al disco).',
           resaltar: ['tp-0-1', 'tp-2-0', 'tp-2-1', 'tp-2-2'],
           valores: {
             'tp-0-1': '0',
@@ -328,7 +328,7 @@ const tlb: Recorrido = {
     texto(30, 34, 'DL', { clase: 'rm-rotulo' }),
     celdaM('dl', 40, 20, 120, 28, '(3, 0x1F0)'),
     panelLeyenda(200, 16, 180, 140, 'TLB (en la MMU)'),
-    encabezados(225, 48, 65, ['pág', 'marco']),
+    encabezados(225, 48, 65, ['pág', 'frame']),
     tablaM('tlb', 225, 56, 65, 26, [
       ['3', '1'],
       ['7', '4'],
@@ -336,7 +336,7 @@ const tlb: Recorrido = {
     ]),
     panelLeyenda(430, 16, 270, 200, 'Memoria principal'),
     texto(490, 48, 'tabla de páginas', { clase: 'rs-titulo' }),
-    encabezados(455, 66, 65, ['pág', 'marco']),
+    encabezados(455, 66, 65, ['pág', 'frame']),
     tablaM('tp', 455, 74, 65, 24, [
       ['2', '6'],
       ['3', '1'],
@@ -357,7 +357,7 @@ const tlb: Recorrido = {
       el: 'f-hit',
       punta: true,
       oculto: true,
-      etiqueta: 'marco',
+      etiqueta: 'frame',
       lx: 250,
       ly: 200,
     }),
@@ -376,7 +376,7 @@ const tlb: Recorrido = {
         {
           titulo: 'Búsqueda por contenido.',
           texto:
-            'La TLB no se indexa: compara la página con **todas** las entradas a la vez. La 3 está, con el marco 1: **TLB hit**, sin acceso a memoria.',
+            'La TLB no se indexa: compara la página con **todas** las entradas a la vez. La 3 está, con el frame 1: **TLB hit**, sin acceso a memoria.',
           resaltar: ['tlb-0-0', 'tlb-0-1', 'f-hit', 'df'],
           mostrar: ['f-hit'],
           clases: { 'tlb-0-0': 'rc-ok', 'tlb-0-1': 'rc-ok' },
@@ -412,7 +412,7 @@ const tlb: Recorrido = {
         {
           titulo: 'Tabla de páginas.',
           texto:
-            'Lee la tabla en RAM (1 acceso): página 2 → marco 6. Si tuviera P = 0 acá recién aparecería el **page fault**.',
+            'Lee la tabla en RAM (1 acceso): página 2 → frame 6. Si tuviera P = 0 acá recién aparecería el **page fault**.',
           resaltar: ['tp-0-0', 'tp-0-1'],
           clases: {
             'tp-0-0': 'rc-ok',
@@ -465,13 +465,13 @@ const jerarquica: Recorrido = {
     ]),
     panelLeyenda(250, 90, 190, 190, 'Tabla de páginas C'),
     tablaM('int', 280, 116, 130, 26, [
-      ['4 → marco 100'],
-      ['5 → marco 708'],
-      ['6 → marco 929'],
+      ['4 → frame 100'],
+      ['5 → frame 708'],
+      ['6 → frame 929'],
       ['7 → P = 0'],
     ]),
     panelLeyenda(490, 90, 210, 190, 'Memoria real'),
-    celdaM('marco', 520, 150, 150, 32, 'marco 708'),
+    celdaM('marco', 520, 150, 150, 32, 'frame 708'),
     celdaM('dato', 520, 196, 150, 32, 'dato (+0x0A4)'),
     arista('M95,48 L95,112', { el: 'f-1', punta: true }),
     arista('M170,181 L248,181', { el: 'f-2', punta: true, oculto: true }),
@@ -497,7 +497,7 @@ const jerarquica: Recorrido = {
     {
       titulo: 'Tabla de páginas.',
       texto:
-        'Con los 42 bits siguientes (5) se lee la entrada de ese pedazo: marco 708. Si el pedazo estuviera en disco, habría **un page fault solo por la tabla**.',
+        'Con los 42 bits siguientes (5) se lee la entrada de ese pedazo: frame 708. Si el pedazo estuviera en disco, habría **un page fault solo por la tabla**.',
       resaltar: ['dl-2', 'f-2', 'int-1-0', 'ext-2-0'],
       mostrar: ['f-2'],
       clases: { 'int-1-0': 'rc-ok' },
@@ -506,7 +506,7 @@ const jerarquica: Recorrido = {
     {
       titulo: 'El dato.',
       texto:
-        'Marco 708 + desplazamiento 0x0A4. Con dos niveles son **3 accesos a memoria**: niveles + 1. Lo que se gana es que de la tabla solo están en RAM los pedazos que se usan.',
+        'Frame 708 + desplazamiento 0x0A4. Con dos niveles son **3 accesos a memoria**: niveles + 1. Lo que se gana es que de la tabla solo están en RAM los pedazos que se usan.',
       resaltar: ['dl-3', 'f-3', 'marco', 'dato'],
       mostrar: ['f-3'],
       clases: { dato: 'rc-ok' },
@@ -535,9 +535,9 @@ const invertida: Recorrido = {
     texto(30, 34, 'Busca', { clase: 'rm-rotulo' }),
     celdaM('busca', 40, 20, 150, 28, '(pág 2, P5)'),
     nodo(110, 120, 150, 50, 'Hash', 'h(2, P5) = 1', { el: 'hash', val: 'hash-v', oculto: true }),
-    texto(330, 64, 'una entrada por marco', { clase: 'rm-nota' }),
+    texto(330, 64, 'una entrada por frame', { clase: 'rm-nota' }),
     encabezados(300, 82, 70, ['pág', 'PID', 'PTR']),
-    ...INVERTIDA.map((_, i) => rotulo(292, 104 + i * 26, `marco ${i}`)),
+    ...INVERTIDA.map((_, i) => rotulo(292, 104 + i * 26, `frame ${i}`)),
     tablaM('inv', 300, 90, 70, 26, INVERTIDA),
     nodo(600, 160, 170, 50, 'Dirección física', '—', { el: 'df', val: 'df-v' }),
     arista('M186,120 L298,118', { el: 'f-h', punta: true, oculto: true }),
@@ -557,32 +557,32 @@ const invertida: Recorrido = {
         {
           titulo: 'Se busca el par.',
           texto:
-            'La tabla tiene **una entrada por marco**, para todos los procesos. No se puede indexar por página: hay que buscar el par (página, PID).',
+            'La tabla tiene **una entrada por frame**, para todos los procesos. No se puede indexar por página: hay que buscar el par (página, PID).',
           resaltar: ['busca'],
           valores: { 'df-v': '—' },
         },
         {
-          titulo: 'Marco 0.',
+          titulo: 'Frame 0.',
           texto: 'Página 1: no es.',
           resaltar: ['inv-0-0', 'inv-0-1'],
           clases: { 'inv-0-0': 'rc-mal' },
         },
         {
-          titulo: 'Marco 1.',
+          titulo: 'Frame 1.',
           texto: 'La página coincide (2), pero es de **P2**: hay que comparar también el PID.',
           resaltar: ['inv-1-0', 'inv-1-1'],
           clases: { 'inv-0-0': '', 'inv-1-0': 'rc-ok', 'inv-1-1': 'rc-mal' },
         },
         {
-          titulo: 'Marcos 2 y 3.',
+          titulo: 'Frames 2 y 3.',
           texto: 'Páginas 3 y 0: no son.',
           resaltar: ['inv-2-0', 'inv-3-0'],
           clases: { 'inv-1-0': '', 'inv-1-1': '', 'inv-2-0': 'rc-mal', 'inv-3-0': 'rc-mal' },
         },
         {
-          titulo: 'Marco 4: está.',
+          titulo: 'Frame 4: está.',
           texto:
-            'Página 2 de P5. **El índice donde aparece es el número de marco**: DF = (4, desplazamiento). Si llegara al final sin encontrarla, sería page fault.',
+            'Página 2 de P5. **El índice donde aparece es el número de frame**: DF = (4, desplazamiento). Si llegara al final sin encontrarla, sería page fault.',
           resaltar: ['inv-4-0', 'inv-4-1', 'df'],
           clases: { 'inv-2-0': '', 'inv-3-0': '', 'inv-4-0': 'rc-ok', 'inv-4-1': 'rc-ok' },
           valores: { 'df-v': '(4, desplazamiento)' },
@@ -611,7 +611,7 @@ const invertida: Recorrido = {
         {
           titulo: 'Sigue la cadena.',
           texto:
-            'En la 4 está (2, P5): marco 4. Si la cadena terminara en NULL sin encontrarla, sería **page fault**.',
+            'En la 4 está (2, P5): frame 4. Si la cadena terminara en NULL sin encontrarla, sería **page fault**.',
           resaltar: ['inv-4-0', 'inv-4-1', 'df'],
           clases: { 'inv-1-1': '', 'inv-1-2': '', 'inv-4-0': 'rc-ok', 'inv-4-1': 'rc-ok' },
           valores: { 'df-v': '(4, desplazamiento)' },
@@ -642,14 +642,14 @@ function clockMejoradoRecorrido(): Recorrido {
   const cuerpo = [
     `<circle class="rm-eje" cx="200" cy="170" r="106" fill="none"/>`,
     ...CM_ESTADO.map((m, i) =>
-      nodo(RUEDA[i].x, RUEDA[i].y, 120, 46, `marco ${i} · pág ${m.pagina}`, um(m), {
+      nodo(RUEDA[i].x, RUEDA[i].y, 120, 46, `frame ${i} · pág ${m.pagina}`, um(m), {
         el: `rm-${i}`,
         val: `um-${i}`,
       }),
     ),
     texto(200, 170, 'pasada —', { val: 'pasada', clase: 'rs-titulo' }),
     panelLeyenda(440, 30, 260, 210, 'Tabla de páginas'),
-    encabezados(470, 62, 44, ['pág', 'marco', 'U', 'M', 'P']),
+    encabezados(470, 62, 44, ['pág', 'frame', 'U', 'M', 'P']),
     tablaM('tp', 470, 70, 44, 28, [
       ['2', '0', '1', '1', '1'],
       ['3', '1', '1', '0', '1'],
@@ -664,7 +664,7 @@ function clockMejoradoRecorrido(): Recorrido {
     {
       titulo: 'Se pide la página 7.',
       texto:
-        'Es para **leer** una variable. No está en memoria y no hay marcos libres: hay que elegir víctima. El puntero está en el marco 0.',
+        'Es para **leer** una variable. No está en memoria y no hay frames libres: hay que elegir víctima. El puntero está en el frame 0.',
       resaltar: ['tp-3-0', 'tp-3-4'],
       fichas: { ptr: 'r0' },
       clases: { 'tp-3-4': 'rc-mal' },
@@ -672,7 +672,7 @@ function clockMejoradoRecorrido(): Recorrido {
     {
       titulo: 'Pasada 1: busca (0, 0).',
       texto:
-        'Recorre los 4 marcos buscando uno **ni usado ni modificado**, sin tocar ningún bit. No hay: el marco 2 tiene U = 0 pero M = 1.',
+        'Recorre los 4 frames buscando uno **ni usado ni modificado**, sin tocar ningún bit. No hay: el frame 2 tiene U = 0 pero M = 1.',
       resaltar: CM_ESTADO.map((_, i) => `rm-${i}`),
       valores: { pasada: 'pasada 1: (0,0)' },
       clases: { 'tp-3-4': '' },
@@ -684,14 +684,14 @@ function clockMejoradoRecorrido(): Recorrido {
     pasos.push(
       v.elegido
         ? {
-            titulo: `Marco ${v.marco}: víctima.`,
+            titulo: `Frame ${v.marco}: víctima.`,
             texto: `La página ${m.pagina} tiene (0, 1): no se usó hace rato, aunque está modificada. **Es la víctima**; como M = 1, antes hay que escribirla en disco.`,
             resaltar: [`rm-${v.marco}`, `tp-${fila}-2`, `tp-${fila}-3`],
             fichas: { ptr: `r${v.marco}` },
             clases: { [`rm-${v.marco}`]: 'rc-mal' },
           }
         : {
-            titulo: `Pasada 2, marco ${v.marco}.`,
+            titulo: `Pasada 2, frame ${v.marco}.`,
             texto: `Busca (0, 1). La página ${m.pagina} tiene ${um(m)}: no es, y al pasar le **baja el bit de uso** a 0.`,
             resaltar: [`rm-${v.marco}`, `tp-${fila}-2`],
             fichas: { ptr: `r${v.marco}` },
@@ -707,7 +707,7 @@ function clockMejoradoRecorrido(): Recorrido {
   const fv = filaTP(CM_ESTADO[victima].pagina)
   pasos.push({
     titulo: 'Entra la página 7.',
-    texto: `La 6 queda con P = 0 y la 7 entra al marco ${victima} con **U = 1 y M = 0** (es una lectura). El puntero pasa al marco siguiente.`,
+    texto: `La 6 queda con P = 0 y la 7 entra al frame ${victima} con **U = 1 y M = 0** (es una lectura). El puntero pasa al frame siguiente.`,
     resaltar: [`rm-${victima}`, 'tp-3-1', 'tp-3-2', 'tp-3-3', 'tp-3-4', `tp-${fv}-4`],
     fichas: { ptr: `r${(victima + 1) % RUEDA.length}` },
     valores: {
@@ -766,7 +766,7 @@ const cow: Recorrido = {
     {
       titulo: 'fork().',
       texto:
-        'El hijo es un duplicado del padre, pero en lugar de copiar toda la memoria, las dos tablas apuntan a **los mismos marcos**, marcados como solo lectura.',
+        'El hijo es un duplicado del padre, pero en lugar de copiar toda la memoria, las dos tablas apuntan a **los mismos frames**, marcados como solo lectura.',
       resaltar: ['a1', 'b1', 'c1', 'a2', 'b2', 'c2', 'fa', 'fb', 'fc'],
       mostrar: ['c1'],
       valores: { nota: 'nada se copió todavía' },
@@ -774,13 +774,13 @@ const cow: Recorrido = {
     {
       titulo: 'Mientras solo leen…',
       texto:
-        '…comparten todo. Crear el proceso fue rápido y no gastó marcos: es la compartición que permite la paginación.',
+        '…comparten todo. Crear el proceso fue rápido y no gastó frames: es la compartición que permite la paginación.',
       resaltar: ['fa', 'fb', 'fc'],
     },
     {
       titulo: 'P1 escribe en C.',
       texto:
-        'La página está protegida contra escritura: salta una excepción y el SO ve que es copy-on-write. **Recién ahora copia C** a un marco nuevo.',
+        'La página está protegida contra escritura: salta una excepción y el SO ve que es copy-on-write. **Recién ahora copia C** a un frame nuevo.',
       resaltar: ['p1-c', 'fc', 'fc2'],
       mostrar: ['fc2'],
       clases: { 'p1-c': 'rc-aviso', fc2: 'rc-ok' },
@@ -836,7 +836,7 @@ const thrashing: Recorrido = {
         oculto: true,
       },
     ),
-    nodo(545, 46, 230, 40, '1. Más procesos en memoria', 'menos marcos para cada uno', {
+    nodo(545, 46, 230, 40, '1. Más procesos en memoria', 'menos frames para cada uno', {
       el: 'c1',
     }),
     nodo(545, 116, 230, 40, '2. Más fallos de página', 'todos esperan al disco', { el: 'c2' }),
@@ -871,13 +871,13 @@ const thrashing: Recorrido = {
     {
       titulo: 'El techo.',
       texto:
-        'Llega un punto en que los marcos ya no alcanzan para la **localidad** de cada proceso.',
+        'Llega un punto en que los frames ya no alcanzan para la **localidad** de cada proceso.',
       fichas: { cpu: 'pico' },
     },
     {
       titulo: 'El círculo vicioso.',
       texto:
-        'Con menos marcos por proceso hay más fallos de página; todos se bloquean esperando al disco y la CPU queda libre.',
+        'Con menos frames por proceso hay más fallos de página; todos se bloquean esperando al disco y la CPU queda libre.',
       resaltar: ['c1', 'a12', 'c2', 'a23', 'c3'],
       fichas: { cpu: 'cae' },
       mostrar: ['zona'],
@@ -891,7 +891,7 @@ const thrashing: Recorrido = {
     {
       titulo: 'La salida.',
       texto:
-        'Hay que **bajar** el grado de multiprogramación (suspender procesos) o darle a cada proceso los marcos de su conjunto de trabajo.',
+        'Hay que **bajar** el grado de multiprogramación (suspender procesos) o darle a cada proceso los frames de su conjunto de trabajo.',
       resaltar: ['zona'],
       fichas: { cpu: 'pico' },
     },
@@ -923,10 +923,10 @@ const workingSet: Recorrido = {
       titulo: `t = ${t + 1}.`,
       texto:
         k === 0
-          ? `La ventana mira las últimas ${DELTA} referencias. Las páginas distintas que aparecen son el conjunto de trabajo: **${w.length} marcos** alcanzan para no fallar en ese tramo.`
+          ? `La ventana mira las últimas ${DELTA} referencias. Las páginas distintas que aparecen son el conjunto de trabajo: **${w.length} frames** alcanzan para no fallar en ese tramo.`
           : `La ventana avanza: W = {${w.join(', ')}}, ${w.length} páginas.` +
             (k === T_WS.length - 1
-              ? ' El tamaño de W va cambiando: con él se decide cuántos marcos darle al proceso.'
+              ? ' El tamaño de W va cambiando: con él se decide cuántos frames darle al proceso.'
               : ''),
       resaltar: ventana.map((j) => `w-${j}`),
       valores: {
@@ -947,19 +947,19 @@ export const recorridos: Record<string, Recorrido> = {
     refs: REFS_CLASE,
     marcos: 3,
     algoritmos: ['optimo', 'fifo', 'lru', 'clock'],
-    titulo: 'Algoritmos de reemplazo con 3 marcos y la secuencia de la clase',
+    titulo: 'Algoritmos de reemplazo con 3 frames y la secuencia de la clase',
   }),
   'belady-3': recorridoReemplazo({
     refs: REFS_BELADY,
     marcos: 3,
     algoritmos: ['fifo'],
-    titulo: 'FIFO con 3 marcos',
+    titulo: 'FIFO con 3 frames',
   }),
   'belady-4': recorridoReemplazo({
     refs: REFS_BELADY,
     marcos: 4,
     algoritmos: ['fifo'],
-    titulo: 'FIFO con 4 marcos',
+    titulo: 'FIFO con 4 frames',
   }),
   'clock-mejorado': clockMejoradoRecorrido(),
   'copy-on-write': cow,

@@ -44,7 +44,7 @@ export function recorridoReemplazo(o: OpcionesReemplazo): Recorrido {
     ),
     ...Array.from({ length: n }, (_, i) =>
       [
-        rotulo(X0 - 12, yFila(i) + FILA / 2, `Marco ${i}`),
+        rotulo(X0 - 12, yFila(i) + FILA / 2, `Frame ${i}`),
         ...refs.map((_, j) =>
           celdaM(`m${i}-${j}`, X0 + j * COL, yFila(i), COL, FILA, '', { clase: 'rm-grilla' }),
         ),
@@ -132,7 +132,7 @@ export function recorridoReemplazo(o: OpcionesReemplazo): Recorrido {
       0,
       lleno,
       'Carga inicial.',
-      `Los marcos arrancan vacíos: ${lista(cargados.filter((i) => i.fallo).map((i) => String(i.ref)))} entran sin reemplazar a nadie, pero **cada una es un PF** y se cuenta.` +
+      `Los frames arrancan vacíos: ${lista(cargados.filter((i) => i.fallo).map((i) => String(i.ref)))} entran sin reemplazar a nadie, pero **cada una es un PF** y se cuenta.` +
         (aciertosIniciales.length ? ` La ${lista(aciertosIniciales)} repetida es acierto.` : '') +
         extraInicial(alg),
     )
@@ -151,13 +151,13 @@ export function recorridoReemplazo(o: OpcionesReemplazo): Recorrido {
 
   function extraInicial(alg: AlgoritmoReemplazo) {
     if (alg === 'clock')
-      return ' Cada página entra con U = 1 y el puntero avanza al marco siguiente.'
-    if (alg === 'fifo') return ' El puntero queda en el marco de la que entró primero.'
+      return ' Cada página entra con U = 1 y el puntero avanza al frame siguiente.'
+    if (alg === 'fifo') return ' El puntero queda en el frame de la que entró primero.'
     return ''
   }
 
   function acierto(alg: AlgoritmoReemplazo, i: Instante) {
-    const m = `marco ${i.marcos.indexOf(i.ref)}`
+    const m = `frame ${i.marcos.indexOf(i.ref)}`
     if (alg === 'fifo')
       return `Acierto en el ${m}. En FIFO un acierto no cambia nada: el puntero no se mueve.`
     if (alg === 'lru')
@@ -170,7 +170,7 @@ export function recorridoReemplazo(o: OpcionesReemplazo): Recorrido {
   function motivo(alg: AlgoritmoReemplazo, inst: Instante[], t: number) {
     const i = inst[t]
     const antes = inst[t - 1]
-    const sale = `Sale la **${i.victima}** del marco ${i.marco}`
+    const sale = `Sale la **${i.victima}** del frame ${i.marco}`
     if (alg === 'optimo') {
       const proximos = antes.marcos.map((p) => {
         const k = refs.indexOf(p!, t + 1)
@@ -179,7 +179,7 @@ export function recorridoReemplazo(o: OpcionesReemplazo): Recorrido {
       return `Mira el futuro: ${lista(proximos)}. ${sale}, la que se usa más lejos.`
     }
     if (alg === 'fifo')
-      return `El puntero está en el marco ${antes.puntero}: ahí está la que hace más tiempo que entró. ${sale} y el puntero avanza.`
+      return `El puntero está en el frame ${antes.puntero}: ahí está la que hace más tiempo que entró. ${sale} y el puntero avanza.`
     if (alg === 'lru') {
       const ultimos = antes.marcos.map(
         (p) => `la ${p} en la ref. ${refs.lastIndexOf(p!, t - 1) + 1}`,
@@ -190,13 +190,13 @@ export function recorridoReemplazo(o: OpcionesReemplazo): Recorrido {
     let p = antes.puntero!
     const bajados: string[] = []
     while (uso[p]) {
-      bajados.push(`marco ${p} (${antes.marcos[p]})`)
+      bajados.push(`frame ${p} (${antes.marcos[p]})`)
       uso[p] = false
       p = (p + 1) % n
     }
     const recorre = bajados.length
-      ? `El puntero arranca en el marco ${antes.puntero} y baja U a 0 en ${lista(bajados)}. Llega al marco ${p}, que tiene U = 0.`
-      : `El puntero está en el marco ${p}, que tiene U = 0.`
+      ? `El puntero arranca en el frame ${antes.puntero} y baja U a 0 en ${lista(bajados)}. Llega al frame ${p}, que tiene U = 0.`
+      : `El puntero está en el frame ${p}, que tiene U = 0.`
     return `${recorre} ${sale}; la nueva entra con U = 1 y el puntero pasa al siguiente.`
   }
 }

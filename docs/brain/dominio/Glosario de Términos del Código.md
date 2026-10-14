@@ -1,8 +1,8 @@
 ---
 tipo: dominio
-aliases: [glosario, términos, nombres, naming, vocabulario, pcb, tick, ráfaga]
+aliases: [glosario, términos, nombres, naming, vocabulario, pcb, tick, ráfaga, frame, marco]
 tags: [dominio, glosario]
-actualizado: 2026-09-23
+actualizado: 2026-10-14
 ---
 
 # Glosario de Términos del Código
@@ -19,5 +19,6 @@ actualizado: 2026-09-23
 | Response ratio (HRRN)          | `responseRatio()` = `(w + s) / s`   |                               |
 | Tema / Unidad                  | colección `temas`                   | id `parcial-N/<slug>`         |
 | Paso de una resolución         | `Step { state, descripcion }`       | [[Patrón — Steps y Playback]] |
+| Frame (de memoria)             | `marco`, `marcos`                   | En la UI siempre "frame" (rótulo corto `F3`); el código conserva `marco` |
 
 **Conectado con:** [[Dominio SO]]
