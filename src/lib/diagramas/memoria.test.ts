@@ -7,9 +7,12 @@ import {
   fragmentacionExterna,
   particionamientoDinamico,
   reemplazo,
+  reemplazoConEstado,
   traducirPaginacion,
   ubicar,
   type Instante,
+  type MarcoEstado,
+  type RefAcceso,
 } from './memoria'
 
 const REFS = [2, 3, 2, 1, 5, 2, 4, 5, 3, 2, 5, 2]
@@ -183,5 +186,50 @@ describe('particionamiento dinámico (RAM de 48 MB, SO de 8: la secuencia de la 
     expect(compacto.map((p) => `${p.proceso ?? '·'}${p.inicio}+${p.tam}`).join(' ')).toBe(
       'P50+8 P48+6 P314+6 P120+10 ·30+10',
     )
+  })
+})
+
+describe('reemplazo con estado inicial (Guía de Memoria, Ej. 9)', () => {
+  // marcos 1, 3, 5 y 8; el puntero está en el 8 (libre)
+  const inicial: MarcoEstado[] = [
+    { marco: 1, pagina: 14, u: true, m: true, ultimoUso: 28 },
+    { marco: 3, pagina: 17, u: true, m: false, ultimoUso: 3 },
+    { marco: 5, pagina: 19, u: true, m: true, ultimoUso: 15 },
+    { marco: 8, pagina: null, u: false, m: false, ultimoUso: -1 },
+  ]
+  const L = (pagina: number | null): RefAcceso => ({ pagina, escritura: false })
+  const E = (pagina: number): RefAcceso => ({ pagina, escritura: true })
+  // 100 L, 122950 E, 98306 L, 139264 E, 122880 L, 155650 E, 172100 L (inválida), 100 L
+  const refs = [L(0), E(15), L(12), E(17), L(15), E(19), L(null), L(0)]
+  const escritas = (inst: ReturnType<typeof reemplazoConEstado>) =>
+    inst.filter((i) => i.escrita).map((i) => i.victima)
+
+  it('LRU: 6 PF y escribe en disco la 19 y la 14', () => {
+    const inst = reemplazoConEstado(inicial, 3, refs, 'lru')
+    expect(inst.map((i) => i.fallo)).toEqual([true, true, true, true, false, true, false, true])
+    expect(inst.map((i) => i.victima)).toEqual([null, 17, 19, 14, null, 0, null, 12])
+    expect(escritas(inst)).toEqual([19, 14])
+    expect(inst.at(-1)!.paginas).toEqual([17, 15, 0, 19])
+  })
+
+  it('Clock mejorado: 5 PF y escribe en disco solo la 14', () => {
+    const inst = reemplazoConEstado(inicial, 3, refs, 'clock-mejorado')
+    expect(inst.map((i) => i.fallo)).toEqual([true, true, true, true, false, false, false, true])
+    expect(inst.map((i) => i.victima)).toEqual([null, 17, 0, 14, null, null, null, 12])
+    expect(escritas(inst)).toEqual([14])
+    expect(inst.at(-1)!.paginas).toEqual([17, 15, 19, 0])
+    expect(inst.at(-1)!.puntero).toBe(0)
+  })
+
+  it('la dirección inválida no es PF ni cambia el estado', () => {
+    const inst = reemplazoConEstado(inicial, 3, refs, 'clock-mejorado')
+    expect(inst[6]).toMatchObject({ invalida: true, fallo: false })
+    expect(inst[6].paginas).toEqual(inst[5].paginas)
+  })
+
+  it('una escritura con acierto prende M sin mover el puntero', () => {
+    const inst = reemplazoConEstado(inicial, 3, refs, 'clock-mejorado')
+    expect(inst[5].m[2]).toBe(true)
+    expect(inst[5].puntero).toBe(inst[4].puntero)
   })
 })
