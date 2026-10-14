@@ -174,6 +174,8 @@ const ejercicios = defineCollection({
     simulaciones: z.array(simulacionSchema).default([]),
     /** Desafíos de código con semáforos (uno por inciso). */
     semaforos: z.array(desafioSemaforosSchema).default([]),
+    /** Cada parte de la resolución se desbloquea al resolver (o rendirse en) la anterior. */
+    encadenado: z.boolean().default(false),
     /** Desafíos de cálculo con resultado exacto (uno por inciso). */
     calculos: z.array(calculoSchema).default([]),
     /** Aclaración (markdown) de un concepto del enunciado que la teoría no explica; va arriba de "Resolución". */

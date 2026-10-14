@@ -1,6 +1,6 @@
 ---
 tipo: patron
-aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice, calculos, cálculo, CalculoDesafio, resultado exacto, fault]
+aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice, calculos, cálculo, CalculoDesafio, resultado exacto, fault, encadenado, partes encadenadas, ParteResolucion, so:revelado]
 tags: [patron, simuladores, ux]
 actualizado: 2026-10-14
 ---
@@ -60,6 +60,21 @@ descarte. `calculos:` en el frontmatter (ver [[Formato de un Ejercicio]]), compo
 - Las respuestas viajan en `data-calc-campos`, igual que `data-mc-correcta` en el MC.
 - Clave de progreso `ruta#calc-N`. Lo categórico (fault por límite vs. por permiso) sigue en MC.
 - **Pendiente:** modo examen (simulacros); hoy el componente es solo de práctica.
+
+## Partes encadenadas (`encadenado: true`)
+Cuando una parte spoilea la anterior (Memoria Ej. 4: el MC "¿qué provoca cada fault?" delata qué
+direcciones fallan), el ejercicio lleva `encadenado: true` y cada parte aparece recién al **resolver
+o rendirse** en la anterior. Es **opt-in**: las preguntas independientes (incisos de Deadlock) no se
+bloquean.
+
+- `controlarResolucion` dispara `so:revelado` (bubbles) cada vez que muestra la resolución, así que
+  sirve para cualquier desafío. `src/lib/desafios/encadenado.ts` lo escucha y destraba la siguiente.
+- Página: cada parte va en `ParteResolucion.astro` con su clave de progreso; el orden es el de la
+  página (cálculos → MC → semáforos → Gantt), no el de `clavesEjercicio`.
+- Si la anterior ya estaba resuelta (localStorage), la siguiente arranca visible. "Ocultar
+  resolución" no vuelve a bloquear.
+- ⚠️ Agregar un campo al schema con `pnpm dev` corriendo no alcanza: el content store sigue con los
+  datos viejos hasta reiniciar el server (el campo nuevo llega `undefined`).
 
 **Ayuda:** ícono "info" junto a "Resolución" con popover nativo (`popover` + CSS anchor positioning).
 

@@ -1,0 +1,24 @@
+---
+/** Una parte de la resolución; con `bloqueada`, se oculta hasta revelar la anterior (encadenado.ts). */
+interface Props {
+  /** Clave de progreso de la parte (`ruta#calc-0`, `ruta#mc-1`…). */
+  clave: string
+  bloqueada: boolean
+}
+
+const { clave, bloqueada } = Astro.props
+---
+
+<div data-parte data-parte-clave={clave}>
+  {bloqueada && (
+    <p
+      class="rounded-xl border border-dashed border-line p-4 text-sm text-muted"
+      data-parte-bloqueo
+    >
+      Resolvé la parte anterior (o rendite) para ver esta.
+    </p>
+  )}
+  <div data-parte-contenido hidden={bloqueada}>
+    <slot />
+  </div>
+</div>
