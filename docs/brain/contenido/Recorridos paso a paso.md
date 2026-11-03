@@ -93,6 +93,8 @@ los junta con `import.meta.glob` (un id repetido falla en build).
 - `primitivas-memoria.ts`: `barraMemoria` (barra con segmentos y fragmentación), `celdaM`, `tablaM`,
   `encabezados`, `rotulo`. `recorrido-reemplazo.ts` genera recorridos de reemplazo enteros. Ver
   [[Recorridos de Memoria]] (incluye la técnica de fotogramas).
+- `filesystem.ts`: cuentas puras de FAT y ext2 (`espacioFat`, `maxArchivoExt2`, `accesosByte`). Ver
+  [[Recorridos y cálculos de Filesystem]].
 
 ## Gotchas
 

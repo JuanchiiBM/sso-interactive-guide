@@ -1,8 +1,8 @@
 ---
 tipo: dominio
-aliases: [glosario, términos, nombres, naming, vocabulario, pcb, tick, ráfaga, frame, marco]
+aliases: [glosario, términos, nombres, naming, vocabulario, pcb, tick, ráfaga, frame, marco, inodo, puntero, conformación, accesos]
 tags: [dominio, glosario]
-actualizado: 2026-10-14
+actualizado: 2026-11-03
 ---
 
 # Glosario de Términos del Código
@@ -20,5 +20,7 @@ actualizado: 2026-10-14
 | Tema / Unidad                  | colección `temas`                   | id `parcial-N/<slug>`         |
 | Paso de una resolución         | `Step { state, descripcion }`       | [[Patrón — Steps y Playback]] |
 | Frame (de memoria)             | `marco`, `marcos`                   | En la UI siempre "frame" (rótulo corto `F3`); el código conserva `marco` |
+| Punteros del inodo (PD, IS, ID, IT) | `Conformacion { directos, simples, dobles, triples }` | `filesystem.ts`; cantidades, no direcciones |
+| Accesos a bloques (ext2)       | `Accesos { datos, punteros, total }` | Sin el inodo (criterio de la cátedra) |
 
 **Conectado con:** [[Dominio SO]]
