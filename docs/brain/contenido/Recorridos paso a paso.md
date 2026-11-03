@@ -2,7 +2,7 @@
 tipo: componente
 aliases: [recorrido, recorridos, paso a paso, stepper, diagrama interactivo, gráfico interactivo, animación, ficha, RECORRIDOS, renderRecorrido, initRecorridos, midudev]
 tags: [componente, contenido, svg, interactivo]
-actualizado: 2026-10-08
+actualizado: 2026-11-03
 ---
 # Recorridos paso a paso
 
@@ -115,6 +115,8 @@ los junta con `import.meta.glob` (un id repetido falla en build).
   recargá forzado o agregá `?v=2` a la URL.
 - **Caché de content collections:** si cambiás un recorrido y el HTML no cambia,
   `rm -rf .astro node_modules/.astro` antes de `pnpm build`.
+- **Dos `pnpm build` a la vez** en el mismo working tree se pisan `dist/` (`ERR_MODULE_NOT_FOUND` en
+  chunks, o páginas que faltan). Con agentes en paralelo, buildear de a uno.
 
 **Conectado con:** [[Bloques SVG grafo y diagrama]], [[Patrón — Steps y Playback]] (el paso a paso
 de los simuladores, que es otro mecanismo), [[Contenido]].

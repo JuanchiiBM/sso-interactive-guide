@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [contenido, teoría, teoria, ejercicios, markdown, guías]
 tags: [moc, contenido]
-actualizado: 2026-10-14
+actualizado: 2026-11-03
 ---
 
 # Contenido
@@ -17,6 +17,7 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 - [[Fuentes y Derechos del Material]] — de dónde sale cada cosa y qué no se sube.
 - [[Content Collections Temas y Ejercicios]] — cómo se cargan y rutean.
 - [[Recorridos de Memoria]] — algoritmos y generadores de los diagramas de memoria.
+- [[Recorridos y cálculos de Filesystem]] — FAT, ext2, links; lib pura de cuentas de FS.
 
 ## Inventario 1er parcial
 
@@ -35,8 +36,11 @@ Las tres guías cierran con un link a Google Forms de "ejercicios avanzados" que
 | --- | --- | --- |
 | Memoria real | 5 | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 1–4 y 11 |
 | Memoria virtual | 6 | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 5–10 |
+| Filesystem | 1 | Guía de Ejercicios – File System (2016, Rev. 1): Ej. 11 |
+| FAT y UFS (ext2) | 10 | Guía de Ejercicios – File System (2016, Rev. 1): Ej. 1–10 |
 
-Teoría: PPT Memoria Real + Resumen SO págs. 71–84; PPT Memoria Virtual + Resumen SO págs. 85–99.
+Teoría: PPT Memoria Real + Resumen SO págs. 71–84; PPT Memoria Virtual + Resumen SO págs. 85–99;
+PPT FileSystem + Resumen SO págs. 100–112; PPT FAT-UFS + Resumen SO págs. 113–121.
 Los ejercicios se numeran **por tema** y el número original va en `guia: '… · Ej. N'` (ver
 [[Formato de un Ejercicio]]). Casi todos se resuelven con `calculos` (resultado exacto); ver
 [[Patrón — Desafío antes de la Resolución]].
