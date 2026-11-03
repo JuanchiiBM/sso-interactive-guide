@@ -2,7 +2,7 @@
 tipo: dominio
 aliases: [convenciones, cátedra, catedra, desempate, tie-break, simultaneidad, reglas de oro, semáforos, utn, frba, parciales, resoluciones]
 tags: [dominio, catedra]
-actualizado: 2026-10-14
+actualizado: 2026-11-03
 ---
 
 # Convenciones de la Cátedra FRBA
@@ -96,6 +96,34 @@ Decisiones al resolverla (no hay resolución oficial en el repo):
   dirección inválida, **no** es PF, no carga nada y el proceso **sigue** con la referencia siguiente.
 - **Accesos con TLB** (Ej. 10): 1 a la TLB por referencia; acierto = 1 a memoria; fallo = 2 (tabla +
   dato); PF = +1 a disco (+1 más si la víctima tiene M = 1).
+
+## File System (PPTs FileSystem y FAT-UFS)
+
+Criterios de las resoluciones de 2dos parciales (1C2024–1C2026); los vigila
+`src/lib/diagramas/filesystem.test.ts`.
+
+- **FAT32 usa 28 bits** de las 32 de la entrada, también para el espacio **teórico**:
+  teórico = `2^28 × cluster`; real = mínimo con el tamaño del disco (1R 2C2024, 1C2026 TT, 1R 2C2025).
+- **Tamaño de la FAT** = clusters reales del disco × tamaño de entrada (1R 1C2025, 1R 1C2026). La
+  PPT lo calcula con el máximo (`2^28 × 4 B`); la teoría dice "como máximo".
+- **Archivo máximo en FAT = FS máximo**, sin el tope de 4 GiB (2C2024 TT). La PPT (diap. 20) dice
+  4 GiB por el campo de tamaño de la entrada de directorio: los ejercicios lo aclaran en una nota.
+- **Accesos en UFS/ext2:** se cuentan bloques de **punteros + datos**; el **inodo no**, porque el
+  archivo ya está abierto. PD = 1, IS = 2, ID = 3, IT = 4. Bytes y bloques desde 0,
+  `bloque = byte div tamaño de bloque` (1C2025 TM, 1C2026 TM, 1C2024 TM, 2C2025 TT, 1R 2C2024).
+- **ext2 FS teórico** = `2^(bits del puntero) × bloque`; real = mínimo con el disco.
+- **Inodo por defecto:** 12 PD + IS + ID + IT si el enunciado no dice otra cosa (la PPT usa 4 PD).
+- **Clasificación:** FAT = asignación **encadenada** con la tabla aparte (algún parcial la llama
+  "enlazada-indexada"); ext2 = **indexada** con indirecciones.
+- **Partición ≠ volumen:** el volumen es la partición con un FS instalado.
+
+### Guía de Ejercicios de File System (2016)
+
+- Ej. 2b dice "128 Mib": se toma MiB; en c.2 "alto tiempo de respuesta" = responder rápido.
+- Ej. 3c: bits desperdiciados = `32 − 21` = 11 (4 reservados del formato + 7 que sobran por disco chico).
+- Ej. 3b pide el porcentaje **exacto** (0,09765625): el verificador de `calculos` no tiene tolerancia.
+- Ej. 8a: el mínimo literal es **1 puntero** (un indirecto triple); eso le da sentido al inciso b.
+- Ej. 11: `/etc/alternatives` en el mismo volumen en c); d) y e) se resuelven con hard link.
 
 ## Formato de respuestas
 
