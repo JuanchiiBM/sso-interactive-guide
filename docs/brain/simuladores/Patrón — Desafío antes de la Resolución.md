@@ -2,7 +2,7 @@
 tipo: patron
 aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice, calculos, cálculo, CalculoDesafio, resultado exacto, fault, encadenado, partes encadenadas, ParteResolucion, so:revelado]
 tags: [patron, simuladores, ux]
-actualizado: 2026-11-03
+actualizado: 2026-11-04
 ---
 # Patrón — Desafío antes de la Resolución
 
@@ -62,7 +62,7 @@ descarte. `calculos:` en el frontmatter (ver [[Formato de un Ejercicio]]), compo
 - **Pendiente:** modo examen (simulacros); hoy el componente es solo de práctica.
 - ⚠️ **Orden fijo en la página:** cálculos → MC → semáforos → Gantt. Un MC del inciso b) queda
   después del cálculo del c) (Memoria virtual Ej. 2). Intercalar exigiría una lista de partes ordenada.
-  Si el orden importa, todo en MC: Filesystem Ej. 1 (links) pregunta "cuántos archivos" como MC.
+  Si el orden importa, todo en MC: Filesystem Ej. 3, 5 y 6 (links) preguntan "cuántas entradas / archivos" como MC.
 
 ## Partes encadenadas (`encadenado: true`)
 Cuando una parte spoilea la anterior (Memoria Ej. 4: el MC "¿qué provoca cada fault?" delata qué

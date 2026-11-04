@@ -20,7 +20,7 @@ aliases:
     ubicarByte,
   ]
 tags: [componente, contenido, svg, interactivo, filesystem]
-actualizado: 2026-11-03
+actualizado: 2026-11-04
 ---
 
 # Recorridos y cálculos de Filesystem
@@ -37,8 +37,11 @@ resoluciones de parciales).
 espacioFat(32, 4 * KiB, 8 * GiB) // { teorico, real, entradas, tamanoTabla }
 maxArchivoExt2({ directos: 12, simples: 1, dobles: 1, triples: 1 }, 1 * KiB, 4)
 accesosByte(conf, 4 * KiB, 8, 16777227) // punteros + datos, sin el inodo
+accesosBloque(conf, 1 * KiB, 4, 260) // igual, por bloque lógico
+clusterPorTabla(32, 256 * MiB, 384 * GiB) // menor cluster 2^k con entradas × cluster ≥ volumen
 ```
 
+También `fragmentacionInterna(Maxima)`, `clustersQueOcupa`, `archivoMaximoRealFat` (descuenta la tabla).
 Cada número de las resoluciones de `ejercicios/fat-ufs/` sale de acá. Los criterios (28 bits en FAT32,
 el inodo no cuenta) están en [[Convenciones de la Cátedra FRBA]].
 
@@ -65,8 +68,10 @@ el inodo no cuenta) están en [[Convenciones de la Cátedra FRBA]].
   (`'nivel 1 · entrada 0'`).
 - Flechas que dependen de la pestaña: una por caso, ocultas (`a-p4-n1`, `a-pd2-dato`), porque el
   dibujo es el mismo para todas las variantes.
-- Ej. 11 (links) va **todo en MC**, también el "cuántos archivos": la página ordena cálculos antes que
-  MC y un cálculo del b) quedaría arriba del MC del a), delatándolo.
+- Links (Ej. 19, 21, 22) van **todo en MC**, también el "cuántas entradas / archivos": la página ordena
+  cálculos antes que MC y un cálculo del b) quedaría arriba del MC del a), delatándolo.
+- `byte-inodo` se embebe en las justificaciones de Ej. 10 y 11 (misma configuración), aunque el
+  recorrido tiene IT y esos ejercicios no: la justificación lo aclara.
 
 **Depende de:** [[Recorridos paso a paso]]
 **Conectado con:** [[Contenido]], [[Recorridos de Memoria]], [[Convenciones de la Cátedra FRBA]]
