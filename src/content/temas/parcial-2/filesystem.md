@@ -104,14 +104,33 @@ Si dos procesos abren el mismo archivo, hay **una** entrada en la global (con co
 
 ### Locks (cerrojos)
 
-Son a los archivos lo que los semáforos a los procesos, con una diferencia: un lock puede tomar **una porción** del archivo (de un byte a otro), así que dos procesos pueden trabajar a la vez en zonas distintas.
+Son a los archivos lo que los semáforos a los procesos, con una diferencia: un lock puede tomar **una porción** del archivo (de un byte a otro), así que dos procesos pueden trabajar a la vez en zonas distintas. Se clasifican de dos formas independientes, y cada lock tiene un valor de cada una:
 
-| Clasificación       | Tipo            | Qué significa                                                                                                                |
-| ------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Por alcance         | **Exclusivo**   | Un solo proceso a la vez, como un mutex.                                                                                     |
-|                     | **Compartido**  | Varios a la vez, para leer.                                                                                                  |
-| Por quién lo impone | **Obligatorio** | Lo fuerza el SO.                                                                                                             |
-|                     | **Sugerido**    | El SO no garantiza nada: cada proceso tiene que pedirlo. Ventaja: **menos overhead**, porque el SO no valida en cada acceso. |
+| Clasificación       | Tipo            | Qué significa                                                                                                                                    |
+| ------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Por alcance         | **Exclusivo**   | Como un mutex: un solo proceso a la vez, **sea para leer o para escribir**.                                                                      |
+|                     | **Compartido**  | Varios procesos a la vez **en modo lectura**. Para escribir sigue siendo de a uno: el que escribe no comparte con nadie.                         |
+| Por quién lo impone | **Obligatorio** | Lo fuerza el SO: aplica el lock al abrir y valida cada acceso, aunque el proceso no lo pida.                                                     |
+|                     | **Sugerido**    | El SO no garantiza nada: cada proceso tiene que pedirlo (`lock` / `unlock`). Ventaja: **menos overhead**, porque el SO no valida en cada acceso. |
+
+El lock se registra en la **tabla global de archivos abiertos** (junto con los permisos y el contador de aperturas): es ahí donde el SO mira, ante el `open`, `read` o `write` de otro proceso, si el archivo está tomado.
+
+#### ¿Puede entrar un segundo proceso?
+
+P1 tiene el archivo abierto con su lock; llega P2. El **alcance** dice si los dos modos son compatibles:
+
+| P1 tiene el archivo…             | P2 quiere leer             | P2 quiere escribir         |
+| -------------------------------- | -------------------------- | -------------------------- |
+| Exclusivo (lectura o escritura)  | No: espera a que P1 libere | No: espera a que P1 libere |
+| Compartido, abierto en lectura   | **Sí**: comparten el lock  | No: espera a que P1 libere |
+| Compartido, abierto en escritura | No: el que escribe va solo | No: espera a que P1 libere |
+
+Quién hace cumplir ese "no" depende de **quién impone** el lock:
+
+- **Obligatorio:** el SO. La syscall de P2 (`open`, `read`, `write`) **falla con un error o bloquea a P2** hasta que P1 libere, según la syscall sea no bloqueante o bloqueante. Un proceso que no pide el lock no lo saltea: el SO lo frena igual.
+- **Sugerido:** nadie. La tabla vale solo entre procesos que **piden** el lock: si P2 lo pide, queda bloqueado igual que con uno obligatorio; si P2 **no lo pide**, el SO lo deja leer o escribir aunque P1 tenga el lock, y la consistencia del archivo queda en manos del programador.
+
+Ejemplo de parcial (cuatro procesos sobre un archivo, con `lock` / `unlock` bloqueantes): P1 y P3 abren en lectura y toman el lock, P2 abre en escritura y lo pide, P4 lee **sin** pedirlo. Con lock **compartido**, P1 y P3 leen a la vez y P2 queda bloqueado hasta que los dos liberan. Lo que cambia según quién lo impone es P4: con lock **sugerido** lee sin problema; con lock **obligatorio** su `read` falla.
 
 ### Métodos de acceso
 
@@ -296,4 +315,12 @@ Son muchas escrituras en lugares distintos del disco. Si el sistema se corta en 
 
 > Que una operación que necesita varias escrituras (directorio, FCB, bitmap, datos) quede por la mitad si el sistema se cae, dejando el filesystem inconsistente. Al registrar antes las tareas como una transacción, se pueden terminar o deshacer al volver.
 
-_Fuente: PPT Filesystem: Conceptos Básicos de la cátedra y Sistemas Operativos for Dummies (págs. 100–112)._
+**8. Un proceso hace `write()` sobre un archivo que otro proceso tiene con un lock obligatorio. ¿Qué sucede? ¿Qué estructuras intervienen?**
+
+> La escritura no se realiza: la syscall devuelve un error o bloquea al proceso hasta que se libere el lock. Interviene la **tabla global de archivos abiertos**, donde están los permisos del archivo y el registro del lock. Si el lock fuera sugerido y el proceso no lo pidiera, el `write()` se haría igual.
+
+**9. Con locks compartidos, ¿por qué un proceso que quiere escribir queda bloqueado mientras otros leen?**
+
+> Porque el lock compartido solo se comparte **entre lectores**: escribir requiere el archivo para uno solo. Quien pide el lock para escribir espera a que todos los lectores lo liberen; mientras tanto, otros lectores pueden seguir entrando.
+
+_Fuente: PPT Filesystem: Conceptos Básicos de la cátedra, Sistemas Operativos for Dummies (págs. 100–112) y resoluciones de 2dos parciales (locks: 2C2024 TT, 1C2025 TT, 1R 2C2025)._
