@@ -55,6 +55,38 @@ export const espacioOcupado = (archivo: number, cluster: number) =>
 /** Bits que hacen falta para numerar `n` clusters. */
 export const bitsNecesarios = (n: number) => Math.ceil(Math.log2(n))
 
+/** Lo que se pierde en el último cluster (o bloque) del archivo. */
+export const fragmentacionInterna = (archivo: number, cluster: number) =>
+  espacioOcupado(archivo, cluster) - archivo
+
+/** Peor caso: el último cluster lleva 1 solo byte. */
+export const fragmentacionInternaMaxima = (cluster: number) => cluster - 1
+
+/** Clusters enteros que ocupa la tabla FAT (u otra estructura) guardada en el volumen. */
+export const clustersQueOcupa = (bytes: number, cluster: number) => Math.ceil(bytes / cluster)
+
+/**
+ * Cluster (potencia de 2) de un volumen cuya tabla FAT mide `tabla` bytes. Criterio de 1R 2C2025:
+ * la tabla tiene 2^n entradas, el mínimo que cubre el volumen.
+ */
+export function clusterPorTabla(fat: TipoFat, tabla: number, volumen: number): number {
+  const entradas = tabla / BYTES_ENTRADA[fat]
+  let cluster = 512
+  while (entradas * cluster < volumen) cluster *= 2
+  return cluster
+}
+
+/** Archivo máximo real en FAT descontando la tabla (una copia), que ocupa clusters del volumen. */
+export function archivoMaximoRealFat(
+  fat: TipoFat,
+  cluster: number,
+  volumen: number,
+  tabla: number,
+) {
+  const real = espacioFat(fat, cluster, volumen).real
+  return real - clustersQueOcupa(tabla, cluster) * cluster
+}
+
 // ── ext2 ──
 
 export interface Conformacion {
@@ -158,3 +190,7 @@ export function accesosRango(
 
 export const accesosByte = (conf: Conformacion, bloque: number, puntero: number, byte: number) =>
   accesosRango(conf, bloque, puntero, byte, byte)
+
+/** Accesos para leer el bloque lógico `n` (base 0) del archivo. */
+export const accesosBloque = (conf: Conformacion, bloque: number, puntero: number, n: number) =>
+  accesosRango(conf, bloque, puntero, n * bloque, n * bloque)

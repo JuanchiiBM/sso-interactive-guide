@@ -2,7 +2,7 @@
 tipo: dominio
 aliases: [convenciones, cátedra, catedra, desempate, tie-break, simultaneidad, reglas de oro, semáforos, utn, frba, parciales, resoluciones]
 tags: [dominio, catedra]
-actualizado: 2026-11-03
+actualizado: 2026-11-04
 ---
 
 # Convenciones de la Cátedra FRBA
@@ -117,13 +117,28 @@ Criterios de las resoluciones de 2dos parciales (1C2024–1C2026); los vigila
   "enlazada-indexada"); ext2 = **indexada** con indirecciones.
 - **Partición ≠ volumen:** el volumen es la partición con un FS instalado.
 
-### Guía de Ejercicios de File System (2016)
+- **Cluster a partir del tamaño de la tabla FAT** (`clusterPorTabla`): entradas = tabla / tamaño de
+  entrada, y el cluster es la **menor potencia de 2** con `entradas × cluster ≥ volumen`; no se divide
+  volumen / entradas
+  (1R 2C2025 "Bilbo", 1R 1C2024). Estructuras administrativas = **una** copia de la FAT.
+- **Locks:** sugerido = solo frena a quien también pide el lock; obligatorio = lo impone el SO (la
+  syscall falla o bloquea, pida o no el lock). Exclusivo frena lectura y escritura; compartido admite
+  solo lectores (2C2024 TT, 1C2025 TT, 1R 2C2025).
 
-- Ej. 2b dice "128 Mib": se toma MiB; en c.2 "alto tiempo de respuesta" = responder rápido.
-- Ej. 3c: bits desperdiciados = `32 − 21` = 11 (4 reservados del formato + 7 que sobran por disco chico).
-- Ej. 3b pide el porcentaje **exacto** (0,09765625): el verificador de `calculos` no tiene tolerancia.
-- Ej. 8a: el mínimo literal es **1 puntero** (un indirecto triple); eso le da sentido al inciso b.
-- Ej. 11: `/etc/alternatives` en el mismo volumen en c); d) y e) se resuelven con hard link.
+### Guía de Ejercicios de Filesystem (v.2C2026)
+
+Reemplazó a la de 2016 (que trae entera). Decisiones al resolverla:
+
+- Ej. 6c: bits desperdiciados = `32 − 21` = 11 (4 reservados del formato + 7 que sobran por disco chico).
+- Ej. 6b pide el porcentaje **exacto** (0,09765625): el verificador de `calculos` no tiene tolerancia.
+- Ej. 5 c.B: "alto tiempo de respuesta" = responder rápido.
+- Ej. 9: B ocupa los 384 GiB restantes; con el criterio de arriba el cluster da **8 KiB** (dividir
+  directo daría 6 KiB, que no es potencia de 2). Va en una nota del enunciado.
+- Ej. 15a: el mínimo literal es **1 puntero** (un indirecto triple); eso le da sentido al inciso b.
+- Ej. 19d repite `/datos/acceso.txt`: se responde por el soft link. Las rutas `java 17` del PDF se
+  escriben `java17`.
+- Ej. 22: `/etc/alternatives` en el mismo volumen → hard link desde el inciso b.
+- Ej. 24/25: se asume que P1 tomó el lock al abrir.
 
 ## Formato de respuestas
 
