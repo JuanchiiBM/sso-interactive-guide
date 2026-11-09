@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [contenido, teoría, teoria, ejercicios, markdown, guías]
 tags: [moc, contenido]
-actualizado: 2026-11-04
+actualizado: 2026-11-09
 ---
 
 # Contenido
@@ -36,8 +36,11 @@ Las tres guías (y la de Filesystem v.2C2026) cierran con un link a Google Forms
 | --- | --- | --- |
 | Memoria real | 5 | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 1–4 y 11 |
 | Memoria virtual | 6 | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 5–10 |
-| Filesystem | 12 | Guía de Ejercicios – Filesystem (v.2C2026): Ej. 17–28 (links y locks) |
-| FAT y UFS (ext2) | 16 | Guía de Ejercicios – Filesystem (v.2C2026): Ej. 1–16 |
+| Filesystem | 6 | Guía de Ejercicios – Filesystem (v.2C2026): Ej. 23–28 (locks) |
+| FAT y UFS (ext2) | 22 | Guía de Ejercicios – Filesystem (v.2C2026): Ej. 1–22 (FAT, ext2 y links) |
+
+Los **links** van en FAT y UFS, no en Filesystem: la teoría (y la PPT FAT-UFS) los explica sobre el
+inodo. En ese tema el número de cada ejercicio coincide con el de la guía.
 
 Teoría: PPT Memoria Real + Resumen SO págs. 71–84; PPT Memoria Virtual + Resumen SO págs. 85–99;
 PPT FileSystem + Resumen SO págs. 100–112; PPT FAT-UFS + Resumen SO págs. 113–121.
