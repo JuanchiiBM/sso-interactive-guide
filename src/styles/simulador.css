@@ -434,6 +434,10 @@
   border-color: var(--ok);
   background: color-mix(in srgb, var(--ok) 10%, transparent);
 }
+.calc-campo[data-mal] {
+  border-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 10%, transparent);
+}
 .calc-input {
   width: 7rem;
   padding: 0.25em 0.5em;
