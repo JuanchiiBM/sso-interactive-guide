@@ -151,6 +151,8 @@ const calculoSchema = z.object({
         respuesta: z.union([z.number(), z.string()]),
         base: z.union([z.literal(10), z.literal(16)]).optional(),
         unidad: z.string().optional(),
+        texto: z.boolean().optional(),
+        alternativas: z.array(z.union([z.number(), z.string()])).optional(),
       }),
     )
     .min(1),

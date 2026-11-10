@@ -24,9 +24,11 @@ const campos = await Promise.all(
     const solucion =
       e === FAULT
         ? 'Fault'
-        : c.base === 16
-          ? `${String(c.respuesta).toUpperCase()}h`
-          : `${c.respuesta}${c.unidad ? ` ${c.unidad}` : ''}`
+        : c.texto
+          ? String(c.respuesta)
+          : c.base === 16
+            ? `${String(c.respuesta).toUpperCase()}h`
+            : `${c.respuesta}${c.unidad ? ` ${c.unidad}` : ''}`
     return { ...c, etiquetaHtml: await markdownInlineAHtml(c.etiqueta), solucion }
   }),
 )
@@ -54,10 +56,12 @@ const campos = await Promise.all(
             id={`calc-${clave}-${i}`}
             type="text"
             class="calc-input"
-            inputmode={c.base === 16 ? 'text' : 'decimal'}
+            inputmode={
+              c.base === 16 || c.texto || String(c.respuesta).includes('^') ? 'text' : 'decimal'
+            }
             autocomplete="off"
             spellcheck="false"
-            placeholder={c.base === 16 ? 'hexa' : '?'}
+            placeholder={c.base === 16 ? 'hexa' : c.texto ? 'texto' : '?'}
           />
           {c.unidad && <span class="text-xs text-muted">{c.unidad}</span>}
           {calculo.fault && (

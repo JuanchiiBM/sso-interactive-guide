@@ -88,6 +88,25 @@ describe('potencias de 2', () => {
   })
 })
 
+describe('respuestas de texto y alternativas', () => {
+  it('texto: sin mayúsculas, espacios ni variantes del guion', () => {
+    const eof = { etiqueta: 'sig.', respuesta: 'EOF', texto: true, alternativas: ['FIN'] }
+    expect(campoCorrecto(eof, r(' eof '))).toBe(true)
+    expect(campoCorrecto(eof, r('Fin'))).toBe(true)
+    expect(campoCorrecto(eof, r('7'))).toBe(false)
+    const libre = { etiqueta: 'frame', respuesta: '—', texto: true }
+    expect(campoCorrecto(libre, r('-'))).toBe(true)
+  })
+
+  it('una alternativa numérica o de texto también vale', () => {
+    const entradas = { etiqueta: 'entradas', respuesta: 15, alternativas: [16, '—'] }
+    expect(campoCorrecto(entradas, r('15'))).toBe(true)
+    expect(campoCorrecto(entradas, r('16'))).toBe(true)
+    expect(campoCorrecto(entradas, r('–'))).toBe(true)
+    expect(campoCorrecto(entradas, r('17'))).toBe(false)
+  })
+})
+
 describe('puntajeCalculo', () => {
   const campos = [
     { etiqueta: 'a', respuesta: 649 },
