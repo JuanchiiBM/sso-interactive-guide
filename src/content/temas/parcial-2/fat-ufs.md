@@ -116,6 +116,7 @@ FAT12, FAT16 y FAT32 usan entradas (punteros a cluster) de 12, 16 y 32 bits. **F
 - **Protección:** no hay permisos ni propietarios.
 - **FCB:** los atributos están en la entrada de directorio.
 - **Journaling:** nada que garantice la integridad ante un corte. La tolerancia a fallos se apoya en las **copias de la FAT**: si se pierde la tabla, se pierden todas las cadenas.
+- **Clusters dañados:** un cluster que se daña queda marcado **ERROR**. Se pierden sus datos y, con ellos, el "siguiente" de la cadena: el resto del archivo sigue en disco pero no se sabe dónde continúa. Para reencadenarlo se usa la **copia de la FAT** o una herramienta de recuperación que la recorra.
 - **Links:** si dos entradas de directorio apuntaran al mismo primer cluster, cada una tendría **su propia copia de los atributos** (por ejemplo, el tamaño). Modificar el archivo por una entrada dejaría la otra desactualizada, y eso es inconsistente.
 
 Crear un archivo en FAT es simple: crear la entrada de directorio, buscar un cluster libre para el primero y, si hacen falta más, buscar otros libres y encadenarlos en la FAT.
@@ -158,7 +159,9 @@ El número de inodo identifica al archivo: la relación inodo-archivo es uno a u
 
 ### El inodo
 
-Es el **FCB** de UFS, uno por archivo, de tamaño fijo (128 bytes en las versiones clásicas de ext). Tiene los atributos (id, propietario, grupo, permisos, tamaño, tipo, fechas, **contador de hard links**) y una lista de **punteros** a los bloques del archivo.
+Es el **FCB** de UFS, uno por archivo, de tamaño fijo (128 bytes en las versiones clásicas de ext). Tiene los atributos (id, propietario, grupo, permisos, tamaño, tipo, fechas, **contador de hard links**) y una lista de **punteros** a los bloques del archivo. El **nombre no está en el inodo**: está en la entrada de directorio.
+
+Las fechas son tres: último **acceso**, última **modificación** del contenido y último **cambio** del inodo. Leer actualiza el acceso. Escribir sobre bloques que el archivo ya tenía cambia solo las fechas, sin tocar tamaño ni punteros; agrandarlo cambia además el tamaño y, si hace falta, los punteros.
 
 Como el inodo es chico, entran pocos punteros. Para archivos grandes se usa un **bloque de datos para guardar punteros**, que se asigna recién cuando hace falta:
 
@@ -259,6 +262,8 @@ Con un hard link ya no hay "entrada original": las dos entradas valen lo mismo. 
 | Journaling    | No                                   | Sí                            |
 | Links         | No                                   | Hard y soft                   |
 | Seguridad     | No                                   | Propietario, grupo y permisos |
+
+Al **copiar de FAT a UFS** el archivo llega sin propietario ni permisos, porque FAT no los tiene: se crea un inodo nuevo y se le asignan el usuario que copia y los permisos por defecto del sistema (o los que indique el usuario).
 
 ## Preguntas de parcial
 

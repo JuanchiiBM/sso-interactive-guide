@@ -276,7 +276,7 @@ Son muchas escrituras en lugares distintos del disco. Si el sistema se corta en 
 
 ## Recuperación
 
-- **Comprobación de coherencia:** un programa recorre las estructuras y corrige lo que no cierra (por ejemplo, `chkdsk` en Windows).
+- **Comprobación de coherencia:** un programa recorre las estructuras y corrige lo que no cierra (por ejemplo, `chkdsk` en Windows o `fsck` en Linux). En ext2, si se corrompe el **bitmap de bloques** se puede reconstruir: se arranca uno nuevo en 0 y se recorren todos los inodos ocupados, marcando cada bloque que usan (de datos y de punteros).
 - **Backups:** copias de seguridad. La cátedra destaca la copia de la **metadata** del filesystem, no solo de los datos.
 - **Journaling:** las operaciones sobre un archivo se tratan como una **transacción**: o se hacen todas o ninguna. Antes de ejecutarlas se escribe en un registro (el _journal_) la lista de lo que hay que hacer; si el sistema se cae en el medio, al volver se lee el registro y se completa (o se descarta) la operación.
 

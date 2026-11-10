@@ -65,6 +65,14 @@ Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos
 | **Bit de bloqueo**         | La página no se puede reemplazar (se usa, por ejemplo, para frames del SO).                 |
 | **Protección**             | Permisos R/W/X.                                                                             |
 
+**Quién lee y quién escribe cada bit** (la pregunta aparece en parciales):
+
+| Bit   | Lo lee                                                         | Lo escribe                                                                                   |
+| ----- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **P** | La **MMU** al traducir (P = 0 dispara el page fault).          | El **SO** al cargar la página (1) o al sacarla (0).                                          |
+| **U** | El **SO**, en clock, al buscar víctima.                        | El **HW** lo pone en 1 al referenciar la página; el **SO** lo pone en 0 al pasar el puntero. |
+| **M** | El **SO** al reemplazar: si es 1, escribe la víctima en disco. | La **MMU** lo pone en 1 cuando el proceso escribe; el **SO** lo vuelve a 0 al cargarla.      |
+
 ### Los tres casos de una referencia
 
 ```recorrido casos-tabla-paginas
@@ -82,16 +90,16 @@ Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos
 
 ## Atención de un page fault
 
-El **page fault** (fallo de página) es una excepción que lanza la MMU cuando se referencia una página con el bit de presencia en 0. Es una excepción de tipo **fallo**: se corrige y la instrucción se vuelve a ejecutar (ver [Repaso de arquitectura](/teoria/parcial-1/arquitectura/)).
+El **page fault** (fallo de página) es una excepción que lanza la MMU cuando se referencia una página con el bit de presencia en 0. Es una interrupción **sincrónica** (la provoca la instrucción que se está ejecutando, no un dispositivo) de tipo **fallo**: se corrige y la instrucción se vuelve a ejecutar (ver [Repaso de arquitectura](/teoria/parcial-1/arquitectura/)).
 
 ```recorrido page-fault
 
 ```
 
 1. **Se referencia memoria** y la tabla de páginas dice P = 0.
-2. **Interrupción por fallo de página:** se bloquea el proceso y, mientras tanto, otro puede usar la CPU.
-3. **Se solicita la página:** el SO elige el frame (si no hay libre, corre el algoritmo de reemplazo) y pide la página al disco.
-4. **Se carga** en el frame y el disco produce una **interrupción** para que el SO retome el control.
+2. **Interrupción por fallo de página:** el proceso pasa a **Bloqueado** y, mientras tanto, otro puede usar la CPU.
+3. **Se solicita la página:** el SO elige el frame (si no hay libre, corre el algoritmo de reemplazo; si la víctima tiene M = 1, primero se escribe en disco) y pide la página al disco.
+4. **Se carga** en el frame por **DMA**, sin usar la CPU, y al terminar el disco produce una **interrupción de fin de E/S** (asincrónica) para que el SO retome el control.
 5. **El SO atiende la interrupción:** actualiza la tabla de páginas y pasa el proceso a **Listo**.
 6. **Se reejecuta** la instrucción que provocó el fallo.
 
@@ -142,7 +150,7 @@ La **TLB** (_Translation Lookaside Buffer_) es una caché de la tabla de página
 - **Miss:** se pierde el tiempo de la búsqueda y se va a la tabla de páginas. Si la página está, se carga la entrada en la TLB; si no, es page fault.
 - Es muy rápida pero tiene **pocas entradas**. Cuando está llena, se elige qué entrada sacar con un algoritmo de reemplazo, igual que con las páginas (por ejemplo, FIFO).
 - **Para contar accesos:** cada referencia consulta la TLB (**1 acceso a la TLB**). Con hit hay 1 acceso a memoria; con miss, 2 (tabla + dato); y si además es page fault se suman los accesos a disco de la tabla de arriba.
-- **ASID** (identificador de espacio de direcciones): cada entrada lleva el proceso dueño. Sin ASID, la TLB se vacía en cada cambio de proceso.
+- **ASID** (identificador de espacio de direcciones): cada entrada lleva el proceso dueño. Sin ASID, la TLB se vacía en cada cambio de proceso. Si no se vaciara, un proceso podría encontrar la entrada de una página con el mismo número pero de **otro** proceso, y la traducción daría una dirección física de memoria ajena.
 
 > **Complemento (Stallings / Silberschatz), tiempo efectivo de acceso.** Con una tasa de aciertos `α`, búsqueda en la TLB `ε` y acceso a memoria `m`:
 >
