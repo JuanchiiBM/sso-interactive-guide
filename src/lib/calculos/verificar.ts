@@ -24,6 +24,9 @@ export function leerNumero(texto: string, base: 10 | 16 = 10): number | null {
     return /^[0-9a-f]+$/.test(hexa) ? parseInt(hexa, 16) : null
   }
   const decimal = t.replace(',', '.')
+  // `2^74`, `2**74` o `3*2^20`: los tamaños de FS y memoria se escriben como potencias
+  const potencia = decimal.match(/^(?:(\d+(?:\.\d+)?)[*x·])?2(?:\^|\*\*)(\d+)$/)
+  if (potencia) return Number(potencia[1] ?? 1) * 2 ** Number(potencia[2])
   return /^-?\d+(\.\d+)?$/.test(decimal) ? Number(decimal) : null
 }
 
@@ -41,7 +44,7 @@ export function campoCorrecto(campo: CampoCalculo, r: RespuestaAlumno): boolean 
   if (e === FAULT) return r.fault
   if (r.fault) return false
   const valor = leerNumero(r.valor, campo.base)
-  return valor != null && Math.abs(valor - e) < 1e-9
+  return valor != null && Math.abs(valor - e) <= 1e-9 * Math.max(1, Math.abs(e))
 }
 
 /** Correcto solo si aciertan todos los campos; `correctos` queda para un modo pista o el puntaje. */

@@ -72,6 +72,22 @@ describe('verificarCalculo', () => {
   })
 })
 
+describe('potencias de 2', () => {
+  it('lee 2^n, 2**n y k*2^n', () => {
+    expect(leerNumero('2^10')).toBe(1024)
+    expect(leerNumero('2**10')).toBe(1024)
+    expect(leerNumero('3*2^20')).toBe(3 * 2 ** 20)
+    expect(leerNumero('2^')).toBeNull()
+  })
+
+  it('una respuesta 2^74 acepta la potencia o el número', () => {
+    const campo = { etiqueta: 'máx', respuesta: '2^74', unidad: 'B' }
+    expect(campoCorrecto(campo, r('2^74'))).toBe(true)
+    expect(campoCorrecto(campo, r('18889465931478580854784'))).toBe(true)
+    expect(campoCorrecto(campo, r('2^73'))).toBe(false)
+  })
+})
+
 describe('puntajeCalculo', () => {
   const campos = [
     { etiqueta: 'a', respuesta: 649 },
