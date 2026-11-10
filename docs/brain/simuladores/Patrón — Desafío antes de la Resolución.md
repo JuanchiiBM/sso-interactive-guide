@@ -2,7 +2,7 @@
 tipo: patron
 aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice, calculos, cálculo, CalculoDesafio, resultado exacto, fault, encadenado, partes encadenadas, ParteResolucion, so:revelado]
 tags: [patron, simuladores, ux]
-actualizado: 2026-11-09
+actualizado: 2026-11-10
 ---
 # Patrón — Desafío antes de la Resolución
 
@@ -59,7 +59,18 @@ descarte. `calculos:` en el frontmatter (ver [[Formato de un Ejercicio]]), compo
   relee como texto en base 16. Una respuesta que no se puede leer **rompe el build** (a propósito).
 - Las respuestas viajan en `data-calc-campos`, igual que `data-mc-correcta` en el MC.
 - Clave de progreso `ruta#calc-N`. Lo categórico (fault por límite vs. por permiso) sigue en MC.
-- **Pendiente:** modo examen (simulacros); hoy el componente es solo de práctica.
+- **Potencias de 2:** `respuesta: '2^74'` (string). El alumno puede escribir `2^74`, `2**74`, `3*2^20`
+  o el número; la comparación es relativa (un `2^74` no entra exacto en decimal).
+- **Texto** (`texto: true`): EOF, `—`, un nombre. Compara sin mayúsculas ni espacios, y `—`/`–` = `-`.
+  Un campo de texto no valida su respuesta en build.
+- **Alternativas** (`alternativas: [16, '—']`): otras respuestas que también valen, cuando la cátedra
+  acepta dos criterios. Una alternativa no numérica en un campo numérico se compara como texto.
+- **Tabla a completar** (`tabla:` en lugar de `campos:`): celdas fijas (texto o número) o campos.
+  `camposDe` (`src/lib/calculos/tabla.ts`) la aplana en orden de lectura con etiqueta `fila · columna`, así
+  que verificar, puntaje y modo examen son los mismos que con `campos`. Se usa para la tabla de páginas
+  final con P/U/M, las tablas de segmentos y de la FAT, la TLB y las trazas de reemplazo.
+- **Modo examen:** `modo="examen"` saca Verificar y Me rindo; `crearCalculoExamen` puntúa por campo (ver
+  [[Simulacros]]).
 - ⚠️ **Orden fijo en la página:** cálculos → MC → semáforos → Gantt. Un MC del inciso b) queda
   después del cálculo del c) (Memoria virtual Ej. 2). Intercalar exigiría una lista de partes ordenada.
   Si el orden importa, todo en MC: FAT y UFS Ej. 19, 21 y 22 (links) preguntan "cuántas entradas / archivos" como MC.
