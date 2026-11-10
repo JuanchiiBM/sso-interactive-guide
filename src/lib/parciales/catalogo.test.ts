@@ -41,6 +41,10 @@ describe('citas de examen', () => {
       '1P 2C2025 TM',
       '1P 1C2026 TM',
     ])
+    expect(examenesDeEnunciado('(2P 1C2025 TM; 2R 1C2026, single choice 3) ¿…?')).toEqual([
+      '2P 1C2025 TM',
+      '2R 1C2026',
+    ])
     expect(examenesDeEnunciado('¿Sin cita?')).toEqual([])
   })
 
@@ -51,6 +55,8 @@ describe('citas de examen', () => {
       '1P 1C2025 TM',
       '1P 1C2026 TM',
     ])
+    expect(examenesDeFuente('2° Parcial 1C2025 · TT')).toEqual(['2P 1C2025 TT'])
+    expect(examenesDeFuente('2° Recuperatorio 2C2024')).toEqual(['2R 2C2024'])
     expect(examenesDeFuente('Guía de Ejercicios – Planificación (v.2C2026)')).toEqual([])
   })
 })
@@ -113,6 +119,34 @@ describe('los 14 parciales del relevamiento', () => {
       const temas = p.practica.map(orden)
       expect(temas, p.codigo).toEqual([...temas].sort((a, b) => a - b))
     }
+  })
+})
+
+describe('2do parcial', () => {
+  const de2 = (id: string, guia: string, dificultad = 'parcial', preguntas: string[] = []) => ({
+    id,
+    data: {
+      tema: 'parcial-2/fat-ufs',
+      fuente: { guia, numero: 1 },
+      dificultad,
+      preguntas: preguntas.map((enunciado) => ({ enunciado })),
+    },
+  })
+  const segundo = armarParciales(
+    [
+      de2('fat-ufs/ej-30', '2° Recuperatorio 1C2025'),
+      de2('fat-ufs/simulacro', 'Parciales 2024–2026 (teoría)', 'parcial', ['(2P 1C2025 TM) ¿…?']),
+    ],
+    ['parcial-2/fat-ufs'],
+  )
+
+  it('arma el número, el título y el id desde el código', () => {
+    expect(
+      segundo.map(({ codigo, titulo, numero, id }) => ({ codigo, titulo, numero, id })),
+    ).toEqual([
+      { codigo: '2P 1C2025 TM', titulo: '2° Parcial 1C2025 · TM', numero: 2, id: '2p-1c2025-tm' },
+      { codigo: '2R 1C2025', titulo: '2° Recuperatorio 1C2025', numero: 2, id: '2r-1c2025' },
+    ])
   })
 })
 
