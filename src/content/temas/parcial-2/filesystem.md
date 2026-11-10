@@ -170,6 +170,8 @@ El **punto de montaje** es el lugar de la estructura de directorios donde se hac
 
 Los permisos son tres: lectura (**r**), escritura (**w**) y ejecución (**x**).
 
+Sobre un **directorio** los permisos hablan de sus entradas: **r** deja listarlas, **w** deja crear, borrar o renombrar entradas, y **x** deja atravesarlo para llegar a lo que tiene adentro. Por eso **borrar un archivo** exige **w** sobre el directorio que lo contiene, no sobre el archivo.
+
 ### Formas de guardar los permisos
 
 - **Tipo UNIX:** cada archivo tiene un **propietario** y un **grupo**, y tres ternas `rwx`: para el propietario, para el grupo y para el resto. Ocupa **9 bits**. Limitación: no se pueden dar permisos distintos a distintos grupos.
