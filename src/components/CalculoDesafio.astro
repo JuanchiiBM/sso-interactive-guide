@@ -2,12 +2,14 @@
 /** Desafío de cálculo: el alumno escribe resultados exactos. Comportamiento: src/lib/desafios/calculo.ts */
 import { markdownAHtml, markdownInlineAHtml } from '@lib/markdown/marked'
 import { esperado, FAULT, type CampoCalculo } from '@lib/calculos/verificar'
+import { camposDe, type TablaCalculo } from '@lib/calculos/tabla'
 
 interface Props {
   calculo: {
     enunciado?: string
     fault: boolean
-    campos: CampoCalculo[]
+    campos?: CampoCalculo[]
+    tabla?: TablaCalculo
     justificacion: string
   }
   /** Identificador estable en la página (para el progreso guardado). */
@@ -18,8 +20,9 @@ interface Props {
 const { calculo, clave, modo = 'practica' } = Astro.props
 const enunciado = calculo.enunciado && (await markdownAHtml(calculo.enunciado))
 const justificacion = await markdownAHtml(calculo.justificacion)
+const todos = camposDe(calculo)
 const campos = await Promise.all(
-  calculo.campos.map(async (c) => {
+  todos.map(async (c) => {
     const e = esperado(c) // valida la respuesta en build
     const solucion =
       e === FAULT
@@ -39,7 +42,7 @@ const campos = await Promise.all(
   data-calc
   data-calc-clave={clave}
   data-calc-modo={modo}
-  data-calc-campos={JSON.stringify(calculo.campos)}
+  data-calc-campos={JSON.stringify(todos)}
 >
   {enunciado && <div class="prose max-w-none font-medium text-fg" set:html={enunciado} />}
 

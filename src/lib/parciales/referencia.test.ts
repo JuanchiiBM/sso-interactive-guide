@@ -10,6 +10,7 @@ import type { ConfigPlanificacion } from '@lib/simuladores/planificacion/tipos'
 import { grillasDesafio, variantesPlanificacion } from '@lib/simuladores/planificacion/verificar'
 import type { EjercicioSemaforos } from '@lib/semaforos/tipos'
 import { FAULT, puntajeCalculo, type CampoCalculo } from '@lib/calculos/verificar'
+import { camposDe, type TablaCalculo } from '@lib/calculos/tabla'
 import { armarParciales } from './catalogo'
 import { notaDeItems, type PuntajeItem } from './nota'
 import { puntajeGantt } from './puntaje-gantt'
@@ -24,7 +25,7 @@ interface Frontmatter {
   preguntas: (Pregunta & { enunciado: string })[]
   semaforos: (EjercicioSemaforos & { solucion: string })[]
   simulaciones: Simulacion[]
-  calculos: { campos: CampoCalculo[] }[]
+  calculos: { campos?: CampoCalculo[]; tabla?: TablaCalculo }[]
 }
 
 const DIR = 'src/content/ejercicios'
@@ -56,11 +57,13 @@ const TEMAS = [
 const parciales = armarParciales(ejercicios, TEMAS)
 
 /** Escribir en cada campo su respuesta (o marcar Fault). */
-const calculo = ({ campos }: { campos: CampoCalculo[] }) =>
-  puntajeCalculo(
+const calculo = (c: Frontmatter['calculos'][number]) => {
+  const campos = camposDe(c)
+  return puntajeCalculo(
     campos,
-    campos.map((c) => ({ valor: String(c.respuesta), fault: c.respuesta === FAULT })),
+    campos.map((x) => ({ valor: String(x.respuesta), fault: x.respuesta === FAULT })),
   )
+}
 
 /** Elegir la opción correcta: 1 si `correcta` apunta a una opción que existe. */
 const mc = (p: Pregunta) => (p.correcta >= 0 && p.correcta < p.opciones.length ? 1 : 0)
