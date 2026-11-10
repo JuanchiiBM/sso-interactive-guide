@@ -1,6 +1,7 @@
 /** Controlador de un simulacro: Empezar, cronómetro, Finalizar y corrección. Solo se persiste el resultado final. */
 import { $, $$ } from '@lib/dom'
 import type { ItemExamen } from '@lib/desafios/tipos'
+import { crearCalculoExamen } from '@lib/desafios/calculo'
 import { crearMCExamen } from '@lib/desafios/multiple-choice'
 import { crearSemaforosExamen } from '@lib/desafios/semaforos'
 import { crearSimuladorExamen } from '@lib/simulador-page'
@@ -10,7 +11,7 @@ import { formatearTiempo } from './tiempo'
 
 export interface ItemSimulacro extends PuntajeItem {
   el: HTMLElement
-  tipo: 'mc' | 'sem' | 'gantt'
+  tipo: 'mc' | 'calc' | 'sem' | 'gantt'
   examen: ItemExamen
 }
 
@@ -25,9 +26,11 @@ function crearItem(el: HTMLElement): ItemSimulacro | null {
   const examen =
     tipo === 'mc'
       ? crearMCExamen(hijo)
-      : tipo === 'sem'
-        ? crearSemaforosExamen(hijo)
-        : crearSimuladorExamen(hijo)
+      : tipo === 'calc'
+        ? crearCalculoExamen(hijo)
+        : tipo === 'sem'
+          ? crearSemaforosExamen(hijo)
+          : crearSimuladorExamen(hijo)
   if (!examen) return null
   const ejercicio = el.dataset.itemEjercicio
   return {

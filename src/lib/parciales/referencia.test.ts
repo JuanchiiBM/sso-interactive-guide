@@ -9,6 +9,7 @@ import { pasosPlanificacion } from '@lib/simuladores/planificacion/pasos'
 import type { ConfigPlanificacion } from '@lib/simuladores/planificacion/tipos'
 import { grillasDesafio, variantesPlanificacion } from '@lib/simuladores/planificacion/verificar'
 import type { EjercicioSemaforos } from '@lib/semaforos/tipos'
+import { FAULT, puntajeCalculo, type CampoCalculo } from '@lib/calculos/verificar'
 import { armarParciales } from './catalogo'
 import { notaDeItems, type PuntajeItem } from './nota'
 import { puntajeGantt } from './puntaje-gantt'
@@ -23,6 +24,7 @@ interface Frontmatter {
   preguntas: (Pregunta & { enunciado: string })[]
   semaforos: (EjercicioSemaforos & { solucion: string })[]
   simulaciones: Simulacion[]
+  calculos: { campos: CampoCalculo[] }[]
 }
 
 const DIR = 'src/content/ejercicios'
@@ -37,6 +39,7 @@ const ejercicios = readdirSync(DIR, { recursive: true, encoding: 'utf8' })
       preguntas: fm.preguntas ?? [],
       semaforos: fm.semaforos ?? [],
       simulaciones: fm.simulaciones ?? [],
+      calculos: fm.calculos ?? [],
     }
     return { id: f.split(sep).join('/').replace(/\.md$/, ''), data }
   })
@@ -51,6 +54,13 @@ const TEMAS = [
   'deadlock',
 ].map((t) => `parcial-1/${t}`)
 const parciales = armarParciales(ejercicios, TEMAS)
+
+/** Escribir en cada campo su respuesta (o marcar Fault). */
+const calculo = ({ campos }: { campos: CampoCalculo[] }) =>
+  puntajeCalculo(
+    campos,
+    campos.map((c) => ({ valor: String(c.respuesta), fault: c.respuesta === FAULT })),
+  )
 
 /** Elegir la opción correcta: 1 si `correcta` apunta a una opción que existe. */
 const mc = (p: Pregunta) => (p.correcta >= 0 && p.correcta < p.opciones.length ? 1 : 0)
@@ -82,8 +92,9 @@ describe('la resolución de referencia saca 10 en cada simulacro', { timeout: 12
       puntaje: mc(porId.get(ejercicioId)!.data.preguntas[indice]),
     }))
     parcial.practica.forEach((id, k) => {
-      const { preguntas, semaforos, simulaciones } = porId.get(id)!.data
+      const { preguntas, semaforos, simulaciones, calculos } = porId.get(id)!.data
       const partes = [
+        ...calculos.map(calculo),
         ...preguntas.map(mc),
         ...semaforos.map((d) => puntajeSemaforos(d.solucion, d).puntaje),
         ...simulaciones.map(gantt),
