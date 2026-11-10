@@ -52,3 +52,8 @@ export function verificarCalculo(campos: CampoCalculo[], respuestas: RespuestaAl
   const correctos = aciertos.filter(Boolean).length
   return { ok: correctos === campos.length, correctos }
 }
+
+/** Puntaje en un simulacro: la fracción de campos bien (cada campo es un resultado independiente). */
+export function puntajeCalculo(campos: CampoCalculo[], respuestas: RespuestaAlumno[]): number {
+  return campos.length ? verificarCalculo(campos, respuestas).correctos / campos.length : 0
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { campoCorrecto, esperado, leerNumero, verificarCalculo } from './verificar'
+import { campoCorrecto, esperado, leerNumero, puntajeCalculo, verificarCalculo } from './verificar'
 
 const r = (valor: string, fault = false) => ({ valor, fault })
 
@@ -69,5 +69,20 @@ describe('verificarCalculo', () => {
 
   it('campos sin responder cuentan como error', () => {
     expect(verificarCalculo(campos, [])).toEqual({ ok: false, correctos: 0 })
+  })
+})
+
+describe('puntajeCalculo', () => {
+  const campos = [
+    { etiqueta: 'a', respuesta: 649 },
+    { etiqueta: 'b', respuesta: '0FA5', base: 16 as const },
+    { etiqueta: 'c', respuesta: 'fault' },
+    { etiqueta: 'd', respuesta: 10 },
+  ]
+
+  it('es la fracción de campos bien', () => {
+    expect(puntajeCalculo(campos, [r('649'), r('fa5'), r('', true), r('10')])).toBe(1)
+    expect(puntajeCalculo(campos, [r('649'), r('fa6'), r('', true), r('')])).toBe(0.5)
+    expect(puntajeCalculo(campos, [])).toBe(0)
   })
 })
