@@ -472,3 +472,31 @@
   grid-column: 2;
   justify-self: end;
 }
+.calc-tabla {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.calc-tabla th,
+.calc-tabla td {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  text-align: center;
+  white-space: nowrap;
+}
+.calc-tabla th {
+  color: var(--fg-soft);
+  font-weight: 600;
+}
+.calc-celda .calc-input {
+  width: 4.5rem;
+  text-align: center;
+}
+.calc-celda .calc-solucion {
+  display: block;
+}
+.calc-celda[data-ok] {
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+.calc-celda[data-mal] {
+  background: color-mix(in srgb, var(--bad) 12%, transparent);
+}
