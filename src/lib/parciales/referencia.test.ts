@@ -46,14 +46,17 @@ const ejercicios = readdirSync(DIR, { recursive: true, encoding: 'utf8' })
   })
 const porId = new Map(ejercicios.map((e) => [e.id, e]))
 const TEMAS = [
-  'arquitectura',
-  'sistemas-operativos',
-  'procesos',
-  'planificacion',
-  'hilos',
-  'sincronizacion',
-  'deadlock',
-].map((t) => `parcial-1/${t}`)
+  ...[
+    'arquitectura',
+    'sistemas-operativos',
+    'procesos',
+    'planificacion',
+    'hilos',
+    'sincronizacion',
+    'deadlock',
+  ].map((t) => `parcial-1/${t}`),
+  ...['memoria-real', 'memoria-virtual', 'filesystem', 'fat-ufs'].map((t) => `parcial-2/${t}`),
+]
 const parciales = armarParciales(ejercicios, TEMAS)
 
 /** Escribir en cada campo su respuesta (o marcar Fault). */
@@ -84,8 +87,8 @@ function gantt(sim: Simulacion): number {
 }
 
 describe('la resolución de referencia saca 10 en cada simulacro', { timeout: 120_000 }, () => {
-  it('están los 14 parciales', () => {
-    expect(parciales).toHaveLength(14)
+  it('están los 29 parciales', () => {
+    expect(parciales).toHaveLength(29)
   })
 
   it.each(parciales.map((p) => ({ titulo: p.titulo, parcial: p })))('$titulo', ({ parcial }) => {
