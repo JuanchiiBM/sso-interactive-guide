@@ -2,92 +2,166 @@
 /** Desafío de cálculo: el alumno escribe resultados exactos. Comportamiento: src/lib/desafios/calculo.ts */
 import { markdownAHtml, markdownInlineAHtml } from '@lib/markdown/marked'
 import { esperado, FAULT, type CampoCalculo } from '@lib/calculos/verificar'
+import { camposDe, esCampo, type TablaCalculo } from '@lib/calculos/tabla'
 
 interface Props {
   calculo: {
     enunciado?: string
     fault: boolean
-    campos: CampoCalculo[]
+    campos?: CampoCalculo[]
+    tabla?: TablaCalculo
     justificacion: string
   }
   /** Identificador estable en la página (para el progreso guardado). */
   clave: string
+  modo?: 'practica' | 'examen'
 }
 
-const { calculo, clave } = Astro.props
+const { calculo, clave, modo = 'practica' } = Astro.props
 const enunciado = calculo.enunciado && (await markdownAHtml(calculo.enunciado))
 const justificacion = await markdownAHtml(calculo.justificacion)
+const todos = camposDe(calculo)
 const campos = await Promise.all(
-  calculo.campos.map(async (c) => {
+  todos.map(async (c) => {
     const e = esperado(c) // valida la respuesta en build
     const solucion =
       e === FAULT
         ? 'Fault'
-        : c.base === 16
-          ? `${String(c.respuesta).toUpperCase()}h`
-          : `${c.respuesta}${c.unidad ? ` ${c.unidad}` : ''}`
+        : c.texto
+          ? String(c.respuesta)
+          : c.base === 16
+            ? `${String(c.respuesta).toUpperCase()}h`
+            : `${c.respuesta}${c.unidad ? ` ${c.unidad}` : ''}`
     return { ...c, etiquetaHtml: await markdownInlineAHtml(c.etiqueta), solucion }
   }),
 )
+// en la tabla, cada celda es un dato fijo (html) o el índice de su campo
+let n = 0
+const tabla = calculo.tabla && {
+  columnas: await Promise.all(calculo.tabla.columnas.map((c) => markdownInlineAHtml(c))),
+  filas: await Promise.all(
+    calculo.tabla.filas.map((fila) =>
+      Promise.all(
+        fila.map(async (celda) =>
+          esCampo(celda) ? { campo: n++ } : { fijo: await markdownInlineAHtml(String(celda)) },
+        ),
+      ),
+    ),
+  ),
+}
+const modoInput = (c: CampoCalculo) =>
+  c.base === 16 || c.texto || String(c.respuesta).includes('^') ? 'text' : 'decimal'
+const placeholder = (c: CampoCalculo) => (c.base === 16 ? 'hexa' : c.texto ? 'texto' : '?')
 ---
 
 <section
   class="rounded-xl border border-line bg-surface-2 p-4 md:p-5"
   data-calc
   data-calc-clave={clave}
-  data-calc-campos={JSON.stringify(calculo.campos)}
+  data-calc-modo={modo}
+  data-calc-campos={JSON.stringify(todos)}
 >
   {enunciado && <div class="prose max-w-none font-medium text-fg" set:html={enunciado} />}
 
-  <div class="mt-4 flex flex-col gap-2">
-    {campos.map((c, i) => (
-      <div class="calc-campo" data-calc-campo={i}>
-        <label
-          for={`calc-${clave}-${i}`}
-          class="mc-texto text-sm text-fg-soft"
-          set:html={c.etiquetaHtml}
-        />
-        <span class="flex items-center gap-1.5">
-          <input
-            id={`calc-${clave}-${i}`}
-            type="text"
-            class="calc-input"
-            inputmode={c.base === 16 ? 'text' : 'decimal'}
-            autocomplete="off"
-            spellcheck="false"
-            placeholder={c.base === 16 ? 'hexa' : '?'}
+  {tabla && (
+    <div class="mt-4 overflow-x-auto">
+      <table class="calc-tabla">
+        <thead>
+          <tr>
+            {tabla.columnas.map((c) => (
+              <th set:html={c} />
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {tabla.filas.map((fila) => (
+            <tr>
+              {fila.map((celda) =>
+                'fijo' in celda ? (
+                  <td set:html={celda.fijo} />
+                ) : (
+                  <td class="calc-celda" data-calc-campo={celda.campo}>
+                    <input
+                      type="text"
+                      class="calc-input"
+                      aria-label={campos[celda.campo].etiqueta}
+                      inputmode={modoInput(campos[celda.campo])}
+                      autocomplete="off"
+                      spellcheck="false"
+                      placeholder={placeholder(campos[celda.campo])}
+                    />
+                    {calculo.fault && (
+                      <button type="button" class="calc-fault" aria-pressed="false" data-calc-fault>
+                        Fault
+                      </button>
+                    )}
+                    <span class="calc-solucion font-mono text-xs text-ok" data-calc-solucion hidden>
+                      {campos[celda.campo].solucion}
+                    </span>
+                  </td>
+                ),
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <div class:list={['mt-4 flex flex-col gap-2', { hidden: tabla }]}>
+    {!tabla &&
+      campos.map((c, i) => (
+        <div class="calc-campo" data-calc-campo={i}>
+          <label
+            for={`calc-${clave}-${i}`}
+            class="mc-texto text-sm text-fg-soft"
+            set:html={c.etiquetaHtml}
           />
-          {c.unidad && <span class="text-xs text-muted">{c.unidad}</span>}
-          {calculo.fault && (
-            <button type="button" class="calc-fault" aria-pressed="false" data-calc-fault>
-              Fault
-            </button>
-          )}
-        </span>
-        <span class="calc-solucion font-mono text-xs text-ok" data-calc-solucion hidden>
-          {c.solucion}
-        </span>
-      </div>
-    ))}
+          <span class="flex items-center gap-1.5">
+            <input
+              id={`calc-${clave}-${i}`}
+              type="text"
+              class="calc-input"
+              inputmode={modoInput(c)}
+              autocomplete="off"
+              spellcheck="false"
+              placeholder={placeholder(c)}
+            />
+            {c.unidad && <span class="text-xs text-muted">{c.unidad}</span>}
+            {calculo.fault && (
+              <button type="button" class="calc-fault" aria-pressed="false" data-calc-fault>
+                Fault
+              </button>
+            )}
+          </span>
+          <span class="calc-solucion font-mono text-xs text-ok" data-calc-solucion hidden>
+            {c.solucion}
+          </span>
+        </div>
+      ))}
   </div>
 
-  <div class="mt-4 flex flex-wrap items-center gap-2">
-    <button
-      type="button"
-      class="rounded-lg bg-fg text-surface px-3 py-1.5 text-sm font-medium hover:opacity-90"
-      data-calc-accion="verificar"
-    >
-      Verificar
-    </button>
-    <button
-      type="button"
-      class="ml-auto rounded-lg px-3 py-1.5 text-sm boton-rendirse"
-      data-calc-accion="resolucion"
-    >
-      Me rindo
-    </button>
-  </div>
-  <p class="mt-2 text-sm min-h-5" aria-live="polite" data-calc-feedback></p>
+  {modo === 'practica' && (
+    <>
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="rounded-lg bg-fg text-surface px-3 py-1.5 text-sm font-medium hover:opacity-90"
+          data-calc-accion="verificar"
+        >
+          Verificar
+        </button>
+        <button
+          type="button"
+          class="ml-auto rounded-lg px-3 py-1.5 text-sm boton-rendirse"
+          data-calc-accion="resolucion"
+        >
+          Me rindo
+        </button>
+      </div>
+      <p class="mt-2 text-sm min-h-5" aria-live="polite" data-calc-feedback></p>
+    </>
+  )}
 
   <div class="mt-4 border-t border-line pt-4" data-calc-respuesta hidden>
     <h3 class="font-heading text-sm text-ok mb-2">Respuesta</h3>

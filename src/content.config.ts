@@ -140,22 +140,33 @@ export const simulacionSchema = z.discriminatedUnion('kind', [
 ])
 
 /** Resultado exacto que el alumno escribe; `respuesta: fault` si la operación tiene que fallar. */
-const calculoSchema = z.object({
-  enunciado: z.string().optional(),
-  /** Muestra el botón Fault en todos los campos (si solo estuviera donde va, regalaría la respuesta). */
-  fault: z.boolean().default(false),
-  campos: z
-    .array(
-      z.object({
-        etiqueta: z.string(),
-        respuesta: z.union([z.number(), z.string()]),
-        base: z.union([z.literal(10), z.literal(16)]).optional(),
-        unidad: z.string().optional(),
-      }),
-    )
-    .min(1),
-  justificacion: z.string(),
+const campoSchema = z.object({
+  respuesta: z.union([z.number(), z.string()]),
+  base: z.union([z.literal(10), z.literal(16)]).optional(),
+  unidad: z.string().optional(),
+  texto: z.boolean().optional(),
+  alternativas: z.array(z.union([z.number(), z.string()])).optional(),
 })
+
+const calculoSchema = z
+  .object({
+    enunciado: z.string().optional(),
+    /** Muestra el botón Fault en todos los campos (si solo estuviera donde va, regalaría la respuesta). */
+    fault: z.boolean().default(false),
+    campos: z
+      .array(campoSchema.extend({ etiqueta: z.string() }))
+      .min(1)
+      .optional(),
+    /** Tabla a completar: celda texto/número = dato fijo; objeto = campo (ver src/lib/calculos/tabla.ts). */
+    tabla: z
+      .object({
+        columnas: z.array(z.string()).min(1),
+        filas: z.array(z.array(z.union([z.string(), z.number(), campoSchema])).min(1)).min(1),
+      })
+      .optional(),
+    justificacion: z.string(),
+  })
+  .refine((c) => !!c.campos !== !!c.tabla, 'un cálculo lleva campos o tabla (uno de los dos)')
 
 const ejercicios = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/ejercicios' }),

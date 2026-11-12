@@ -9,6 +9,8 @@ import { pasosPlanificacion } from '@lib/simuladores/planificacion/pasos'
 import type { ConfigPlanificacion } from '@lib/simuladores/planificacion/tipos'
 import { grillasDesafio, variantesPlanificacion } from '@lib/simuladores/planificacion/verificar'
 import type { EjercicioSemaforos } from '@lib/semaforos/tipos'
+import { FAULT, puntajeCalculo, type CampoCalculo } from '@lib/calculos/verificar'
+import { camposDe, type TablaCalculo } from '@lib/calculos/tabla'
 import { armarParciales } from './catalogo'
 import { notaDeItems, type PuntajeItem } from './nota'
 import { puntajeGantt } from './puntaje-gantt'
@@ -23,6 +25,7 @@ interface Frontmatter {
   preguntas: (Pregunta & { enunciado: string })[]
   semaforos: (EjercicioSemaforos & { solucion: string })[]
   simulaciones: Simulacion[]
+  calculos: { campos?: CampoCalculo[]; tabla?: TablaCalculo }[]
 }
 
 const DIR = 'src/content/ejercicios'
@@ -37,20 +40,33 @@ const ejercicios = readdirSync(DIR, { recursive: true, encoding: 'utf8' })
       preguntas: fm.preguntas ?? [],
       semaforos: fm.semaforos ?? [],
       simulaciones: fm.simulaciones ?? [],
+      calculos: fm.calculos ?? [],
     }
     return { id: f.split(sep).join('/').replace(/\.md$/, ''), data }
   })
 const porId = new Map(ejercicios.map((e) => [e.id, e]))
 const TEMAS = [
-  'arquitectura',
-  'sistemas-operativos',
-  'procesos',
-  'planificacion',
-  'hilos',
-  'sincronizacion',
-  'deadlock',
-].map((t) => `parcial-1/${t}`)
+  ...[
+    'arquitectura',
+    'sistemas-operativos',
+    'procesos',
+    'planificacion',
+    'hilos',
+    'sincronizacion',
+    'deadlock',
+  ].map((t) => `parcial-1/${t}`),
+  ...['memoria-real', 'memoria-virtual', 'filesystem', 'fat-ufs'].map((t) => `parcial-2/${t}`),
+]
 const parciales = armarParciales(ejercicios, TEMAS)
+
+/** Escribir en cada campo su respuesta (o marcar Fault). */
+const calculo = (c: Frontmatter['calculos'][number]) => {
+  const campos = camposDe(c)
+  return puntajeCalculo(
+    campos,
+    campos.map((x) => ({ valor: String(x.respuesta), fault: x.respuesta === FAULT })),
+  )
+}
 
 /** Elegir la opción correcta: 1 si `correcta` apunta a una opción que existe. */
 const mc = (p: Pregunta) => (p.correcta >= 0 && p.correcta < p.opciones.length ? 1 : 0)
@@ -71,8 +87,8 @@ function gantt(sim: Simulacion): number {
 }
 
 describe('la resolución de referencia saca 10 en cada simulacro', { timeout: 120_000 }, () => {
-  it('están los 14 parciales', () => {
-    expect(parciales).toHaveLength(14)
+  it('están los 29 parciales', () => {
+    expect(parciales).toHaveLength(29)
   })
 
   it.each(parciales.map((p) => ({ titulo: p.titulo, parcial: p })))('$titulo', ({ parcial }) => {
@@ -82,8 +98,9 @@ describe('la resolución de referencia saca 10 en cada simulacro', { timeout: 12
       puntaje: mc(porId.get(ejercicioId)!.data.preguntas[indice]),
     }))
     parcial.practica.forEach((id, k) => {
-      const { preguntas, semaforos, simulaciones } = porId.get(id)!.data
+      const { preguntas, semaforos, simulaciones, calculos } = porId.get(id)!.data
       const partes = [
+        ...calculos.map(calculo),
         ...preguntas.map(mc),
         ...semaforos.map((d) => puntajeSemaforos(d.solucion, d).puntaje),
         ...simulaciones.map(gantt),

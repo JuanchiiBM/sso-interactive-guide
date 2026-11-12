@@ -31,7 +31,7 @@ export interface Parcial {
   practica: string[]
 }
 
-const RE_CITA = /\b(1[PR]) (\dC\d{4})(?: (TM|TT))?/g
+const RE_CITA = /\b([12][PR]) (\dC\d{4})(?: (TM|TT))?/g
 
 /** Exámenes que cita el prefijo `(1P 2C2025 TM, 1P 1C2026 TM) …` de una pregunta de simulacro. */
 export function examenesDeEnunciado(enunciado: string): string[] {
@@ -39,10 +39,11 @@ export function examenesDeEnunciado(enunciado: string): string[] {
   return [...prefijo.matchAll(RE_CITA)].map((m) => [m[1], m[2], m[3]].filter(Boolean).join(' '))
 }
 
-/** Exámenes de una fuente `1° Parcial 1C2025 · TM y 1C2026 · TM` (el tipo vale para todos). */
+/** Exámenes de una fuente `2° Parcial 1C2025 · TM y 1C2026 · TM` (el tipo vale para todos). */
 export function examenesDeFuente(guia: string): string[] {
-  const tipo = /Recuperatorio/.test(guia) ? '1R' : /Parcial/.test(guia) ? '1P' : null
-  if (!tipo) return []
+  const n = guia.match(/^([12])° (Parcial|Recuperatorio)/)
+  if (!n) return []
+  const tipo = n[1] + (n[2] === 'Recuperatorio' ? 'R' : 'P')
   return [...guia.matchAll(/(\dC\d{4})(?: · (TM|TT))?/g)].map((m) =>
     [tipo, m[1], m[2]].filter(Boolean).join(' '),
   )
@@ -75,7 +76,7 @@ export function ocultarExamenes<T extends EjercicioFuente>(
 
 const tituloDe = (codigo: string) => {
   const [tipo, cuatri, turno] = codigo.split(' ')
-  const nombre = tipo === '1R' ? '1° Recuperatorio' : '1° Parcial'
+  const nombre = `${tipo[0]}° ${tipo[1] === 'R' ? 'Recuperatorio' : 'Parcial'}`
   return `${nombre} ${cuatri}${turno ? ` · ${turno}` : ''}`
 }
 

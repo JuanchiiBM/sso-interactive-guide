@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { campoCorrecto, esperado, leerNumero, verificarCalculo } from './verificar'
+import { campoCorrecto, esperado, leerNumero, puntajeCalculo, verificarCalculo } from './verificar'
 
 const r = (valor: string, fault = false) => ({ valor, fault })
 
@@ -69,5 +69,55 @@ describe('verificarCalculo', () => {
 
   it('campos sin responder cuentan como error', () => {
     expect(verificarCalculo(campos, [])).toEqual({ ok: false, correctos: 0 })
+  })
+})
+
+describe('potencias de 2', () => {
+  it('lee 2^n, 2**n y k*2^n', () => {
+    expect(leerNumero('2^10')).toBe(1024)
+    expect(leerNumero('2**10')).toBe(1024)
+    expect(leerNumero('3*2^20')).toBe(3 * 2 ** 20)
+    expect(leerNumero('2^')).toBeNull()
+  })
+
+  it('una respuesta 2^74 acepta la potencia o el número', () => {
+    const campo = { etiqueta: 'máx', respuesta: '2^74', unidad: 'B' }
+    expect(campoCorrecto(campo, r('2^74'))).toBe(true)
+    expect(campoCorrecto(campo, r('18889465931478580854784'))).toBe(true)
+    expect(campoCorrecto(campo, r('2^73'))).toBe(false)
+  })
+})
+
+describe('respuestas de texto y alternativas', () => {
+  it('texto: sin mayúsculas, espacios ni variantes del guion', () => {
+    const eof = { etiqueta: 'sig.', respuesta: 'EOF', texto: true, alternativas: ['FIN'] }
+    expect(campoCorrecto(eof, r(' eof '))).toBe(true)
+    expect(campoCorrecto(eof, r('Fin'))).toBe(true)
+    expect(campoCorrecto(eof, r('7'))).toBe(false)
+    const libre = { etiqueta: 'frame', respuesta: '—', texto: true }
+    expect(campoCorrecto(libre, r('-'))).toBe(true)
+  })
+
+  it('una alternativa numérica o de texto también vale', () => {
+    const entradas = { etiqueta: 'entradas', respuesta: 15, alternativas: [16, '—'] }
+    expect(campoCorrecto(entradas, r('15'))).toBe(true)
+    expect(campoCorrecto(entradas, r('16'))).toBe(true)
+    expect(campoCorrecto(entradas, r('–'))).toBe(true)
+    expect(campoCorrecto(entradas, r('17'))).toBe(false)
+  })
+})
+
+describe('puntajeCalculo', () => {
+  const campos = [
+    { etiqueta: 'a', respuesta: 649 },
+    { etiqueta: 'b', respuesta: '0FA5', base: 16 as const },
+    { etiqueta: 'c', respuesta: 'fault' },
+    { etiqueta: 'd', respuesta: 10 },
+  ]
+
+  it('es la fracción de campos bien', () => {
+    expect(puntajeCalculo(campos, [r('649'), r('fa5'), r('', true), r('10')])).toBe(1)
+    expect(puntajeCalculo(campos, [r('649'), r('fa6'), r('', true), r('')])).toBe(0.5)
+    expect(puntajeCalculo(campos, [])).toBe(0)
   })
 })

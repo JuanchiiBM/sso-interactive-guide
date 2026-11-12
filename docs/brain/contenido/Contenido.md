@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [contenido, teoría, teoria, ejercicios, markdown, guías]
 tags: [moc, contenido]
-actualizado: 2026-11-09
+actualizado: 2026-11-10
 ---
 
 # Contenido
@@ -34,10 +34,15 @@ Las tres guías (y la de Filesystem v.2C2026) cierran con un link a Google Forms
 
 | Tema | Ejercicios | Fuente |
 | --- | --- | --- |
-| Memoria real | 5 | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 1–4 y 11 |
-| Memoria virtual | 6 | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 5–10 |
-| Filesystem | 6 | Guía de Ejercicios – Filesystem (v.2C2026): Ej. 23–28 (locks) |
-| FAT y UFS (ext2) | 22 | Guía de Ejercicios – Filesystem (v.2C2026): Ej. 1–22 (FAT, ext2 y links) |
+| Memoria real | 5 + 6 de parcial | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 1–4 y 11 |
+| Memoria virtual | 6 + 15 de parcial | Guía de Ejercicios – Memoria (2016, Rev. 1): Ej. 5–10 |
+| Filesystem | 6 + 4 de parcial | Guía de Ejercicios – Filesystem (v.2C2026): Ej. 23–28 (locks) |
+| FAT y UFS (ext2) | 22 + 30 de parcial | Guía de Ejercicios – Filesystem (v.2C2026): Ej. 1–22 (FAT, ext2 y links) |
+
+**Parciales del 2do (1C2024 → 1C2026, 15 exámenes):** teoría en `simulacro(-N)` de cada tema (28, 41, 30 y
+30 preguntas) y práctica desde el número que sigue a la guía. Los ejercicios que mezclan memoria y
+FAT/ext2 van en FAT y UFS. Los desarrollos se pasaron a MC; se descartó 2R 2C2024 V/F 4a (la cátedra acepta
+V y F).
 
 Los **links** van en FAT y UFS, no en Filesystem: la teoría (y la PPT FAT-UFS) los explica sobre el
 inodo. En ese tema el número de cada ejercicio coincide con el de la guía.

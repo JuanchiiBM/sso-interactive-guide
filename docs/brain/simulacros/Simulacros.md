@@ -1,13 +1,13 @@
 ---
 tipo: modulo
-aliases: [simulacros, simulacro, parciales simulados, examen, modo examen, nota, cronómetro, parcial real, ItemExamen, crearMCExamen, crearSemaforosExamen, crearSimuladorExamen, puntaje, banda, ocultar, oculto, EXAMENES_OCULTOS, ocultarExamenes, examen no publicado]
+aliases: [simulacros, 2do parcial, segundo parcial, crearCalculoExamen, puntajeCalculo, simulacro, parciales simulados, examen, modo examen, nota, cronómetro, parcial real, ItemExamen, crearMCExamen, crearSemaforosExamen, crearSimuladorExamen, puntaje, banda, ocultar, oculto, EXAMENES_OCULTOS, ocultarExamenes, examen no publicado]
 tags: [moc, simulacros, examen]
-actualizado: 2026-10-08
+actualizado: 2026-11-10
 ---
 
 # Simulacros
 
-Cada parcial real (13 publicados + 1 oculto, del 1er parcial) como un examen con reloj: teoría y práctica juntas, sin
+Cada parcial real (1er parcial: 13 publicados + 1 oculto; 2do parcial: 15) como un examen con reloj: teoría y práctica juntas, sin
 feedback hasta **Finalizar**, con nota y el mejor resultado guardado en el navegador.
 
 **Ubicación:**
@@ -28,9 +28,11 @@ No hay un archivo por parcial: se arma solo desde lo que ya está cargado.
 
 - **Teoría:** las preguntas de los ejercicios `<tema>/simulacro(-N)` (los MC de "Teoría de
   parciales") citan el examen en el prefijo del enunciado: `(1P 2C2025 TM, 1P 1C2026 TM) ¿…?`.
+  Códigos: `1P`/`1R` (1er parcial) y `2P`/`2R` (2do); el recuperatorio no lleva turno.
   Una pregunta que cita dos exámenes entra en los dos. En el simulacro se muestra sin el prefijo.
 - **Práctica:** los ejercicios con `dificultad: parcial`, por su `fuente.guia`
-  (`1° Parcial 1C2025 · TM y 1C2026 · TM`). Cada ejercicio entra completo, con todas sus partes.
+  (`1° Parcial 1C2025 · TM y 1C2026 · TM`, `2° Recuperatorio 2C2024`). El número de parcial sale del
+  `N°` del principio: la fuente **tiene que empezar** con `1° ` o `2° `. Cada ejercicio entra completo, con todas sus partes.
 - Orden: teoría y práctica por tema (el orden de `getTemas`), los parciales cronológicos.
 - `firmaParcial` es un hash de la composición: si cambia el contenido de un parcial, el resultado
   guardado deja de valer (la card vuelve a "Sin rendir").
@@ -58,8 +60,8 @@ sección Simulacros son los exámenes armados. Es un choque de nombres conocido 
 
 ## Modo examen de los componentes
 
-`MultipleChoice`, `SemaforosDesafio` y `SimuladorStage` reciben `modo="examen"` (atributo
-`data-mc-modo` / `data-sem-modo` / `data-sim-modo`). En examen no hay Verificar, Me rindo ni
+`MultipleChoice`, `CalculoDesafio`, `SemaforosDesafio` y `SimuladorStage` reciben `modo="examen"`
+(atributo `data-mc-modo` / `data-calc-modo` / `data-sem-modo` / `data-sim-modo`). En examen no hay Verificar, Me rindo ni
 "Correr tests", ni borradores ni marcas de resuelto. Los `init*` de práctica solo toman
 `modo="practica"`; los de examen los crea el controlador con:
 
@@ -69,7 +71,7 @@ interface ItemExamen {
   detalle: () => string // "Correcta", "72 % de celdas", "Correcto, sección crítica de más"…
   revelar: () => void // bloquea la respuesta y muestra la resolución
 }
-// crearMCExamen(box) · crearSemaforosExamen(box) · crearSimuladorExamen(host)
+// crearMCExamen(box) · crearCalculoExamen(box) · crearSemaforosExamen(box) · crearSimuladorExamen(host)
 ```
 
 Bloquear al revelar **no** es `pointer-events: none`: rompe el scroll del editor (que tiene altura
@@ -79,7 +81,7 @@ máxima) y no deja ver lo que uno escribió. El de semáforos usa el solo lectur
 Un tipo interactivo nuevo tiene que implementar su `crearXExamen`, sumar su `data-item-tipo` en la
 página y en `crearItem` de `examen.ts`, y entrar en `referencia.test.ts`.
 
-Cada ítem de la página va envuelto en `data-item` con `data-item-tipo` (mc | sem | gantt),
+Cada ítem de la página va envuelto en `data-item` con `data-item-tipo` (mc | calc | sem | gantt),
 `data-item-seccion` (teoria | practica) y `data-item-ejercicio` (índice del ejercicio, para repartir
 su peso). Al finalizar, `marcar()` le pone `data-estado` (ok | parcial | mal) y una línea con el
 resultado y los puntos arriba del ítem. No hay tabla de resumen: se decidió marcar en el lugar.
@@ -90,6 +92,9 @@ resultado y los puntos arriba del ítem. No hay tabla de resumen: se decidió ma
   igual; cada ejercicio de práctica pesa igual y sus partes se reparten su peso. `pesosDeItems` da
   cuánto vale cada ítem en puntos de nota (suman 10).
 - **Multiple choice:** 1 o 0.
+- **Cálculo** (`puntajeCalculo`): la fracción de campos bien. Cada campo suele ser un resultado
+  independiente (espacio antes y después, DF de cada dirección), así que no es todo o nada. Una tabla a
+  completar cuenta cada celda como un campo. Al revelar marca cada campo (`data-ok` / `data-mal`).
 - **Gantt:** % de celdas bien sobre las no vacías (de la esperada o de la respuesta), contra la
   mejor variante válida (2 CPUs → varias). Menos del 80 % vale 0; de 80 % a 100 %, lineal de 0 a 1.
 - **Semáforos:** **todo o nada.** 1 si pasa todos los tests; 0,75 si además la sección crítica es
@@ -114,9 +119,8 @@ resultado y los puntos arriba del ítem. No hay tabla de resumen: se decidió ma
   `!important` para ganarle a la utilidad `border-line` (capa `utilities`).
 - **La card se pinta con un script inline** en `simulacros/index.astro` que duplica la lógica de
   `banda`, `formatearNota` y `formatearTiempo`, para no parpadear. Si cambia una, cambiar las dos.
-- **2do parcial:** `numero` ya existe en `Parcial`, y el listado agrupa y filtra por él. Pero el
-  parseo asume 1er parcial: `RE_CITA` solo acepta `1[PR]`, `examenesDeFuente` arma `1P`/`1R` y
-  `tituloDe` escribe "1°". Hay que generalizar esas tres cosas antes de cargar exámenes del 2do.
+- **Los tests cuentan los parciales por número:** `catalogo.test.ts` fija los 14 códigos del 1er
+  parcial y los 15 del 2do. Un examen nuevo (o publicar uno oculto) exige actualizar esas listas.
 
 **Conectado con:** [[Patrón — Desafío antes de la Resolución]] (el modo práctica de los mismos
 componentes), [[Verificador de Semáforos]], [[Simulador de Planificación]], [[Home]].

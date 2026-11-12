@@ -77,11 +77,14 @@ Traducir solo tiene sentido con binding en ejecución: con binding en compilaci�
 | **Estático**                         | Las bibliotecas se copian adentro del ejecutable (`.lib` en Windows, `.a` en Linux).                  | El programa es autónomo: se distribuye solo.                       | Ejecutables mucho más grandes; cada proceso carga su copia. |
 | **Dinámico (biblioteca compartida)** | La biblioteca queda aparte y se carga en ejecución cuando se usa (`.dll` en Windows, `.so` en Linux). | Ejecutables chicos; una sola copia en RAM para todos los procesos. | La máquina destino tiene que tener las bibliotecas.         |
 
+**Overlays (superposiciones).** Antes de la memoria virtual, un programa más grande que la RAM se partía a mano en partes que no se usan al mismo tiempo. En memoria queda una parte común y las demás se van cargando **una encima de la otra** en la misma zona, cuando se necesitan. Lo organiza el **programador**, no el SO. Es la alternativa a la [memoria virtual](/teoria/parcial-2/memoria-virtual/) que aparece en los parciales, por ejemplo cuando una dirección lógica no entra en la RAM.
+
 ## Particionamiento fijo
 
 La memoria se divide **una vez** en particiones, todas del mismo tamaño o de tamaños distintos, y no cambia más. Cada proceso tiene que entrar **entero y contiguo** en una partición de tamaño mayor o igual. El SO lleva una tabla con cada partición, si está libre u ocupada y, si son distintas, su tamaño.
 
 - **Grado de multiprogramación fijo:** a lo sumo tantos procesos como particiones.
+- **Proceso más grande posible:** el tamaño de la partición **más grande**.
 - **Dónde ubicar:** en la partición más chica donde entre. Se puede tener **una cola por partición** (cada proceso espera la que le corresponde, aunque otras estén libres) o **una única cola** (va a cualquier libre, aunque desperdicie una grande en un proceso chico).
 
 ```recorrido particionamiento-fijo
@@ -104,14 +107,14 @@ La solución es la **compactación**: mover todos los procesos para juntar los h
 
 ### Algoritmos de ubicación
 
-Cuando hay varios huecos donde entra el proceso, el SO elige uno con alguno de estos criterios:
+Cuando hay varios huecos donde entra el proceso, el SO elige uno con alguno de estos criterios. Esa elección es la **política de ubicación**. Solo hace falta cuando las unidades son de tamaño variable (particiones dinámicas, segmentos): en paginación cualquier frame libre sirve. Los enunciados suelen usar los nombres en inglés.
 
-| Algoritmo            | Elige                                                        |
-| -------------------- | ------------------------------------------------------------ |
-| **Primer ajuste**    | El primer hueco donde entra, buscando desde el comienzo.     |
-| **Siguiente ajuste** | El primero donde entra, buscando desde la última asignación. |
-| **Mejor ajuste**     | El hueco más chico donde entra.                              |
-| **Peor ajuste**      | El hueco más grande.                                         |
+| Algoritmo                         | Elige                                                        |
+| --------------------------------- | ------------------------------------------------------------ |
+| **Primer ajuste** (_First Fit_)   | El primer hueco donde entra, buscando desde el comienzo.     |
+| **Siguiente ajuste** (_Next Fit_) | El primero donde entra, buscando desde la última asignación. |
+| **Mejor ajuste** (_Best Fit_)     | El hueco más chico donde entra.                              |
+| **Peor ajuste** (_Worst Fit_)     | El hueco más grande.                                         |
 
 ```recorrido algoritmos-ubicacion
 

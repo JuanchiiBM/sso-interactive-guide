@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
 tags: [contenido, ejercicios]
-actualizado: 2026-10-14
+actualizado: 2026-11-10
 ---
 
 # Formato de un Ejercicio
@@ -57,7 +57,27 @@ calculos:
     justificacion: |
       Markdown; se ve recién al acertar.
 ```
+Además: `respuesta: '2^74'`, `texto: true` (EOF, `—`) y `alternativas: [...]`. Para una tabla a
+completar, `tabla` en lugar de `campos`:
+
+```yaml
+calculos:
+  - enunciado: 'Estado final de la tabla de páginas.'
+    tabla:
+      columnas: [Página, Frame, P, U, M]
+      filas:
+        - ['10', { respuesta: 2 }, { respuesta: 1 }, { respuesta: 1 }, { respuesta: 0 }]
+        - ['21', { respuesta: '—', texto: true }, 0, 0, 1] # números o textos sueltos = dato fijo
+    justificacion: |
+      ...
+```
+
 Ver [[Patrón — Desafío antes de la Resolución]] (sección Cálculo).
+
+**Ejercicios de parcial:** `fuente.guia` con el examen (`2° Parcial 1C2025 · TT`,
+`2° Recuperatorio 2C2024`, varios: `'2° Parcial 1C2025 · TT y 2C2025 · TT'`) y `dificultad: parcial`.
+Si la resolución oficial está mal, se carga el valor correcto y la justificación lo dice
+(`> La resolución oficial da X; …`). Ver [[Simulacros]].
 
 El `enunciado` de una pregunta también es markdown de bloque (usar `|` si lleva código o párrafos);
 `texto` y `explicacion` de las opciones, markdown inline (`código`, **negrita**). Los renderiza

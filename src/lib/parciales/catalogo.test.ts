@@ -23,14 +23,17 @@ const ejercicios: EjercicioFuente[] = readdirSync(DIR, { recursive: true, encodi
     }
   })
 const TEMAS = [
-  'arquitectura',
-  'sistemas-operativos',
-  'procesos',
-  'planificacion',
-  'hilos',
-  'sincronizacion',
-  'deadlock',
-].map((t) => `parcial-1/${t}`)
+  ...[
+    'arquitectura',
+    'sistemas-operativos',
+    'procesos',
+    'planificacion',
+    'hilos',
+    'sincronizacion',
+    'deadlock',
+  ].map((t) => `parcial-1/${t}`),
+  ...['memoria-real', 'memoria-virtual', 'filesystem', 'fat-ufs'].map((t) => `parcial-2/${t}`),
+]
 const parciales = armarParciales(ejercicios, TEMAS)
 
 describe('citas de examen', () => {
@@ -40,6 +43,10 @@ describe('citas de examen', () => {
     expect(examenesDeEnunciado('(1P 2C2025 TM, 1P 1C2026 TM) ¿…?')).toEqual([
       '1P 2C2025 TM',
       '1P 1C2026 TM',
+    ])
+    expect(examenesDeEnunciado('(2P 1C2025 TM; 2R 1C2026, single choice 3) ¿…?')).toEqual([
+      '2P 1C2025 TM',
+      '2R 1C2026',
     ])
     expect(examenesDeEnunciado('¿Sin cita?')).toEqual([])
   })
@@ -51,13 +58,17 @@ describe('citas de examen', () => {
       '1P 1C2025 TM',
       '1P 1C2026 TM',
     ])
+    expect(examenesDeFuente('2° Parcial 1C2025 · TT')).toEqual(['2P 1C2025 TT'])
+    expect(examenesDeFuente('2° Recuperatorio 2C2024')).toEqual(['2R 2C2024'])
     expect(examenesDeFuente('Guía de Ejercicios – Planificación (v.2C2026)')).toEqual([])
   })
 })
 
-describe('los 14 parciales del relevamiento', () => {
-  it('son 14, en orden cronológico', () => {
-    expect(parciales.map((p) => p.codigo)).toEqual([
+const codigos = (numero: 1 | 2) => parciales.filter((p) => p.numero === numero).map((p) => p.codigo)
+
+describe('los 29 parciales del relevamiento', () => {
+  it('del 1er parcial son 14, en orden cronológico', () => {
+    expect(codigos(1)).toEqual([
       '1P 1C2024 TM',
       '1P 1C2024 TT',
       '1P 1C2025 TM',
@@ -75,8 +86,14 @@ describe('los 14 parciales del relevamiento', () => {
     ])
   })
 
-  it('por ahora todos son del 1er parcial', () => {
-    expect(parciales.every((p) => p.numero === 1)).toBe(true)
+  it('del 2do parcial son 15, en orden cronológico', () => {
+    expect(codigos(2)).toEqual(
+      ['1C2024', '2C2024', '1C2025', '2C2025', '1C2026'].flatMap((c) => [
+        `2P ${c} TM`,
+        `2P ${c} TT`,
+        `2R ${c}`,
+      ]),
+    )
   })
 
   it('cada uno tiene teoría y práctica', () => {
@@ -107,12 +124,40 @@ describe('los 14 parciales del relevamiento', () => {
     expect(de('1P 1C2026 TM').practica).toContain('hilos/ej-11')
   })
 
-  it('la práctica va por tema: planificación, hilos, sincronización, deadlock', () => {
-    const orden = (id: string) => TEMAS.indexOf(`parcial-1/${id.split('/')[0]}`)
+  it('la práctica va en el orden de los temas', () => {
+    const orden = (id: string) => TEMAS.findIndex((t) => t.endsWith(`/${id.split('/')[0]}`))
     for (const p of parciales) {
       const temas = p.practica.map(orden)
       expect(temas, p.codigo).toEqual([...temas].sort((a, b) => a - b))
     }
+  })
+})
+
+describe('2do parcial', () => {
+  const de2 = (id: string, guia: string, dificultad = 'parcial', preguntas: string[] = []) => ({
+    id,
+    data: {
+      tema: 'parcial-2/fat-ufs',
+      fuente: { guia, numero: 1 },
+      dificultad,
+      preguntas: preguntas.map((enunciado) => ({ enunciado })),
+    },
+  })
+  const segundo = armarParciales(
+    [
+      de2('fat-ufs/ej-30', '2° Recuperatorio 1C2025'),
+      de2('fat-ufs/simulacro', 'Parciales 2024–2026 (teoría)', 'parcial', ['(2P 1C2025 TM) ¿…?']),
+    ],
+    ['parcial-2/fat-ufs'],
+  )
+
+  it('arma el número, el título y el id desde el código', () => {
+    expect(
+      segundo.map(({ codigo, titulo, numero, id }) => ({ codigo, titulo, numero, id })),
+    ).toEqual([
+      { codigo: '2P 1C2025 TM', titulo: '2° Parcial 1C2025 · TM', numero: 2, id: '2p-1c2025-tm' },
+      { codigo: '2R 1C2025', titulo: '2° Recuperatorio 1C2025', numero: 2, id: '2r-1c2025' },
+    ])
   })
 })
 
@@ -136,8 +181,8 @@ describe('exámenes ocultos', () => {
   })
 
   it('su parcial desaparece y los demás quedan', () => {
-    const codigos = armarParciales(visibles, TEMAS).map((p) => p.codigo)
-    expect(codigos).toHaveLength(13)
-    expect(codigos).not.toContain('1P 2C2026 TM')
+    const quedan = armarParciales(visibles, TEMAS).filter((p) => p.numero === 1)
+    expect(quedan).toHaveLength(13)
+    expect(quedan.map((p) => p.codigo)).not.toContain('1P 2C2026 TM')
   })
 })
