@@ -145,9 +145,9 @@ preguntas:
 - enunciado: (1P 1C2026 TT, desarrollo 5) ¿Cómo garantiza cada estrategia, **prevención** y **evasión**,
     que no ocurra deadlock?
   opciones:
-  - texto: Prevención mantiene el estado seguro; evasión ordena los recursos
+  - texto: Prevención analiza cada petición para mantener el estado seguro; evasión ordena los recursos para romper la espera circular
     explicacion: Están invertidas.
-  - texto: 'Prevención elimina por diseño al menos una de las condiciones necesarias; evasión analiza cada petición para mantener el sistema en estado seguro'
+  - texto: 'Prevención elimina por diseño alguna condición necesaria; evasión analiza cada petición para mantener el estado seguro'
     explicacion: Correcta.
   - texto: 'Ninguna lo garantiza: ambas detectan el deadlock a tiempo y lo resuelven matando a uno de
       los procesos del ciclo'
@@ -220,7 +220,7 @@ preguntas:
   opciones:
   - texto: Es más sencillo de implementar, pero potencialmente finaliza más procesos de los que eran necesarios
     explicacion: Eso describe finalizar a todos los procesos del deadlock.
-  - texto: 'Menor costo (se pierde menos trabajo), pero hay que elegir una víctima y volver a correr la detección después de cada finalización'
+  - texto: 'Menor costo (se pierde menos trabajo), pero hay que elegir víctima y volver a detectar tras cada finalización'
     explicacion: Correcta.
   - texto: No finaliza ningún proceso, pero requiere poder devolver a los procesos expropiados a un estado
       anterior
@@ -325,7 +325,7 @@ preguntas:
   - texto: Detectó un deadlock entre P1 y P2 y bloqueó a P2 como medida de recuperación
     explicacion: 'No hay deadlock: P2 no retiene nada y R2 estaba libre. Además, la detección no niega
       asignaciones.'
-  - texto: Aplica prevención de la espera circular y P2 pidió los recursos en un orden prohibido
+  - texto: Aplica prevención de la espera circular, y P2 pidió los recursos en un orden prohibido por la numeración
     explicacion: 'P2 no retiene ningún recurso: pedir R2 primero no viola ningún orden.'
   - texto: 'Aplica evasión (banquero): asignarle R2 a P2 dejaría al sistema en un estado inseguro, aunque
       R2 esté libre'

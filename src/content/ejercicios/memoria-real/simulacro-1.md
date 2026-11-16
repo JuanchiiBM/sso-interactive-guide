@@ -12,9 +12,9 @@ preguntas:
         explicacion: 'Eso vale para un proceso solo, pero la RAM la comparten varios.'
       - texto: 'Sí, pero solo si se agrega memoria virtual'
         explicacion: 'La memoria virtual sirve para lo contrario: procesos más grandes que la RAM.'
-      - texto: 'Sí: cada proceso tiene su propio espacio lógico, y con suficientes procesos cargados se ocupa toda la RAM'
+      - texto: 'Sí: cada proceso tiene su propio espacio lógico, y con varios procesos cargados se llena la RAM'
         explicacion: Correcta.
-      - texto: 'No: la MMU no puede generar una dirección física mayor que la mayor dirección lógica'
+      - texto: 'No: la MMU no puede generar una dirección física mayor que la mayor dirección lógica del proceso'
         explicacion: 'La DF sale de sumar una base (o un frame) que puede estar en cualquier parte de la RAM.'
     correcta: 2
     justificacion: |
@@ -23,13 +23,13 @@ preguntas:
       multiprogramación suficiente, entre todos la ocupan completa.
   - enunciado: '(2P 1C2024 TM, desarrollo 1) ¿Qué relación existe entre las direcciones lógicas y la capacidad de **reubicar** procesos?'
     opciones:
-      - texto: 'Ninguna: la reubicación la decide el planificador de largo plazo'
+      - texto: 'Ninguna: la reubicación la decide el planificador de largo plazo, que elige dónde cargar cada proceso'
         explicacion: 'El planificador decide cuándo, pero lo que permite mover un proceso es la traducción.'
-      - texto: 'Como el proceso usa direcciones lógicas que se traducen en cada acceso, para moverlo alcanza con cambiar la estructura de traducción'
+      - texto: 'Las direcciones lógicas se traducen en cada acceso: para mover el proceso alcanza con cambiar la estructura de traducción'
         explicacion: Correcta.
-      - texto: 'Para reubicar un proceso hay que recompilarlo con las direcciones nuevas'
+      - texto: 'Para reubicar un proceso hay que recompilarlo, porque sus direcciones quedan fijas en el ejecutable'
         explicacion: 'Eso pasa con direcciones absolutas resueltas en compilación: justo lo que las lógicas evitan.'
-      - texto: 'Las direcciones lógicas impiden reubicar: el proceso queda atado a las direcciones que generó'
+      - texto: 'Las direcciones lógicas impiden reubicar: el proceso queda atado a las direcciones físicas que generó al cargarse'
         explicacion: 'Es al revés: las direcciones lógicas no dependen de dónde está el proceso en la RAM.'
     correcta: 1
     justificacion: |
@@ -53,13 +53,13 @@ preguntas:
       traducirse en cada acceso.
   - enunciado: '(2P 2C2024 TM, desarrollo 1; 2P 2C2025 TT, desarrollo 1) Al comparar **particiones fijas** y **particiones dinámicas**, ¿cuál de estas descripciones es correcta?'
     opciones:
-      - texto: 'Fijas: fragmentación externa y necesidad de compactar. Dinámicas: fragmentación interna'
+      - texto: 'Fijas: fragmentación externa y necesidad de compactar, más overhead. Dinámicas: fragmentación interna, limitan la multiprogramación, poco overhead'
         explicacion: 'Están invertidas.'
-      - texto: 'Las dos sufren fragmentación interna; las dinámicas además necesitan compactar'
+      - texto: 'Las dos sufren fragmentación interna, porque redondean al tamaño de partición; las dinámicas además necesitan compactar y tienen más overhead'
         explicacion: 'Las dinámicas miden lo que pide el proceso: no les sobra nada adentro.'
-      - texto: 'Fijas: fragmentación interna, limitan la multiprogramación y el tamaño del proceso, poco overhead. Dinámicas: fragmentación externa (hay que compactar), no limitan, más overhead'
+      - texto: 'Fijas: fragmentación interna, limitan multiprogramación y tamaño de proceso, poco overhead. Dinámicas: fragmentación externa (compactar), sin esos límites, más overhead'
         explicacion: Correcta.
-      - texto: 'Fijas: limitan la multiprogramación pero no el tamaño del proceso, porque un proceso puede ocupar varias particiones'
+      - texto: 'Fijas: limitan la multiprogramación pero no el tamaño del proceso, porque un proceso puede ocupar varias particiones. Dinámicas: fragmentación externa'
         explicacion: 'La asignación es contigua: un proceso va en una sola partición, que limita su tamaño.'
     correcta: 2
     justificacion: |
@@ -74,7 +74,7 @@ preguntas:
     opciones:
       - texto: 'Falso: las dinámicas también lo limitan, porque la cantidad de particiones se decide al arrancar'
         explicacion: 'En las dinámicas las particiones se crean a medida, del tamaño de cada proceso.'
-      - texto: 'Falso: las fijas no lo limitan, porque un proceso chico deja lugar para otro en su partición'
+      - texto: 'Falso: las fijas no lo limitan, porque un proceso chico deja lugar para otro proceso dentro de su misma partición'
         explicacion: 'Cada partición fija la ocupa un solo proceso, aunque le sobre lugar.'
       - texto: 'Verdadero: las dinámicas no tienen ningún límite, ni siquiera la memoria libre'
         explicacion: 'La conclusión es correcta, pero la memoria libre sí las limita.'
@@ -87,12 +87,12 @@ preguntas:
       tamaño de cada partición es el del proceso y la única limitante es la **memoria libre**.
   - enunciado: '(2R 1C2025, desarrollo 1) Comparando **particionamiento fijo**, **dinámico** y **segmentación** en compactación y fragmentación, ¿cuál es la afirmación correcta?'
     opciones:
-      - texto: 'Fijo: no necesita compactar y sufre fragmentación interna. Dinámico y segmentación: necesitan compactar (con mucho overhead) y sufren fragmentación externa, no interna'
+      - texto: 'Fijo: no compacta y sufre fragmentación interna. Dinámico y segmentación: compactan (con mucho overhead) y sufren fragmentación externa, no interna'
         explicacion: Correcta.
-      - texto: 'Fijo y dinámico necesitan compactar; segmentación no, porque divide al proceso en partes'
+      - texto: 'Fijo y dinámico necesitan compactar, con mucho overhead; segmentación no, porque divide al proceso en partes que entran en cualquier hueco'
         explicacion: 'Cada segmento es contiguo y de tamaño variable: deja huecos como las particiones dinámicas.'
-      - texto: 'Segmentación sufre fragmentación interna en el último segmento de cada proceso'
-        explicacion: 'El segmento mide lo que necesita: la interna aparece cuando hay páginas.'
+      - texto: 'Segmentación sufre fragmentación interna en el último segmento de cada proceso; fijo y dinámico, solo externa, y los dos necesitan compactar'
+        explicacion: 'El segmento mide lo que necesita: la interna aparece cuando hay páginas. Y el fijo sí tiene interna y no compacta.'
       - texto: 'Fijo sufre fragmentación externa, porque quedan particiones enteras sin usar'
         explicacion: 'Una partición libre se puede usar para otro proceso que entre: eso no es externa.'
     correcta: 0
@@ -172,13 +172,13 @@ preguntas:
       al arrancar, pero no tienen que ser iguales).
   - enunciado: '(2R 1C2024, desarrollo 1) Comparando paginación pura, segmentación paginada y particionamiento dinámico, ¿qué estructuras y qué fragmentación tiene la **segmentación paginada**?'
     opciones:
-      - texto: 'Una tabla de páginas por proceso; fragmentación interna y externa'
-        explicacion: 'Eso mezcla la estructura de la paginación pura con una externa que no existe.'
-      - texto: 'Una tabla de segmentos por proceso y una tabla de páginas por segmento; solo fragmentación interna, en la última página de cada segmento'
+      - texto: 'Una tabla de páginas por proceso y otra de segmentos global; fragmentación interna en las páginas y externa entre segmentos'
+        explicacion: 'La tabla de segmentos es por proceso, no global; y la externa no existe porque los segmentos se reparten en frames.'
+      - texto: 'Tabla de segmentos por proceso y tabla de páginas por segmento; solo fragmentación interna, en la última página de cada segmento'
         explicacion: Correcta.
-      - texto: 'Una tabla de particiones y una de huecos libres; solo fragmentación externa'
+      - texto: 'Una tabla de particiones y una lista de huecos libres; solo fragmentación externa, que se resuelve compactando'
         explicacion: 'Esas son las estructuras del particionamiento dinámico.'
-      - texto: 'Una tabla de segmentos por proceso; solo fragmentación externa'
+      - texto: 'Una tabla de segmentos por proceso con base y límite de cada uno; solo fragmentación externa'
         explicacion: 'Esa es la segmentación pura.'
     correcta: 1
     justificacion: |
@@ -189,14 +189,14 @@ preguntas:
       | Segmentación paginada | Solo interna, en la **última página de cada segmento** | 1 tabla de segmentos por proceso + **1 tabla de páginas por segmento** | Medio-alto |
   - enunciado: '(2P 1C2026 TM, desarrollo 4) Comparando **particiones fijas** y **paginación**, ¿con qué estructuras se administra el espacio libre y cómo queda el grado máximo de multiprogramación?'
     opciones:
-      - texto: 'Fijas: un bitmap de frames, sin límite de procesos. Paginación: tabla de particiones, con un proceso por partición'
+      - texto: 'Fijas: un bitmap de frames libres, sin límite de procesos. Paginación: tabla de particiones (base, tamaño, estado), con un proceso por partición'
         explicacion: 'Están invertidas.'
       - texto: 'Las dos usan una lista de huecos libres y limitan la multiprogramación a la cantidad de huecos'
         explicacion: 'Ninguna de las dos tiene huecos variables: eso es de particiones dinámicas.'
-      - texto: 'Fijas: tabla de particiones (base, tamaño, libre u ocupada) y a lo sumo un proceso por partición. Paginación: bitmap de frames libres y casi sin límite, porque los frames son chicos'
+      - texto: 'Fijas: tabla de particiones (base, tamaño, estado) y a lo sumo un proceso por partición. Paginación: bitmap de frames y casi sin límite, porque los frames son chicos'
         explicacion: Correcta.
-      - texto: 'Fijas: no necesitan estructura porque las particiones no cambian. Paginación: tabla de páginas global'
-        explicacion: 'Igual hay que saber qué partición está libre; y la tabla de páginas es por proceso, no del espacio libre.'
+      - texto: 'Fijas: no necesitan estructura porque las particiones no cambian, y no limitan procesos. Paginación: tabla de páginas global, con un proceso por frame'
+        explicacion: 'Igual hay que saber qué partición está libre, y entra un proceso por partición; la tabla de páginas es por proceso, no del espacio libre.'
     correcta: 2
     justificacion: |
       - **Particiones fijas:** el grado de multiprogramación está limitado por la **cantidad de
@@ -206,13 +206,13 @@ preguntas:
         se lleva con un **bitmap** (o lista) de frames.
   - enunciado: '(2P 1C2026 TM, desarrollo 4) ¿Se usa algún hardware especial para agilizar la traducción de direcciones en **paginación**? ¿Por qué?'
     opciones:
-      - texto: 'No: con registros base y límite alcanza, igual que en particiones fijas'
+      - texto: 'No: con registros base y límite alcanza, igual que en particiones fijas, porque la traducción es una suma'
         explicacion: 'Eso alcanza para asignación contigua; en paginación cada página tiene su propio frame.'
       - texto: 'Sí, el DMA: transfiere las páginas sin pasar por la CPU'
         explicacion: 'El DMA mueve datos de E/S; no traduce direcciones.'
-      - texto: 'No: la traducción la hace el SO en cada acceso'
+      - texto: 'No: la traducción la hace el SO en cada acceso, leyendo la tabla de páginas del proceso en memoria'
         explicacion: 'La traducción la hace el hardware (MMU); el SO solo carga las tablas.'
-      - texto: 'Sí, la TLB: la tabla de páginas es demasiado grande para registros y está en memoria, así que sin caché cada acceso costaría dos'
+      - texto: 'Sí, la TLB: la tabla de páginas está en memoria y no entra en registros, así que sin caché cada acceso costaría dos'
         explicacion: Correcta.
     correcta: 3
     justificacion: |

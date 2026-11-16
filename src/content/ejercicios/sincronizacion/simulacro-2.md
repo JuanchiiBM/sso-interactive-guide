@@ -169,13 +169,14 @@ preguntas:
     condición de carrera. ¿Cómo cumplen, en particular, el de **espera limitada**?
   opciones:
   - texto: Solo un proceso puede adquirir el semáforo a la vez y el resto se queda bloqueado esperando
+      hasta que se libere
     explicacion: Eso explica la mutua exclusión, no la espera limitada.
   - texto: Solo los procesos que también están haciendo wait pueden impedir que otro adquiera el semáforo
     explicacion: Eso explica el requisito de progreso.
-  - texto: 'Los procesos se bloquean en la cola FIFO del semáforo y cada signal despierta al siguiente en orden, así nadie espera para siempre'
+  - texto: 'Los procesos se bloquean en la cola FIFO del semáforo y cada signal despierta al siguiente, así nadie espera para siempre'
     explicacion: Correcta.
   - texto: El SO le da a cada proceso un tiempo máximo dentro de la sección crítica y lo desaloja cuando
-      se vence
+      ese tiempo se vence
     explicacion: El semáforo no limita el tiempo dentro de la sección crítica; limita cuánto espera cada
       uno para entrar.
   correcta: 2
@@ -363,11 +364,11 @@ preguntas:
   opciones:
   - texto: Test-and-set (TSL); también vale swap/exchange
     explicacion: Correcta.
-  - texto: '`wait()` de un semáforo'
+  - texto: '`wait()` de un semáforo, que el SO ejecuta de forma atómica'
     explicacion: Es una syscall del SO, no una instrucción del procesador (por dentro puede usar test-and-set).
-  - texto: Algoritmo de Peterson
+  - texto: Algoritmo de Peterson, con sus variables de turno e interés
     explicacion: Es una solución de software, con variables y un bucle, no una instrucción de hardware.
-  - texto: Un `load` del lock seguido de un `store`
+  - texto: Un `load` del lock seguido de un `store` sobre la misma posición
     explicacion: 'Son dos instrucciones: una interrupción entre leer y escribir deja entrar a los dos.'
   correcta: 0
   justificacion: |
@@ -385,18 +386,18 @@ preguntas:
 - enunciado: (1P 2C2026 TM, desarrollo 4) ¿Qué ocurre con un proceso que ejecuta `wait()` y no puede continuar,
     si el semáforo está implementado con **espera activa** y si está implementado con **bloqueo**?
   opciones:
-  - texto: 'Espera activa: sigue en ejecución, en un bucle que consulta el valor, y consume CPU sin avanzar.
+  - texto: 'Espera activa: sigue ejecutando un bucle que consulta el valor y consume CPU sin avanzar.
       Bloqueo: pasa a Blocked en la cola del semáforo y libera la CPU hasta que un `signal` lo despierte'
     explicacion: Correcta.
-  - texto: 'Espera activa: pasa a Blocked y libera la CPU. Bloqueo: queda en un bucle consultando el valor
-      hasta que pueda entrar'
+  - texto: 'Espera activa: pasa a Blocked en la cola del semáforo y libera la CPU. Bloqueo: queda en un bucle
+      consultando el valor, consumiendo CPU hasta que pueda entrar'
     explicacion: Están invertidas.
   - texto: 'Espera activa: vuelve a la cola de Ready y reintenta cuando lo vuelvan a planificar. Bloqueo:
       queda en Ready con menor prioridad'
     explicacion: Con espera activa no cede la CPU por sí mismo; con bloqueo va a la cola del semáforo, no
       a Ready.
-  - texto: 'En los dos casos pasa a Blocked; la diferencia es que con espera activa el SO lo despierta cada
-      cierto tiempo para que vuelva a consultar el valor'
+  - texto: 'En los dos casos pasa a Blocked y libera la CPU; la diferencia es que con espera activa el SO lo
+      despierta cada cierto tiempo para que vuelva a consultar el valor del semáforo'
     explicacion: 'Con espera activa no se bloquea: gira en la CPU consultando el valor.'
   correcta: 0
   justificacion: |

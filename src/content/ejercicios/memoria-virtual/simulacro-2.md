@@ -38,13 +38,13 @@ preguntas:
       multiprogramación**.
   - enunciado: '(2P 2C2024 TM, desarrollo 2) En un sistema con paginación y 1 GiB de RAM, la DL **8101FFFFh** de un proceso es válida. ¿El sistema usa memoria virtual?'
     opciones:
-      - texto: 'Sí: esa dirección está más allá de 1 GiB, así que el proceso no entraría entero en la RAM aunque fuera el único'
+      - texto: 'Sí: esa dirección supera 1 GiB, así que el proceso no entraría entero en la RAM aunque fuera el único'
         explicacion: Correcta.
-      - texto: 'No: una DL de 32 bits es normal en cualquier sistema con paginación'
+      - texto: 'No: una DL de 32 bits es normal en cualquier sistema con paginación, tenga o no memoria virtual'
         explicacion: 'Que sea válida implica que el proceso tiene más de 2 GiB de espacio lógico.'
-      - texto: 'No se puede saber: depende del tamaño de página'
+      - texto: 'No se puede saber: depende del tamaño de página, que define cuántas páginas entran en 1 GiB'
         explicacion: 'El tamaño de página no cambia cuánto mide el espacio lógico.'
-      - texto: 'No: la MMU la traduciría a una dirección física dentro de 1 GiB'
+      - texto: 'No: la MMU la traduciría a una dirección física dentro de 1 GiB, así que el proceso entra en la RAM'
         explicacion: 'Traducirla a un frame existe, pero el proceso entero no entra en la RAM.'
     correcta: 0
     justificacion: |
@@ -102,12 +102,12 @@ preguntas:
       lo contradice: si otro proceso le roba un frame, tiene menos; si él le roba a otro, tiene más.
   - enunciado: '(2R 1C2024, V/F 2a; 2P 2C2024 TM, V/F 5a) "El bit de modificado en las tablas de páginas en un sistema con memoria virtual es necesario únicamente cuando el algoritmo de reemplazo es clock mejorado."'
     opciones:
-      - texto: 'Verdadero: es el único algoritmo que mira el bit M'
+      - texto: 'Verdadero: es el único algoritmo que mira el bit M, y los demás eligen víctima sin él'
         explicacion: 'Es el único que lo usa para elegir víctima, pero no es el único uso del bit.'
-      - texto: 'Falso: hace falta con cualquier algoritmo, para saber si al reemplazar una página hay que escribirla a disco'
+      - texto: 'Falso: hace falta con cualquier algoritmo, para saber si la víctima se tiene que escribir a disco'
         explicacion: Correcta.
-      - texto: 'Falso: también lo usa LRU para ordenar las páginas'
-        explicacion: 'LRU ordena por instante de referencia, no por M.'
+      - texto: 'Falso: también lo usa LRU para ordenar las páginas según cuándo fueron modificadas'
+        explicacion: 'LRU ordena por instante de última referencia (lectura o escritura), no por M.'
       - texto: 'Verdadero: sin clock mejorado todas las víctimas se escriben a disco igual'
         explicacion: 'Escribir siempre sería un desperdicio: para evitarlo está el bit M.'
     correcta: 1
@@ -117,13 +117,13 @@ preguntas:
       la copia del disco ya está al día y se ahorra la escritura.
   - enunciado: '(2R 1C2025, desarrollo 3) En una tabla de páginas con bits de presencia, uso y modificado, ¿quién **pone en 1 el bit M** y quién lo **lee**?'
     opciones:
-      - texto: 'Lo pone el SO cuando atiende un fallo de página; lo lee la MMU en cada traducción'
+      - texto: 'Lo pone el SO cuando atiende un fallo de página; lo lee la MMU en cada traducción para validar el acceso'
         explicacion: 'Al traer una página M queda en 0; y la MMU no necesita M para traducir.'
-      - texto: 'Lo pone la MMU cuando el proceso escribe en la página; lo lee el SO al reemplazarla, para saber si escribirla a disco'
+      - texto: 'Lo pone la MMU cuando el proceso escribe en la página; lo lee el SO al reemplazarla, para ver si va a disco'
         explicacion: Correcta.
-      - texto: 'Lo pone el proceso con una syscall; lo lee el SO'
+      - texto: 'Lo pone el proceso con una syscall cada vez que escribe; lo lee el SO cuando elige la víctima'
         explicacion: 'Sería una syscall por escritura: lo hace el hardware.'
-      - texto: 'Lo ponen y lo leen solo el SO, durante el algoritmo de reemplazo'
+      - texto: 'Lo ponen y lo leen solo el SO, durante el algoritmo de reemplazo, comparando la página con el disco'
         explicacion: 'El SO no se entera de cada escritura: la ve el hardware.'
     correcta: 1
     justificacion: |
@@ -137,13 +137,13 @@ preguntas:
       en 1 en cada referencia es lo que hace funcionar al algoritmo.)
   - enunciado: '(2R 1C2025, desarrollo 3) ¿Quién **lee** el bit de presencia y quién lo **escribe**?'
     opciones:
-      - texto: 'Lo lee el SO cuando elige víctima; lo escribe la MMU'
+      - texto: 'Lo lee el SO cuando elige víctima; lo escribe la MMU cuando trae la página'
         explicacion: 'Están invertidos.'
-      - texto: 'Lo lee y lo escribe la MMU, sin intervención del SO'
+      - texto: 'Lo lee y lo escribe la MMU al traducir, sin intervención del SO'
         explicacion: 'Cargar una página la hace el SO: es él quien la marca presente.'
       - texto: 'Lo lee la MMU al traducir; lo escribe el SO al cargar o descargar la página'
         explicacion: Correcta.
-      - texto: 'Lo lee el proceso antes de acceder; lo escribe el SO'
+      - texto: 'Lo lee el proceso antes de acceder a memoria; lo escribe el SO al cargarla'
         explicacion: 'El proceso no ve su tabla de páginas.'
     correcta: 2
     justificacion: |
@@ -180,14 +180,14 @@ preguntas:
       recorre los frames. Ninguna de las opciones es lo que necesita.
   - enunciado: '(2R 2C2024, desarrollo 2) ¿Qué diferencia hay entre la tabla de páginas de un proceso con **memoria real** y con **memoria virtual**?'
     opciones:
-      - texto: 'Ninguna: en las dos cada entrada tiene solo el número de frame'
+      - texto: 'Ninguna: en las dos cada entrada tiene solo el número de frame; la memoria virtual se resuelve con el área de swap, sin agregar nada a la tabla'
         explicacion: 'Con memoria virtual hacen falta bits para presencia y para el reemplazo.'
-      - texto: 'Con memoria real: frame y bit de validez. Con memoria virtual: el bit de validez pasa a ser de presencia y se agregan el bit M y datos para el reemplazo (bit U, instantes de carga o de referencia)'
+      - texto: 'Real: frame y bit de validez. Virtual: la validez pasa a ser presencia y se agregan el bit M y datos de reemplazo (U, instantes de carga o referencia)'
         explicacion: Correcta.
-      - texto: 'Con memoria virtual la tabla tiene una entrada por frame en vez de una por página'
+      - texto: 'Con memoria virtual la tabla tiene una entrada por frame en vez de una por página, y cada entrada guarda el PID del proceso dueño de ese frame'
         explicacion: 'Esa es la tabla invertida, que también existe sin memoria virtual.'
-      - texto: 'Con memoria real la tabla incluye la dirección en disco de cada página'
-        explicacion: 'Sin memoria virtual las páginas están todas en RAM.'
+      - texto: 'Con memoria real la tabla incluye la dirección en disco de cada página; con virtual alcanza con el frame y el bit de validez'
+        explicacion: 'Es al revés: sin memoria virtual las páginas están todas en RAM, y es con virtual que hacen falta bits extra.'
     correcta: 1
     justificacion: |
       - **Memoria real:** número de **frame** y bit de **validez** (si la página pertenece al proceso).

@@ -21,11 +21,11 @@ preguntas:
       máxima prioridad'
     explicacion: Estar en modo kernel no impide que lleguen interrupciones; solo se postergan si están
       deshabilitadas.
-  - texto: 'Falso: la interrupción se atiende al terminar la instrucción en curso (el kernel también es interrumpible) y después se retoma la syscall'
+  - texto: 'Falso: se atiende al terminar la instrucción en curso (el kernel también es interrumpible) y después se retoma la syscall'
     explicacion: Correcta.
-  - texto: 'Falso: la syscall se cancela y el proceso tiene que volver a invocarla después de la interrupción'
+  - texto: 'Falso: la syscall se aborta para atender la interrupción y el proceso tiene que volver a invocarla desde el principio'
     explicacion: 'No se pierde el trabajo hecho: se guarda el contexto de la syscall para reanudarla.'
-  - texto: 'Verdadero: las interrupciones solo se chequean cuando la CPU vuelve a modo usuario'
+  - texto: 'Verdadero: las interrupciones solo se chequean cuando la CPU vuelve a modo usuario, así que la syscall termina sin cortes'
     explicacion: El chequeo de interrupciones es parte del ciclo de instrucción, en cualquier modo.
   correcta: 1
   justificacion: |

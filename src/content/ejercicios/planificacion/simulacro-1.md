@@ -64,16 +64,16 @@ preguntas:
     si el algoritmo del planificador de corto plazo es Round Robin o variantes del mismo".'
   opciones:
   - texto: 'Verdadero: solo el fin de quantum puede sacar a un proceso de la CPU sin que se bloquee ni
-      termine'
+      termine por su cuenta'
     explicacion: También desaloja la llegada de un proceso más prioritario, sin quantum de por medio (SRT,
       prioridades).
   - texto: 'Falso: esa transición la decide siempre el planificador de mediano plazo al suspender procesos
       a disco'
     explicacion: Suspender lleva a Ready/Suspended o Blocked/Suspended; Running → Ready es decisión del
       corto plazo.
-  - texto: 'Falso: es posible con cualquier algoritmo con desalojo, por ejemplo SJF con desalojo cuando llega un proceso con ráfaga más corta'
+  - texto: 'Falso: es posible con cualquier algoritmo con desalojo, como SJF con desalojo al llegar un proceso con ráfaga más corta'
     explicacion: Correcta.
-  - texto: 'Falso: también ocurre en FIFO cuando el proceso vuelve de su E/S'
+  - texto: 'Falso: también ocurre en FIFO cuando el proceso vuelve de su E/S y retoma su lugar en la cola de Ready'
     explicacion: Volver de E/S es Blocked → Ready, no Running → Ready.
   correcta: 2
   justificacion: |
@@ -226,13 +226,14 @@ preguntas:
 - enunciado: (1R 2C2025) Comparando VRR, RR y FIFO en atención de I/O bound y tiempo de respuesta promedio,
     ¿qué afirmación es correcta?
   opciones:
-  - texto: RR tiene el mejor tiempo de respuesta porque trata a todos por igual
+  - texto: RR tiene el mejor tiempo de respuesta porque trata a todos por igual y ninguno pasa más de un
+      quantum en la CPU
     explicacion: Tratar a todos igual no favorece a los I/O bound; VRR mejora a RR justamente priorizándolos.
   - texto: FIFO tiene mejor tiempo de respuesta que RR porque no pierde tiempo en cambios de contexto
       por quantum
     explicacion: El overhead es menor, pero un proceso que vuelve de E/S puede esperar mucho detrás de
       un CPU bound.
-  - texto: 'VRR lo mejora respecto de RR porque los I/O bound vuelven por la cola auxiliar; en FIFO puede empeorar mucho si hay un CPU bound adelante'
+  - texto: 'VRR mejora a RR porque los I/O bound vuelven por la cola auxiliar; FIFO puede empeorar mucho si hay un CPU bound adelante'
     explicacion: Correcta.
   - texto: Los tres tienen un tiempo de respuesta similar; solo difieren en la cantidad de cambios de
       contexto que generan
@@ -248,11 +249,11 @@ preguntas:
 - enunciado: '(1P 2C2026 TM, single choice iv) El tiempo de espera de un proceso representa el tiempo en
     que el proceso:'
   opciones:
-  - texto: Está suspendido
+  - texto: Está suspendido en disco
     explicacion: Estar suspendido (en disco) no es esperar la CPU en la cola de Ready.
-  - texto: No está en ejecución
+  - texto: No está ejecutando en la CPU
     explicacion: 'Incluye el tiempo bloqueado esperando E/S, que no cuenta como espera.'
-  - texto: Está bloqueado
+  - texto: Está bloqueado esperando un evento
     explicacion: El tiempo bloqueado (esperando un evento o una E/S) no es tiempo de espera.
   - texto: Ninguna de las anteriores
     explicacion: Correcta.

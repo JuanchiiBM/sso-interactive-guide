@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
 tags: [contenido, ejercicios]
-actualizado: 2026-11-10
+actualizado: 2026-11-16
 ---
 
 # Formato de un Ejercicio
@@ -43,6 +43,14 @@ preguntas:
     justificacion: |
       Markdown completo (listas, `código`, ```grafo). Se ve recién al acertar.
 ```
+**Opciones parejas: la correcta no se delata por el largo.** La tendencia natural es escribir la
+correcta completa y matizada y las distractoras cortas, y se adivina sin leer (en 103 de 472
+preguntas era claramente la más larga). Regla: la correcta mide como mucho **1,15×** la distractora
+más larga, sin contar asteriscos, guiones bajos ni backticks. Se arregla alargando las distractoras con la misma forma (afirmación + "porque…"),
+plausibles pero inequívocamente falsas, o recortando relleno de la correcta. Sin sobrecorregir: que
+a veces la más larga sea una distractora. Lo vigila `src/lib/markdown/largo-opciones.test.ts` (también
+que la correcta no sea la más larga en ≥ 35% del total).
+
 **Resultados exactos** (números, direcciones, faults) van en `calculos`, no en `preguntas`:
 
 ```yaml

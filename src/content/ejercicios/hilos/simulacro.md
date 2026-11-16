@@ -37,7 +37,8 @@ preguntas:
 - enunciado: (1P 1C2024 TT) En una aplicación que busque minimizar los cambios de modo, ¿qué tipo de hilos
     convendría usar?
   opciones:
-  - texto: KLTs, porque el kernel los gestiona directamente y no necesita cambiar de modo para planificarlos
+  - texto: KLTs, porque el kernel los gestiona directamente y no necesita cambiar de modo para crearlos
+      ni planificarlos
     explicacion: Justamente por gestionarlos el kernel, crearlos o planificarlos requiere pasar a modo
       kernel.
   - texto: 'ULTs, porque la biblioteca los crea, planifica y cambia en modo usuario, sin syscalls ni intervención del kernel'
@@ -46,7 +47,7 @@ preguntas:
       hilos
     explicacion: 'Crear procesos o cambiar entre ellos requiere siempre al SO: más cambios de modo, no
       menos.'
-  - texto: 'Es indistinto: todo tipo de hilo requiere syscalls'
+  - texto: 'Es indistinto: todo tipo de hilo requiere syscalls para crearse y para cambiar entre ellos'
     explicacion: Las operaciones sobre ULTs las resuelve la biblioteca en modo usuario, sin syscalls.
   correcta: 1
   justificacion: |
@@ -57,15 +58,16 @@ preguntas:
 - enunciado: (1P 1C2025 TT) En términos de posibilidad de multiprocesamiento, ¿qué afirmación es correcta
     sobre procesos, KLTs y ULTs?
   opciones:
-  - texto: Solo los procesos aprovechan varios cores; los KLTs no
+  - texto: Solo los procesos aprovechan varios cores; los KLTs de un mismo proceso corren siempre en
+      el mismo core
     explicacion: El kernel conoce a cada KLT y puede asignarlos a cores distintos.
   - texto: Los tres pueden ejecutar en paralelo, porque el SO reparte los hilos de usuario entre los cores
       disponibles
     explicacion: 'El SO no conoce a los ULTs: ve un único hilo de ejecución por KLT.'
-  - texto: Los ULTs permiten paralelismo si la biblioteca usa jacketing; los KLTs dependen del core del
-      proceso
+  - texto: Los ULTs permiten paralelismo si la biblioteca usa jacketing; los KLTs dependen del core asignado
+      a su proceso
     explicacion: El jacketing no da paralelismo, y los KLTs se planifican de forma independiente.
-  - texto: 'Procesos y KLTs pueden usar distintos cores; los ULTs hermanos no, porque el SO los ve como una sola unidad, salvo que corran sobre KLTs distintos'
+  - texto: 'Procesos y KLTs pueden usar distintos cores; los ULTs de un mismo KLT no, porque el SO los ve como una sola unidad'
     explicacion: Correcta.
   correcta: 3
   justificacion: |
@@ -148,14 +150,14 @@ preguntas:
 - enunciado: '(1R 1C2025 TM) Verdadero o falso: "Por defecto los hilos ULT de un mismo proceso no pueden
     ser ejecutados en paralelo, pero esto puede solucionarse utilizando la técnica de jacketing".'
   opciones:
-  - texto: 'Verdadero: el jacketing convierte cada llamada bloqueante en un KLT nuevo que corre en otra
-      CPU'
+  - texto: 'Verdadero: el jacketing convierte cada llamada bloqueante en un KLT nuevo que el SO puede
+      mandar a correr en otra CPU'
     explicacion: El jacketing reemplaza la syscall bloqueante por una no bloqueante; no crea KLTs.
-  - texto: 'Verdadero: con jacketing el SO pasa a conocer cada ULT y puede asignarlo a distintos procesadores'
+  - texto: 'Verdadero: con jacketing el SO pasa a conocer cada ULT y puede asignarlo a distintos procesadores a la vez'
     explicacion: 'El jacketing se implementa en la biblioteca: el SO sigue sin conocer a los ULTs.'
-  - texto: 'Falso: los ULTs pueden ejecutar en paralelo por defecto'
+  - texto: 'Falso: los ULTs de un mismo proceso ya pueden ejecutar en paralelo por defecto, sin necesidad de jacketing'
     explicacion: 'La primera parte de la frase es cierta: por defecto no hay paralelismo entre ULTs.'
-  - texto: 'Falso: el SO no ve los ULTs; el jacketing solo evita que una syscall bloqueante bloquee a todo el proceso, no da paralelismo'
+  - texto: 'Falso: el SO no ve los ULTs; el jacketing solo evita que una syscall bloqueante bloquee todo el proceso, no da paralelismo'
     explicacion: Correcta.
   correcta: 3
   justificacion: |
