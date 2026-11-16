@@ -454,7 +454,7 @@ const LINEAS_IMG = [
   '  return 0;',
   '}',
 ]
-// v queda en la línea de abajo del marco de cargar; de ahí sale el puntero al heap
+// v queda en la línea de abajo del frame de cargar; de ahí sale el puntero al heap
 const puntero = (el: string, yBloque: number) =>
   arista(`M600,139 C646,139 646,${yBloque} 584,${yBloque}`, { el, oculto: true, punta: true })
 
@@ -478,8 +478,8 @@ const imagenProceso: Recorrido = {
     caja(520, 282, 130, 22, 'contador = 5', '', 'contador'),
     `<g data-el="instrucciones">${texto(512, 314, 'main y cargar · solo lectura', { clase: 'ri-chica ri-mini' })}</g>`,
     caja(668, 70, 88, 76, 'PCB\n(lo maneja\nel SO)', 'dg-neutro', 'pcb'),
-    tarjeta(520, 58, 160, 44, 'marco de main', [{ t: 'total = 0' }], {
-      el: 'marco-main',
+    tarjeta(520, 58, 160, 44, 'frame de main', [{ t: 'total = 0' }], {
+      el: 'frame-main',
       oculto: true,
       clase: 'dg-activo',
     }),
@@ -488,9 +488,9 @@ const imagenProceso: Recorrido = {
       117,
       160,
       58,
-      'marco de cargar',
+      'frame de cargar',
       [{ t: 'retorno → main' }, { t: 'v = ?', val: 'c-v' }],
-      { el: 'marco-cargar', oculto: true, clase: 'dg-activo' },
+      { el: 'frame-cargar', oculto: true, clase: 'dg-activo' },
     ),
     oculto(caja(520, 250, 120, 24, '40 bytes', 'dg-listo', 'bloque1')),
     oculto(caja(520, 222, 120, 24, '40 bytes', 'dg-listo', 'bloque2')),
@@ -510,24 +510,24 @@ const imagenProceso: Recorrido = {
     {
       titulo: 'Entra a main.',
       texto:
-        'Se apila el marco de `main` con su local `total`: es automática, vive mientras se ejecuta `main`.',
-      resaltar: ['img-6', 'marco-main'],
+        'Se apila el frame de `main` con su local `total`: es automática, vive mientras se ejecuta `main`.',
+      resaltar: ['img-6', 'frame-main'],
       fichas: { pc: 'img-6' },
-      mostrar: ['marco-main'],
+      mostrar: ['frame-main'],
     },
     {
       titulo: 'Llama a cargar.',
       texto:
-        'El marco nuevo va **debajo** del de `main`, porque el stack crece hacia las direcciones bajas. Guarda la dirección de retorno y la local `v`.',
-      resaltar: ['img-7', 'marco-cargar', 'crece-stack'],
+        'El frame nuevo va **debajo** del de `main`, porque el stack crece hacia las direcciones bajas. Guarda la dirección de retorno y la local `v`.',
+      resaltar: ['img-7', 'frame-cargar', 'crece-stack'],
       fichas: { pc: 'img-7' },
-      mostrar: ['marco-cargar'],
+      mostrar: ['frame-cargar'],
     },
     {
       titulo: 'malloc.',
       texto:
         'Los 40 bytes se reservan en el **heap**, que crece hacia arriba, y viven hasta el `free`. En el stack solo queda su dirección, guardada en `v`.',
-      resaltar: ['img-2', 'marco-cargar', 'puntero1', 'bloque1', 'crece-heap'],
+      resaltar: ['img-2', 'frame-cargar', 'puntero1', 'bloque1', 'crece-heap'],
       fichas: { pc: 'img-2' },
       mostrar: ['bloque1', 'puntero1'],
       valores: { 'c-v': 'v = 0x5A0' },
@@ -535,20 +535,20 @@ const imagenProceso: Recorrido = {
     {
       titulo: 'Retorna sin free.',
       texto:
-        'El marco de `cargar` se descarta solo, y con él `v`: se pierde la única dirección del bloque. Sigue ocupado y ya nadie lo puede liberar: **memory leak**.',
+        'El frame de `cargar` se descarta solo, y con él `v`: se pierde la única dirección del bloque. Sigue ocupado y ya nadie lo puede liberar: **memory leak**.',
       resaltar: ['img-4', 'bloque1', 'leak'],
       fichas: { pc: 'img-4' },
-      ocultar: ['marco-cargar', 'puntero1'],
+      ocultar: ['frame-cargar', 'puntero1'],
       mostrar: ['leak'],
       clases: { bloque1: 'rc-mal' },
     },
     {
       titulo: 'Otra llamada a cargar.',
       texto:
-        'El marco nuevo reusa el lugar del stack que había quedado libre. El heap no: el primer bloque sigue ocupado, así que `malloc` toma otro.',
-      resaltar: ['img-8', 'marco-cargar', 'puntero2', 'bloque2', 'bloque1'],
+        'El frame nuevo reusa el lugar del stack que había quedado libre. El heap no: el primer bloque sigue ocupado, así que `malloc` toma otro.',
+      resaltar: ['img-8', 'frame-cargar', 'puntero2', 'bloque2', 'bloque1'],
       fichas: { pc: 'img-8' },
-      mostrar: ['marco-cargar', 'bloque2', 'puntero2'],
+      mostrar: ['frame-cargar', 'bloque2', 'puntero2'],
       valores: { 'c-v': 'v = 0x5D0' },
     },
     {
@@ -556,7 +556,7 @@ const imagenProceso: Recorrido = {
       texto: 'Se pierde otra dirección: ahora son 80 bytes ocupados que nadie puede liberar.',
       resaltar: ['img-4', 'bloque1', 'bloque2', 'leak'],
       fichas: { pc: 'img-4' },
-      ocultar: ['marco-cargar', 'puntero2'],
+      ocultar: ['frame-cargar', 'puntero2'],
       clases: { bloque2: 'rc-mal' },
       valores: { leak: 'leak: 80 bytes' },
     },
@@ -566,7 +566,7 @@ const imagenProceso: Recorrido = {
         'Al terminar, el SO libera **toda** la imagen, heap incluido. El leak hace daño mientras el proceso vive: si `cargar` estuviera en un bucle, cada vuelta perdería 40 bytes más.',
       resaltar: ['img-9', 'leak'],
       fichas: { pc: 'img-9' },
-      ocultar: ['marco-main', 'bloque1', 'bloque2'],
+      ocultar: ['frame-main', 'bloque1', 'bloque2'],
       valores: { leak: 'exit: SO libera todo' },
     },
   ],

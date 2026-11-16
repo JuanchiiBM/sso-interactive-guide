@@ -150,7 +150,7 @@ El proceso se divide en **segmentos de tamaño variable**, según la visión del
 
 ## Paginación
 
-Tanto los procesos como la memoria se dividen en partes **del mismo tamaño**: **páginas** en el proceso y **frames** en la memoria (la guía a veces les dice **marcos**). Cualquier página puede ir a cualquier frame, y no hace falta que estén en orden ni contiguas. Cada proceso tiene una **tabla de páginas** que dice en qué frame está cada página.
+Tanto los procesos como la memoria se dividen en partes **del mismo tamaño**: **páginas** en el proceso y **frames** en la memoria (la cátedra a veces les dice **marcos**; en el sitio se usa siempre "frame"). Cualquier página puede ir a cualquier frame, y no hace falta que estén en orden ni contiguas. Cada proceso tiene una **tabla de páginas** que dice en qué frame está cada página.
 
 - **Sin fragmentación externa:** un frame libre sirve para cualquier página.
 - **Fragmentación interna solo en la última página** del proceso: como mucho, el tamaño de página − 1 byte.
