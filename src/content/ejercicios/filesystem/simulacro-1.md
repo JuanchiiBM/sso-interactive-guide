@@ -84,11 +84,11 @@ preguntas:
     lo propio de cada apertura: modo y puntero de lectura/escritura. Es la pregunta espejo de la anterior.
 - enunciado: '(2R 1C2026, single choice 2.iv) Indique cuál estructura o información **nunca** es persistida en el volumen de un filesystem:'
   opciones:
-  - texto: El FCB
+  - texto: El FCB de cada archivo, con sus atributos
     explicacion: 'El FCB (inodo, entrada de directorio en FAT) vive en disco.'
   - texto: La tabla global de archivos abiertos
     explicacion: Correcta.
-  - texto: El directorio raíz
+  - texto: El directorio raíz del volumen
     explicacion: 'El raíz es un directorio más (o una zona fija en FAT): está en disco.'
   - texto: Ninguna de las anteriores
     explicacion: 'La tabla global de archivos abiertos no se guarda en disco.'
@@ -230,11 +230,11 @@ preguntas:
   opciones:
   - texto: 'No permite permiso de ejecución; se soluciona con una matriz de accesos'
     explicacion: 'UFS sí tiene el bit `x`.'
-  - texto: 'Ocupa mucho espacio en el inodo; se soluciona guardando los permisos en el directorio'
+  - texto: 'Ocupa mucho espacio en el inodo; se soluciona guardando los permisos en la entrada de directorio de cada archivo'
     explicacion: 'Ocupa poco; el problema es la granularidad.'
   - texto: 'No permite dar permisos distintos a varios usuarios o grupos puntuales; se soluciona con listas de control de acceso (ACL)'
     explicacion: Correcta.
-  - texto: 'Cualquier usuario puede cambiar los permisos; se soluciona con locks obligatorios'
+  - texto: 'Cualquier usuario puede cambiar los permisos de un archivo ajeno; se soluciona con locks obligatorios del SO'
     explicacion: 'Solo el dueño (o root) cambia los permisos; los locks son otra cosa.'
   correcta: 2
   justificacion: |

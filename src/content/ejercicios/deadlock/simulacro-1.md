@@ -23,7 +23,7 @@ preguntas:
     explicacion: Eso es detección y recuperación.
   - texto: Analiza en cada petición si el sistema queda en estado seguro
     explicacion: Eso es evasión (algoritmo del banquero).
-  - texto: 'Es una estrategia que impide el deadlock por diseño, eliminando al menos una de las cuatro condiciones necesarias (alcanza con romper una)'
+  - texto: 'Impide el deadlock por diseño, eliminando al menos una de las cuatro condiciones necesarias (alcanza con romper una)'
     explicacion: Correcta.
   - texto: Elimina las cuatro condiciones a la vez, porque alcanza con que se cumpla cualquiera de ellas
       para que haya deadlock
@@ -331,7 +331,7 @@ preguntas:
     explicacion: Atacarla sería permitir quitarle recursos a un proceso; esta política no quita nada.
   - texto: Retención y espera
     explicacion: Correcta.
-  - texto: Espera circular
+  - texto: Espera circular entre procesos
     explicacion: Se ataca numerando los recursos y pidiéndolos en orden creciente.
   correcta: 2
   justificacion: |

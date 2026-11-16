@@ -12,9 +12,9 @@ preguntas:
         explicacion: 'Es espacio libre repartido en huecos, no intercambio de páginas.'
       - texto: Thrashing (sobrepaginación)
         explicacion: Correcta.
-      - texto: Swapping
+      - texto: 'Swapping (intercambio de procesos)'
         explicacion: 'El swapping saca procesos enteros; el fenómeno patológico tiene otro nombre.'
-      - texto: Inanición
+      - texto: 'Inanición (starvation)'
         explicacion: 'Es de planificación: un proceso que nunca recibe la CPU.'
     correcta: 1
     justificacion: |
@@ -22,13 +22,13 @@ preguntas:
       páginas y casi no ejecutan.
   - enunciado: '(2P 2C2024 TT, desarrollo 3) ¿Qué relación hay entre el thrashing y el grado de multiprogramación?'
     opciones:
-      - texto: 'Ninguna: el thrashing depende solo del algoritmo de reemplazo'
+      - texto: 'Ninguna: el thrashing depende solo del algoritmo de reemplazo, y con LRU no aparece sin importar cuántos procesos haya'
         explicacion: 'Con cualquier algoritmo, si a cada proceso le tocan muy pocos frames, falla todo el tiempo.'
-      - texto: 'Subir la multiprogramación siempre mejora el uso de CPU, así que nunca causa thrashing'
+      - texto: 'Subir la multiprogramación siempre mejora el uso de CPU, así que nunca causa thrashing: más procesos dan más trabajo listo'
         explicacion: 'Mejora al principio, hasta que los frames por proceso no alcanzan.'
-      - texto: 'Subir la multiprogramación con la CPU ociosa mejora al principio, pero si se sigue subiendo cada proceso tiene muy pocas páginas en memoria y aparece el thrashing'
+      - texto: 'Subir la multiprogramación mejora la CPU al principio, pero pasado un punto cada proceso tiene muy pocos frames y aparece el thrashing'
         explicacion: Correcta.
-      - texto: 'El thrashing aparece cuando la multiprogramación es baja, porque la CPU queda ociosa'
+      - texto: 'El thrashing aparece cuando la multiprogramación es baja, porque la CPU queda ociosa y el SO tiene que traer más páginas'
         explicacion: 'Con multiprogramación baja la CPU está ociosa por falta de procesos, sin paginar.'
     correcta: 2
     justificacion: |
@@ -38,13 +38,13 @@ preguntas:
       falla constantemente y el uso de CPU **se desploma**.
   - enunciado: '(2P 1C2024 TT, desarrollo 1) Si analiza un sistema para determinar si está ocurriendo thrashing, ¿qué métricas permitirían inferirlo?'
     opciones:
-      - texto: 'Uso de CPU bajo y cantidad de fallos de página en aumento (con mucha E/S a disco de paginación)'
+      - texto: 'Uso de CPU bajo y fallos de página en aumento (con mucha E/S al disco de paginación)'
         explicacion: Correcta.
-      - texto: 'Uso de CPU alto y pocos fallos de página'
+      - texto: 'Uso de CPU alto y pocos fallos de página, con el disco de paginación casi sin actividad'
         explicacion: 'Es un sistema trabajando bien.'
-      - texto: 'Mucha fragmentación externa en la memoria'
-        explicacion: 'No tiene que ver con la paginación bajo demanda.'
-      - texto: 'Muchos TLB hits'
+      - texto: 'Mucha fragmentación externa en la memoria y procesos esperando que se compacte'
+        explicacion: 'No tiene que ver con la paginación bajo demanda, que no genera fragmentación externa.'
+      - texto: 'Muchos TLB hits y la tabla de páginas consultada pocas veces'
         explicacion: 'Muchos hits indican buena localidad, lo contrario del thrashing.'
     correcta: 0
     justificacion: |
@@ -69,13 +69,13 @@ preguntas:
       frames a los que están en thrashing.
   - enunciado: '(2P 1C2024 TM, desarrollo 2) En ese mismo sistema, si un proceso está en thrashing y **no hay frames libres**, ¿qué se puede hacer?'
     opciones:
-      - texto: 'Nada: con sustitución local no se le pueden dar frames de otro lado'
+      - texto: 'Nada: con sustitución local no se le pueden dar frames de otro lado, solo esperar a que termine'
         explicacion: 'La asignación es dinámica: el SO puede cambiar cuántos frames tiene cada proceso.'
-      - texto: 'Sacarles frames a procesos con frecuencia de PF muy baja, o bajar la multiprogramación suspendiendo un proceso'
+      - texto: 'Quitarles frames a procesos con frecuencia de PF muy baja, o suspender un proceso para bajar la multiprogramación'
         explicacion: Correcta.
-      - texto: 'Aumentar la multiprogramación para que la CPU no quede ociosa'
+      - texto: 'Aumentar la multiprogramación para que la CPU no quede ociosa mientras el proceso espera sus páginas'
         explicacion: 'Más procesos compiten por los mismos frames: lo empeora.'
-      - texto: 'Cambiar el algoritmo de reemplazo a uno global'
+      - texto: 'Cambiar el algoritmo de reemplazo a uno global, para que el proceso tome los frames que necesita'
         explicacion: 'Con global el proceso le robaría frames a otros y podría contagiarlos.'
     correcta: 1
     justificacion: |
@@ -84,13 +84,13 @@ preguntas:
       multiprogramación** (suspender algún proceso).
   - enunciado: '(2R 2C2024, desarrollo 3) ¿Cómo se soluciona una situación de thrashing con **reemplazo local** y con **reemplazo global**?'
     opciones:
-      - texto: 'En los dos casos, cambiando el algoritmo de reemplazo por LRU'
+      - texto: 'En los dos casos, cambiando el algoritmo de reemplazo por LRU para que elija mejores víctimas'
         explicacion: 'Ningún algoritmo arregla que no alcancen los frames.'
-      - texto: 'Local: bajando la multiprogramación. Global: dándole más frames a un proceso'
+      - texto: 'Local: bajando la multiprogramación. Global: dándole más frames al proceso que más falla'
         explicacion: 'Están invertidas.'
-      - texto: 'Local: dándoles más frames a los procesos en thrashing. Global: bajando el grado de multiprogramación'
+      - texto: 'Local: dándoles más frames a los procesos en thrashing. Global: bajando la multiprogramación'
         explicacion: Correcta.
-      - texto: 'Local: no puede haber thrashing. Global: compactando la memoria'
+      - texto: 'Local: no puede haber thrashing. Global: compactando la memoria para liberar frames'
         explicacion: 'Con local puede haberlo en algunos procesos; y compactar no aplica a la paginación.'
     correcta: 2
     justificacion: |
@@ -99,13 +99,13 @@ preguntas:
         **bajar el grado de multiprogramación**.
   - enunciado: '(2P 1C2025 TT, V/F 1b) "El thrashing se puede solucionar parcialmente aumentando el grado de multiprogramación del sistema."'
     opciones:
-      - texto: 'Verdadero: con más procesos la CPU tiene más trabajo y deja de estar ociosa'
+      - texto: 'Verdadero: con más procesos la CPU tiene más trabajo listo y deja de estar ociosa esperando páginas'
         explicacion: 'La CPU está ociosa porque los procesos esperan páginas: más procesos esperarían más.'
-      - texto: 'Verdadero, pero solo con sustitución local'
-        explicacion: 'Con local tampoco: los frames siguen sin alcanzar.'
-      - texto: 'Falso: el thrashing no tiene nada que ver con la multiprogramación'
+      - texto: 'Verdadero, pero solo con sustitución local, porque cada proceso nuevo trae sus propios frames'
+        explicacion: 'Con local tampoco: los frames siguen sin alcanzar, y los del proceso nuevo salen del mismo total.'
+      - texto: 'Falso: el thrashing no tiene nada que ver con la multiprogramación, solo con el algoritmo'
         explicacion: 'Tiene todo que ver: es su causa típica.'
-      - texto: 'Falso: lo empeora, porque más procesos compiten por los mismos frames; se soluciona bajando la multiprogramación'
+      - texto: 'Falso: lo empeora, porque más procesos compiten por los mismos frames; se soluciona bajándolo'
         explicacion: Correcta.
     correcta: 3
     justificacion: |
@@ -114,13 +114,13 @@ preguntas:
       working set o la frecuencia de PF).
   - enunciado: '(2P 2C2025 TM, desarrollo 3) Con asignación dinámica y sustitución **global**, ¿cómo se detecta y se mitiga el thrashing?'
     opciones:
-      - texto: 'Se detecta con la frecuencia de fallos de página (cotas) o comparando la suma de los working sets con los frames; se mitiga bajando el grado de multiprogramación'
+      - texto: 'Se detecta por la frecuencia de PF (cotas) o comparando la suma de working sets con los frames; se mitiga bajando la multiprogramación'
         explicacion: Correcta.
-      - texto: 'Se detecta por la fragmentación externa; se mitiga compactando'
+      - texto: 'Se detecta por la fragmentación externa de la memoria; se mitiga compactando para juntar los frames libres'
         explicacion: 'La paginación no tiene fragmentación externa.'
-      - texto: 'Se detecta por el uso de CPU alto; se mitiga aumentando la multiprogramación'
+      - texto: 'Se detecta por el uso de CPU alto con mucha cola de listos; se mitiga aumentando el grado de multiprogramación para repartir la carga'
         explicacion: 'El thrashing baja el uso de CPU, y más procesos lo empeoran.'
-      - texto: 'No se puede detectar con sustitución global; hay que pasar a local'
+      - texto: 'No se puede detectar con sustitución global, porque los frames se mezclan entre procesos; hay que pasar a local'
         explicacion: 'Se detecta igual, con métricas del sistema.'
     correcta: 0
     justificacion: |
@@ -132,11 +132,11 @@ preguntas:
       - **Mitigación:** **bajar el grado de multiprogramación** (suspender procesos).
   - enunciado: '(2R 2C2025, V/F 3b) "Si en un sistema existe un bajo uso de I/O durante un período de tiempo, podemos concluir que no hay thrashing."'
     opciones:
-      - texto: 'Falso: el thrashing se mide con el uso de CPU, no con la E/S'
+      - texto: 'Falso: el thrashing se mide con el uso de CPU, no con la E/S, así que la E/S baja no prueba nada'
         explicacion: 'La CPU baja también puede ser falta de procesos; la E/S de paginación es lo que delata.'
       - texto: 'Verdadero: el thrashing implica muchos fallos de página, y cada uno es una E/S a disco'
         explicacion: Correcta.
-      - texto: 'Falso: los fallos de página se atienden desde la TLB, sin E/S'
+      - texto: 'Falso: los fallos de página se atienden desde la TLB, sin necesidad de E/S a disco'
         explicacion: 'Una página ausente no está en la TLB: hay que traerla de disco.'
       - texto: 'Verdadero, porque con poca E/S los procesos no se bloquean nunca'
         explicacion: 'La conclusión es correcta pero el motivo no: pueden bloquearse por otras cosas.'
@@ -160,13 +160,13 @@ preguntas:
       Es **thrashing**. Subir la multiprogramación generaría más fallos de página; hay que bajarla.
   - enunciado: '(2P 1C2026 TM, desarrollo 3 b) Mismo sistema: **CPU 87 %, disco de paginación 13 %**. ¿Qué pasa? ¿Conviene subir la multiprogramación?'
     opciones:
-      - texto: 'Hay thrashing; hay que bajar la multiprogramación'
+      - texto: 'Hay thrashing: la CPU está casi saturada atendiendo fallos de página; hay que bajar la multiprogramación'
         explicacion: 'Con CPU alta y poca paginación no hay thrashing.'
-      - texto: 'No hay thrashing: hay bastantes procesos con su localidad en memoria; subirla podría aumentar un poco la CPU, siempre que no lleve al thrashing'
+      - texto: 'No hay thrashing: los procesos tienen su localidad en memoria; subirla un poco podría aumentar la CPU, sin pasarse'
         explicacion: Correcta.
-      - texto: 'Hay pocos procesos; subir la multiprogramación siempre va a aumentar mucho la CPU'
+      - texto: 'Hay pocos procesos; subir la multiprogramación siempre va a aumentar mucho la CPU, sin ningún riesgo de thrashing'
         explicacion: 'La CPU ya está alta: el margen es chico y el riesgo es pasarse.'
-      - texto: 'El disco es el cuello de botella; hay que agrandar el área de swap'
+      - texto: 'El disco es el cuello de botella; hay que agrandar el área de swap para que pagine más rápido'
         explicacion: 'El disco está casi libre.'
     correcta: 1
     justificacion: |
@@ -175,12 +175,12 @@ preguntas:
       procesos no empujen al sistema al thrashing.
   - enunciado: '(2P 1C2026 TM, desarrollo 3 c) Mismo sistema: **CPU 13 %, disco de paginación 3 %**. ¿Qué pasa? ¿Conviene subir la multiprogramación?'
     opciones:
-      - texto: 'Hay thrashing; hay que bajar la multiprogramación'
-        explicacion: 'Con thrashing el disco de paginación estaría saturado.'
-      - texto: 'El sistema está saturado y no admite más procesos'
-        explicacion: 'Ni la CPU ni el disco están ocupados.'
-      - texto: 'No conviene: con la CPU tan baja cualquier proceso nuevo causa thrashing'
-        explicacion: 'Lo que causa thrashing es la falta de frames, y casi no se está paginando.'
+      - texto: 'Hay thrashing: la CPU está casi parada esperando páginas; hay que bajar la multiprogramación'
+        explicacion: 'Con thrashing el disco de paginación estaría saturado, no al 3 %.'
+      - texto: 'El sistema está saturado y no admite más procesos: el poco uso de CPU es por bloqueos en E/S'
+        explicacion: 'Ni la CPU ni el disco están ocupados: no hay nada saturado.'
+      - texto: 'No conviene: con la CPU tan baja cualquier proceso nuevo causa thrashing enseguida, porque ya no quedan frames'
+        explicacion: 'Lo que causa thrashing es la falta de frames, y casi no se está paginando: hay frames de sobra.'
       - texto: 'Hay pocos procesos con su localidad en memoria; subir la multiprogramación aumentaría el uso de CPU, lejos del thrashing'
         explicacion: Correcta.
     correcta: 3
@@ -191,7 +191,7 @@ preguntas:
     opciones:
       - texto: 'Sí: con más TLB hits hay menos fallos de página'
         explicacion: 'Un hit ahorra leer la tabla, pero si la página no está en memoria, no hay hit posible.'
-      - texto: 'Sí, si la TLB es lo bastante grande como para guardar todas las páginas del proceso'
+      - texto: 'Sí, si la TLB es lo bastante grande como para guardar todas las páginas del proceso en thrashing'
         explicacion: 'La TLB guarda traducciones de páginas presentes; no agrega memoria.'
       - texto: 'No: una página que no está en memoria tampoco está en la TLB, así que el fallo de página ocurre igual'
         explicacion: Correcta.

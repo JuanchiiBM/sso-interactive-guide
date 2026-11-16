@@ -19,7 +19,7 @@ preguntas:
     del sistema, y cuándo conviene usar cada uno?
   opciones:
   - texto: El wrapper ejecuta el servicio en modo usuario sin pasar por el kernel; por eso conviene siempre
-      que se busque performance
+      que se busque performance y evitar cambios de modo
     explicacion: El wrapper es código de usuario, pero para acceder al servicio igual termina invocando
       a la syscall.
   - texto: La syscall es portable entre sistemas operativos y el wrapper no; conviene la syscall cuando
@@ -28,7 +28,7 @@ preguntas:
       la biblioteca.'
   - texto: 'El wrapper es una función de biblioteca que envuelve la syscall: conviene por simpleza y portabilidad; la syscall directa, por control fino del pedido'
     explicacion: Correcta.
-  - texto: 'Son lo mismo con distinto nombre: el compilador decide cuál de las dos se usa'
+  - texto: 'Son lo mismo con distinto nombre: el compilador decide cuál de las dos se usa según el lenguaje'
     explicacion: 'No son lo mismo: uno es una función de biblioteca y la otra es la entrada al kernel.'
   correcta: 2
   justificacion: |
@@ -176,11 +176,13 @@ preguntas:
   - texto: El monolítico tiene menos overhead y además es más tolerante a fallas, porque todo corre en
       modo kernel
     explicacion: Que todo corra junto en modo kernel es lo que hace que una falla afecte a todo el sistema.
-  - texto: El microkernel tiene menos overhead, porque en modo kernel queda solo lo mínimo
+  - texto: El microkernel tiene menos overhead, porque en modo kernel queda solo lo mínimo y hay menos
+      código que ejecutar
     explicacion: Tener poco en el kernel obliga a comunicar los módulos a través de él, y eso agrega overhead.
-  - texto: 'El microkernel es más mantenible y más tolerante a fallas (los servicios corren aislados en modo usuario), pero tiene más overhead'
+  - texto: 'El microkernel es más mantenible y tolerante a fallas (los servicios corren aislados en modo usuario), pero tiene más overhead'
     explicacion: Correcta.
-  - texto: El monolítico es más fácil de mantener, porque todo el código está en un único módulo
+  - texto: El monolítico es más fácil de mantener, porque todo el código está en un único módulo y no hay
+      interfaces que respetar
     explicacion: Tener todo en un bloque aumenta el acoplamiento, y eso lo hace más difícil de mantener.
   correcta: 2
   justificacion: |

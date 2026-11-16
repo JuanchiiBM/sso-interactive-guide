@@ -181,9 +181,9 @@ preguntas:
   - texto: Para que el planificador de largo plazo pueda volver a admitir al mismo proceso más adelante
     explicacion: 'Un proceso que terminó no vuelve a admitirse: si se lo ejecuta otra vez, es un proceso
       nuevo.'
-  - texto: 'Para guardar un tiempo datos del proceso terminado, como estadísticas o su valor de retorno, hasta que el padre los recoja'
+  - texto: 'Para guardar un tiempo datos del proceso terminado (estadísticas, valor de retorno) hasta que el padre los recoja'
     explicacion: Correcta.
-  - texto: Para dejar al proceso suspendido en disco hasta que el usuario decida si lo reanuda o no
+  - texto: Para dejar al proceso suspendido en disco hasta que el usuario decida si lo reanuda o lo elimina
     explicacion: Eso describe a un proceso suspendido, no a uno terminado.
   correcta: 2
   justificacion: |
@@ -219,16 +219,19 @@ preguntas:
     y cómo afectan sus decisiones al grado de multiprogramación?
   opciones:
   - texto: 'Corto: en cada interrupción, y baja el grado al desalojar un proceso a Ready. Largo: solo al
-      arrancar el sistema. Mediano: al terminar un proceso, para subir el grado'
+      arrancar el sistema, para cargar los procesos iniciales. Mediano: al terminar un proceso, para subir
+      el grado'
     explicacion: El desalojo a Ready no saca al proceso de memoria, así que el grado no cambia.
-  - texto: 'Largo: al crearse un proceso (o al liberarse lugar), y admitir sube el grado. Mediano: ante falta
-      de memoria o mucha carga suspende (baja el grado) y al liberarse reanuda (lo sube). Corto: muy seguido,
-      sin cambiar el grado'
+  - texto: 'Largo: al crearse un proceso o liberarse lugar; admitir sube el grado. Mediano: ante falta de
+      memoria o mucha carga suspende (lo baja) y luego reanuda (lo sube). Corto: muy seguido, sin cambiar
+      el grado'
     explicacion: Correcta.
-  - texto: 'Largo: en cada fin de quantum, para decidir quién ejecuta. Mediano: al crearse un proceso. Corto:
-      ante falta de memoria, bajando el grado'
+  - texto: 'Largo: en cada fin de quantum, para decidir quién ejecuta, sin cambiar el grado. Mediano: al
+      crearse un proceso, y admitirlo sube el grado. Corto: ante falta de memoria, suspendiendo procesos y
+      bajando el grado'
     explicacion: Están mezclados los roles de los tres planificadores.
-  - texto: 'Los tres intervienen solo cuando un proceso termina, y los tres suben o bajan el grado por igual'
+  - texto: 'Los tres intervienen solo cuando un proceso termina: cada uno elige a quién admitir, reanudar
+      o ejecutar, y los tres suben o bajan el grado por igual'
     explicacion: Cada uno interviene ante eventos distintos, y el de corto plazo no modifica el grado.
   correcta: 1
   justificacion: |

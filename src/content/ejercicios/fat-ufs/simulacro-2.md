@@ -69,14 +69,14 @@ preguntas:
     el soft link, que guarda una ruta.
 - enunciado: '(2R 1C2024, desarrollo 4) ¿Se puede crear un **hard link** en un filesystem **FAT**?'
   opciones:
-  - texto: 'Sí: dos entradas de directorio pueden tener el mismo primer cluster'
+  - texto: 'Sí: alcanza con que dos entradas de directorio tengan el mismo primer cluster del archivo'
     explicacion: 'Cada entrada tendría su propio tamaño y fechas: se desincronizan al modificar el archivo.'
   - texto: 'No: FAT no tiene inodos, y la metadata del archivo está en su única entrada de directorio'
     explicacion: Correcta.
-  - texto: 'Sí, pero solo en el directorio raíz'
+  - texto: 'Sí, pero solo en el directorio raíz, que tiene una ubicación fija en el volumen'
     explicacion: 'El directorio no cambia nada: el problema es la falta de inodos.'
-  - texto: 'No, porque FAT no permite dos archivos con el mismo nombre'
-    explicacion: 'Un hard link puede tener otro nombre; el problema es otro.'
+  - texto: 'No, porque FAT no permite dos entradas con el mismo nombre en todo el volumen'
+    explicacion: 'Un hard link puede tener otro nombre (y FAT admite nombres repetidos en distintos directorios); el problema es otro.'
   correcta: 1
   justificacion: |
     Un hard link necesita un **FCB compartido** (el inodo) al que apunten varias entradas. En FAT **no hay
@@ -84,9 +84,9 @@ preguntas:
     hay una estructura común a la que apunten dos nombres.
 - enunciado: '(2P 2C2025 TM, single choice 8) ¿Cuál de las siguientes afirmaciones es válida para **hardlinks**?'
   opciones:
-  - texto: Su creación implica crear un nuevo inodo
-    explicacion: 'Comparte el inodo del original.'
-  - texto: Puede referenciar a un archivo de otro FS
+  - texto: Su creación implica crear un nuevo inodo que apunta a los mismos bloques
+    explicacion: 'Comparte el inodo del original: no se crea otro.'
+  - texto: Puede referenciar a un archivo de otro FS montado en el sistema
     explicacion: 'Los números de inodo son propios de cada FS.'
   - texto: Su creación implica crear una nueva entrada de directorio
     explicacion: Correcta.
@@ -141,13 +141,13 @@ preguntas:
     guarda un número de inodo, que solo tiene sentido en su propio volumen.
 - enunciado: '(2P 1C2026 TT, teoría 2c) ¿Qué tipo de link requiere **más espacio en disco** para su creación?'
   opciones:
-  - texto: 'Hard link, porque duplica el inodo'
+  - texto: 'Hard link, porque duplica el inodo del archivo para tener metadata propia'
     explicacion: 'El hard link comparte el inodo.'
-  - texto: 'Los dos ocupan solo una entrada de directorio'
+  - texto: 'Los dos ocupan lo mismo: solo una entrada de directorio con el nombre del link'
     explicacion: 'El soft link además ocupa un inodo y un bloque.'
   - texto: 'Soft link: además de la entrada de directorio ocupa un inodo y un bloque con la ruta'
     explicacion: Correcta.
-  - texto: 'Hard link, porque copia los bloques de datos'
+  - texto: 'Hard link, porque copia los bloques de datos del archivo original'
     explicacion: 'No copia nada: es otro nombre para el mismo inodo.'
   correcta: 2
   justificacion: |
@@ -156,11 +156,11 @@ preguntas:
 - enunciado: |
     (2P 1C2025 TM, desarrollo 2) Un directorio tiene el archivo `fileloco`, dos hard links a él (`hl_fileloco_1` y `hl_fileloco_2`) y un soft link `sl_fileloco` que apunta a `fileloco`. ¿Qué muestra el listado (`ls -li`) para estos archivos?
   opciones:
-  - texto: 'Los cuatro con el mismo número de inodo y contador 4'
+  - texto: 'Los cuatro con el mismo número de inodo y contador 4, porque el soft link también suma una referencia'
     explicacion: 'El soft link tiene su propio inodo y no suma al contador.'
-  - texto: '`fileloco` y los dos hard links con el mismo inodo y contador 3, de tipo regular; `sl_fileloco` con otro inodo, tipo `l` y contador 1'
+  - texto: '`fileloco` y los dos hard links: mismo inodo, contador 3, tipo regular; `sl_fileloco`: otro inodo, tipo `l`, contador 1'
     explicacion: Correcta.
-  - texto: '`fileloco` con contador 3 y los hard links con contador 1, cada uno con su inodo'
+  - texto: '`fileloco` con contador 3 y los dos hard links con contador 1, cada uno con su propio inodo; `sl_fileloco` tipo `l`'
     explicacion: 'Los hard links comparten el inodo, así que muestran el mismo contador.'
   - texto: 'Los tres primeros con contador 3; `sl_fileloco` con el mismo inodo que `fileloco` y tipo `l`'
     explicacion: 'Un soft link es un archivo aparte: otro inodo.'

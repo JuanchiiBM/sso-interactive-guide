@@ -65,7 +65,7 @@ preguntas:
         **interna**, en la última página de cada segmento.
   - enunciado: '(2P 1C2025 TM, V/F 4a) "Mientras que paginación posee fragmentación interna, segmentación paginada posee tanto fragmentación interna como externa."'
     opciones:
-      - texto: 'Verdadero: la paginación aporta la interna y la segmentación aporta la externa'
+      - texto: 'Verdadero: la paginación aporta la interna en la última página y la segmentación aporta la externa entre segmentos'
         explicacion: 'Los segmentos ya no son contiguos: se reparten en frames.'
       - texto: 'Falso: la segmentación paginada no tiene ninguna de las dos'
         explicacion: 'La última página de cada segmento sigue pudiendo quedar incompleta.'
@@ -80,13 +80,13 @@ preguntas:
       segmento.
   - enunciado: '(2P 1C2025 TT, V/F 1a) "La segmentación paginada causa en promedio más fragmentación externa en sistemas donde los segmentos suelen ser pequeños."'
     opciones:
-      - texto: 'Verdadero: muchos segmentos chicos dejan muchos huecos chicos'
+      - texto: 'Verdadero: muchos segmentos chicos dejan muchos huecos chicos entre ellos, que después no se pueden usar'
         explicacion: 'Eso pasa en segmentación pura, no en la paginada.'
-      - texto: 'Verdadero: un segmento más chico que una página deja la página a medias'
+      - texto: 'Verdadero: un segmento más chico que una página deja la página a medias, y eso suma fragmentación externa'
         explicacion: 'Eso es fragmentación interna, no externa.'
       - texto: 'Falso: los segmentos chicos causan más thrashing, no fragmentación'
         explicacion: 'Lo que importa es que la paginada no tiene fragmentación externa en ningún caso.'
-      - texto: 'Falso: la segmentación paginada no tiene fragmentación externa, porque los segmentos se dividen en páginas de tamaño fijo'
+      - texto: 'Falso: la segmentación paginada no tiene fragmentación externa, porque cada segmento se divide en páginas fijas'
         explicacion: Correcta.
     correcta: 3
     justificacion: |
@@ -95,13 +95,13 @@ preguntas:
       segmentos chicos lo que puede crecer es la **interna**.
   - enunciado: '(2P 2C2025 TM, desarrollo 2) En **segmentación paginada**, ¿qué compone la dirección lógica y qué estructuras intervienen en la traducción?'
     opciones:
-      - texto: 'Número de segmento + desplazamiento; la tabla de segmentos da la base física del segmento'
+      - texto: 'Número de segmento + desplazamiento; la tabla de segmentos da la base física y el límite de cada segmento'
         explicacion: 'Esa es la segmentación pura.'
-      - texto: 'Número de segmento + número de página + offset; la tabla de segmentos da la tabla de páginas del segmento y esa tabla da el frame'
+      - texto: 'Número de segmento + número de página + offset; la tabla de segmentos da la tabla de páginas, y esta da el frame'
         explicacion: Correcta.
       - texto: 'Número de página + offset; una sola tabla de páginas por proceso'
         explicacion: 'Esa es la paginación simple.'
-      - texto: 'Número de segmento + número de frame + offset; la MMU suma el frame a la base del segmento'
+      - texto: 'Número de segmento + número de frame + offset; la tabla de segmentos da la base y la MMU le suma el frame'
         explicacion: 'El frame no está en la DL: es lo que se obtiene al traducir.'
     correcta: 1
     justificacion: |
@@ -110,13 +110,13 @@ preguntas:
       **frame** en esa tabla, y la DF es frame + offset.
   - enunciado: '(2P 2C2025 TM, desarrollo 2) ¿Qué ventaja da la segmentación paginada para **compartir memoria** entre procesos?'
     opciones:
-      - texto: 'Ninguna: para compartir hay que copiar el segmento en la memoria de cada proceso'
+      - texto: 'Ninguna: para compartir hay que copiar el segmento en la memoria de cada proceso y mantener las copias sincronizadas'
         explicacion: 'Justamente se evita copiar: se apunta a los mismos frames.'
-      - texto: 'Se puede compartir un segmento entero (por ejemplo, el código) haciendo que los dos procesos apunten a la misma tabla de páginas o a los mismos frames'
+      - texto: 'Se comparte un segmento entero (por ejemplo, el código): los dos procesos apuntan a la misma tabla de páginas o a los mismos frames'
         explicacion: Correcta.
-      - texto: 'Se comparten las tablas de segmentos completas, así los procesos ven la misma memoria'
+      - texto: 'Se comparten las tablas de segmentos completas, así los procesos ven la misma memoria sin duplicar ninguna tabla de páginas'
         explicacion: 'Compartirían todo, también los datos y la pila.'
-      - texto: 'Se comparte la TLB, que es lo que guarda las traducciones'
+      - texto: 'Se comparte la TLB, que guarda las traducciones, así los dos procesos llegan a los mismos frames sin tocar sus tablas'
         explicacion: 'La TLB es una caché; compartir es un tema de las tablas.'
     correcta: 1
     justificacion: |
@@ -153,13 +153,13 @@ preguntas:
       el SO.
   - enunciado: '(2P 2C2024 TT, desarrollo 1) ¿Qué componentes del hardware dan soporte a la traducción de direcciones y qué pasaría si no estuvieran?'
     opciones:
-      - texto: 'La MMU, que traduce, y la TLB, que guarda traducciones recientes. Sin MMU la traduciría el SO con muchísimo overhead; sin TLB cada traducción iría a la tabla en memoria'
+      - texto: 'La MMU, que traduce, y la TLB, que cachea traducciones. Sin MMU traduciría el SO con mucho overhead; sin TLB cada traducción iría a la tabla en memoria'
         explicacion: Correcta.
-      - texto: 'El DMA y el controlador de disco: sin ellos no se podrían traer páginas'
+      - texto: 'El DMA y el controlador de disco: sin ellos no se podrían traer páginas a memoria, así que la traducción no tendría frames a donde apuntar'
         explicacion: 'Participan en la E/S, no en la traducción.'
-      - texto: 'Solo la TLB: si no está, la traducción no se puede hacer'
+      - texto: 'Solo la TLB, que traduce cada dirección: si no está, la traducción no se puede hacer y el proceso no accede a memoria'
         explicacion: 'Sin TLB se traduce igual, leyendo la tabla en memoria; es más lento.'
-      - texto: 'La MMU y el bitmap de frames: sin bitmap la MMU no sabe a qué frame ir'
+      - texto: 'La MMU y el bitmap de frames, ambos en hardware: sin bitmap la MMU no sabe a qué frame ir y la traducción falla'
         explicacion: 'El bitmap es una estructura del SO para asignar, no un componente de hardware.'
     correcta: 0
     justificacion: |

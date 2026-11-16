@@ -25,9 +25,9 @@ preguntas:
   - texto: Porque sus operaciones de E/S también usan la CPU y conviene terminarlas antes para liberar
       el procesador
     explicacion: Durante la E/S el proceso está bloqueado y no usa la CPU.
-  - texto: Porque así se evita la starvation de los CPU bound
+  - texto: Porque así se evita la starvation de los CPU bound, que de otro modo nunca llegarían a ejecutar
     explicacion: Priorizar I/O bound, si algo, perjudica a los CPU bound; no evita su starvation.
-  - texto: 'Porque pasan mucho tiempo bloqueados en E/S y, al volver a ready, compiten en desventaja con los CPU bound que acaparan la CPU'
+  - texto: 'Porque pasan mucho tiempo bloqueados en E/S y, al volver a ready, quedan en desventaja frente a los CPU bound'
     explicacion: Correcta.
   correcta: 3
   justificacion: |
@@ -112,15 +112,16 @@ preguntas:
     ordenadas de menor a mayor, FIFO da el mismo resultado.
 - enunciado: (1R 1C2026 TT) ¿Cuáles son dos desventajas de utilizar SJF con desalojo por sobre FIFO?
   opciones:
-  - texto: Permite que un proceso monopolice la CPU y no asegura que los procesos cortos terminen primero
+  - texto: Permite que un proceso monopolice la CPU durante toda su ráfaga y no asegura que los procesos
+      cortos terminen primero
     explicacion: 'Esas son desventajas de FIFO: SJF con desalojo expulsa al proceso cuando llega una ráfaga
       más corta.'
-  - texto: Aumenta la espera promedio y requiere declarar prioridades
+  - texto: Aumenta la espera promedio de los procesos y requiere que cada uno declare su prioridad al crearse
     explicacion: 'SJF minimiza la espera promedio y no usa prioridades declaradas: estima la próxima ráfaga.'
   - texto: Perjudica a los I/O bound, que tienen ráfagas de CPU largas, y necesita definir un quantum
       fijo
     explicacion: Los I/O bound tienen ráfagas de CPU cortas (SJF los favorece), y SJF no usa quantum.
-  - texto: 'Puede producir inanición de los procesos largos y tiene mayor overhead (más cambios de contexto y estimar cada ráfaga)'
+  - texto: 'Puede producir inanición de los procesos largos y tiene más overhead (más cambios de contexto y estimar ráfagas)'
     explicacion: Correcta.
   correcta: 3
   justificacion: |

@@ -8,13 +8,13 @@ tags: [simulacro, teoria, parcial, paginacion-jerarquica, tabla-invertida, tlb, 
 preguntas:
   - enunciado: '(2P 1C2024 TT, desarrollo 2) Dos procesos muy grandes tienen gran parte de la RAM ocupada por sus tablas de páginas. ¿Qué recomendaría para tener más memoria disponible sin penalizar mucho el tiempo de acceso?'
     opciones:
-      - texto: 'Achicar las páginas, así cada tabla ocupa menos'
+      - texto: 'Achicar las páginas, así cada tabla ocupa menos y se cargan en memoria solo las entradas usadas'
         explicacion: 'Con páginas más chicas hay más páginas y la tabla crece.'
-      - texto: 'Pasar a segmentación pura, que no usa tablas de páginas'
-        explicacion: 'Cambia el esquema entero y trae fragmentación externa.'
-      - texto: 'Usar paginación jerárquica, para tener en memoria solo las partes de la tabla que se usan, y una TLB para compensar los accesos extra'
+      - texto: 'Pasar a segmentación pura, que no usa tablas de páginas y además evita los accesos extra de traducción'
+        explicacion: 'Cambia el esquema entero, trae fragmentación externa y también necesita una tabla (la de segmentos).'
+      - texto: 'Usar paginación jerárquica, con solo las partes de la tabla que se usan en memoria, y una TLB para compensar los accesos extra'
         explicacion: Correcta.
-      - texto: 'Agrandar la TLB hasta que entren las tablas completas'
+      - texto: 'Agrandar la TLB hasta que entren las tablas completas, y así sacarlas de la RAM sin perder velocidad de acceso'
         explicacion: 'La TLB es una caché chica; no reemplaza a las tablas.'
     correcta: 2
     justificacion: |
@@ -52,13 +52,13 @@ preguntas:
       costa de más accesos para traducir.
   - enunciado: '(2R 1C2026, desarrollo 4) ¿Cómo reduce la paginación **multinivel** la RAM usada por las tablas de páginas, y cuál es su principal desventaja?'
     opciones:
-      - texto: 'Comprime las entradas de la tabla; la desventaja es que hay que descomprimirlas al traducir'
+      - texto: 'Comprime las entradas de la tabla para que ocupen menos; la desventaja es que hay que descomprimirlas al traducir'
         explicacion: 'No comprime nada: reparte la tabla en pedazos.'
-      - texto: 'Comparte una misma tabla entre todos los procesos; la desventaja es la seguridad'
+      - texto: 'Comparte una misma tabla entre todos los procesos del sistema; la desventaja es que uno puede leer la memoria de otro'
         explicacion: 'Eso se parece más a la tabla invertida, que es global.'
-      - texto: 'Elimina la tabla de páginas y usa solo la TLB; la desventaja es que la TLB es chica'
+      - texto: 'Elimina la tabla de páginas y usa solo la TLB para traducir; la desventaja es que la TLB es chica y falla seguido'
         explicacion: 'Las tablas siguen existiendo, en niveles.'
-      - texto: 'Solo se cargan la tabla de 1er nivel y las de 2do nivel que se usan; la desventaja es un acceso extra a memoria por nivel en cada TLB miss'
+      - texto: 'Solo se cargan la tabla de 1er nivel y las de 2do nivel que se usan; la desventaja es un acceso extra por nivel en cada TLB miss'
         explicacion: Correcta.
     correcta: 3
     justificacion: |
@@ -70,14 +70,14 @@ preguntas:
       porque las propias tablas pueden no estar en memoria y generar sus propios fallos de página.
   - enunciado: '(2P 1C2025 TT, desarrollo 2) ¿Cuál es la principal ventaja de un esquema de **paginación invertida**?'
     opciones:
-      - texto: 'Traduce con un solo acceso siempre, sin importar la cantidad de procesos'
+      - texto: 'Traduce con un solo acceso siempre, sin importar la cantidad de procesos ni el tamaño de cada uno'
         explicacion: 'Puede necesitar varios accesos si hay colisiones o no hay hash.'
-      - texto: 'Hay una sola tabla, con una entrada por frame: ocupa poco y un tamaño fijo, sin importar cuántos procesos haya ni su tamaño'
+      - texto: 'Una sola tabla con una entrada por frame: tamaño chico y fijo, sin importar cuántos procesos haya ni su tamaño'
         explicacion: Correcta.
-      - texto: 'Hace muy fácil compartir páginas entre procesos'
+      - texto: 'Hace muy fácil compartir páginas entre procesos, porque cada frame figura una sola vez en la tabla'
         explicacion: 'Es al revés: cada frame tiene un solo dueño en la tabla, compartir es complicado.'
-      - texto: 'Elimina los fallos de página'
-        explicacion: 'Los fallos de página siguen existiendo.'
+      - texto: 'Elimina los fallos de página, porque todos los frames están siempre en la tabla'
+        explicacion: 'Los fallos de página siguen existiendo: que una página no figure en la tabla es justamente un fallo.'
     correcta: 1
     justificacion: |
       La tabla invertida tiene **una entrada por frame** de la RAM (con PID y número de página), en
@@ -85,13 +85,13 @@ preguntas:
       depende de cuántos procesos haya ni de qué tamaño sean.
   - enunciado: '(2P 1C2025 TT, desarrollo 2) ¿Qué sucede al traducir direcciones si la tabla invertida se usa **sin función de hash**?'
     opciones:
-      - texto: 'Hay que recorrer la tabla secuencialmente buscando el par (PID, página): la traducción se vuelve muy lenta'
+      - texto: 'Hay que recorrer la tabla secuencialmente buscando el par (PID, página): la traducción es muy lenta'
         explicacion: Correcta.
-      - texto: 'Se usa directamente el número de página como índice de la tabla'
+      - texto: 'Se usa directamente el número de página como índice de la tabla, igual que en una tabla común'
         explicacion: 'La tabla está indexada por frame: el número de página no sirve de índice.'
-      - texto: 'No se puede traducir: el hash es lo que guarda los frames'
+      - texto: 'No se puede traducir: el hash es lo que guarda los frames asignados a cada página del proceso'
         explicacion: 'Se puede: buscando entrada por entrada.'
-      - texto: 'Nada cambia: el hash solo sirve para compartir páginas'
+      - texto: 'Nada cambia: el hash solo sirve para compartir páginas entre procesos, no para traducir'
         explicacion: 'El hash sirve para ir directo a la entrada.'
     correcta: 0
     justificacion: |
@@ -101,13 +101,13 @@ preguntas:
       encadenan).
   - enunciado: '(2P 1C2026 TT, desarrollo 3) Con **varios procesos de gran tamaño**, ¿qué tabla de páginas consume más memoria real?'
     opciones:
-      - texto: 'La invertida, porque guarda el PID en cada entrada'
+      - texto: 'La invertida, porque guarda el PID en cada entrada y crece con la cantidad de procesos'
         explicacion: 'Tiene una entrada por frame y tamaño fijo: es de las que menos ocupa.'
-      - texto: 'La multinivel, porque tiene varias tablas por proceso'
+      - texto: 'La multinivel, porque tiene varias tablas por proceso y además la de 1er nivel'
         explicacion: 'Tiene varias, pero solo carga las que usa.'
       - texto: 'La de un nivel: cada proceso necesita una tabla tan grande como su cantidad de páginas'
         explicacion: Correcta.
-      - texto: 'Las tres consumen lo mismo'
+      - texto: 'Las tres consumen lo mismo: dependen solo del tamaño de la RAM'
         explicacion: 'Difieren mucho cuando los procesos son grandes.'
     correcta: 2
     justificacion: |
@@ -149,9 +149,9 @@ preguntas:
       **hits**.
   - enunciado: '(2P 2C2025 TM, single choice 2) En paginación simple, el uso de una TLB permite:'
     opciones:
-      - texto: Reducir la memoria ocupada por tablas
+      - texto: Reducir la memoria ocupada por tablas de páginas
         explicacion: 'Las tablas siguen enteras en memoria.'
-      - texto: Reducir la cantidad de Page Faults
+      - texto: Reducir la cantidad de Page Faults del proceso
         explicacion: 'En paginación simple no hay fallos de página; y la TLB no los evitaría.'
       - texto: Reducir el tiempo de traducción de direcciones
         explicacion: Correcta.
@@ -196,9 +196,9 @@ preguntas:
       > demanda (memoria virtual); así se interpretó.
   - enunciado: '(2P 1C2026 TM, teoría 1b) ¿Qué tipo de interrupción es un Page Fault?'
     opciones:
-      - texto: Asincrónica, porque la genera el hardware
+      - texto: Asincrónica, porque la genera el hardware y no el proceso
         explicacion: 'La genera el hardware, pero por la instrucción que se está ejecutando.'
-      - texto: Una interrupción de E/S, porque hay que leer el disco
+      - texto: Una interrupción de E/S, porque hay que leer la página del disco
         explicacion: 'La de E/S llega después, cuando termina la lectura.'
       - texto: Sincrónica (una excepción provocada por la instrucción en curso)
         explicacion: Correcta.
@@ -225,13 +225,13 @@ preguntas:
       atiende, elige el frame y actualiza las tablas. El proceso no participa: está bloqueado.
   - enunciado: '(2P 1C2026 TT, desarrollo 4) Durante un page fault, ¿por qué estados pasa el proceso hasta poder acceder a la referencia?'
     opciones:
-      - texto: 'Ejecutando → Bloqueado (mientras se lee la página) → Listo (cuando termina la E/S) → Ejecutando, reintentando la instrucción'
+      - texto: 'Ejecutando → Bloqueado (mientras se lee la página) → Listo (al terminar la E/S) → Ejecutando, reintentando la instrucción'
         explicacion: Correcta.
-      - texto: 'Sigue ejecutando: la página se trae sin interrumpirlo'
+      - texto: 'Sigue ejecutando: la página se trae en paralelo sin interrumpirlo, y la instrucción solo espera a que llegue'
         explicacion: 'Leer de disco tarda muchísimo: el proceso se bloquea.'
-      - texto: 'Ejecutando → Suspendido → Listo'
+      - texto: 'Ejecutando → Suspendido (mientras se lee la página de disco) → Listo (cuando termina la E/S) → Ejecutando'
         explicacion: 'Suspendido es estar fuera de memoria entera; acá solo espera una página.'
-      - texto: 'Ejecutando → Listo → Ejecutando, porque el fallo lo atiende la MMU al instante'
+      - texto: 'Ejecutando → Listo → Ejecutando, porque el fallo lo atiende la MMU al instante sin esperar al disco'
         explicacion: 'La MMU solo lo detecta; hay que esperar la E/S.'
     correcta: 0
     justificacion: |
@@ -239,13 +239,13 @@ preguntas:
       la página está cargada y, cuando vuelve a ejecutar, **reintenta** la instrucción que falló.
   - enunciado: '(2P 1C2026 TT, desarrollo 4) ¿Cuál es el orden correcto del procedimiento de un page fault?'
     opciones:
-      - texto: 'El SO trae la página → la MMU ve P = 0 → interrupción → se actualiza la tabla → se reintenta la instrucción'
+      - texto: 'El SO trae la página → la MMU ve P = 0 → interrupción de PF → el proceso se bloquea → fin de E/S → se actualiza la tabla → el proceso pasa a listo → se reintenta la instrucción'
         explicacion: 'El SO no puede traerla antes de enterarse del fallo.'
-      - texto: 'La MMU ve P = 0 → interrupción de PF → el SO pide la página al disco y el proceso se bloquea → el DMA la copia a memoria → interrupción de fin de E/S → el SO actualiza la tabla (y la TLB) → el proceso pasa a listo → reintenta la instrucción'
+      - texto: 'La MMU ve P = 0 → interrupción de PF → el SO pide la página y bloquea el proceso → el DMA la copia → interrupción de fin de E/S → el SO actualiza tabla y TLB → listo → reintenta la instrucción'
         explicacion: Correcta.
-      - texto: 'La MMU ve P = 0 → la MMU lee la página de disco → actualiza la TLB → el proceso sigue'
+      - texto: 'La MMU ve P = 0 → interrupción de PF → la MMU lee la página de disco por DMA → actualiza la tabla y la TLB → el proceso sigue sin bloquearse → reintenta la instrucción'
         explicacion: 'La MMU no lee de disco: eso lo inicia el SO.'
-      - texto: 'Interrupción de PF → el proceso pasa a listo → el SO pide la página → el proceso se bloquea → reintenta'
+      - texto: 'Interrupción de PF → el proceso pasa a listo → el SO pide la página al disco → el proceso se bloquea → interrupción de fin de E/S → el SO actualiza la tabla → reintenta'
         explicacion: 'El proceso se bloquea primero y pasa a listo cuando la página ya está.'
     correcta: 1
     justificacion: |
