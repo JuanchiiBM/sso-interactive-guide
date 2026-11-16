@@ -27,6 +27,39 @@ Para ejecutarse, un programa tiene que estar cargado en memoria como proceso. La
 
 En todo este tema el proceso se carga **entero** en memoria. Cargar solo una parte es lo que agrega la [memoria virtual](/teoria/parcial-2/memoria-virtual/).
 
+## Herramientas de cuenta
+
+Los ejercicios de memoria (real y virtual) usan siempre las mismas tres cuentas. Conviene tenerlas a mano antes de empezar.
+
+### Hexa ↔ binario
+
+Cada dígito hexa son **exactamente 4 bits**, siempre. Se convierte **dígito por dígito**, sin hacer cuentas con el número entero. Para armar cada fila se suman los pesos **8 4 2 1** (B = 11 = 8 + 2 + 1 → `1011`).
+
+| Hexa | Binario | Hexa | Binario | Hexa | Binario | Hexa | Binario |
+| ---- | ------- | ---- | ------- | ---- | ------- | ---- | ------- |
+| 0    | `0000`  | 4    | `0100`  | 8    | `1000`  | C    | `1100`  |
+| 1    | `0001`  | 5    | `0101`  | 9    | `1001`  | D    | `1101`  |
+| 2    | `0010`  | 6    | `0110`  | A    | `1010`  | E    | `1110`  |
+| 3    | `0011`  | 7    | `0111`  | B    | `1011`  | F    | `1111`  |
+
+Ejemplo: `2F0A` = `0010 1111 0000 1010`. Para volver a hexa, se agrupa de a 4 **desde la derecha**.
+
+### Tamaños en potencias de 2
+
+| Unidad | Bytes    | Potencia       |
+| ------ | -------- | -------------- |
+| 1 KiB  | 1024     | 2<sup>10</sup> |
+| 1 MiB  | 1024 KiB | 2<sup>20</sup> |
+| 1 GiB  | 1024 MiB | 2<sup>30</sup> |
+
+Cualquier otro tamaño sale sumando exponentes: 4 KiB = 2<sup>2</sup> × 2<sup>10</sup> = 2<sup>12</sup>; 64 KiB = 2<sup>16</sup>; 0,5 KiB = 512 bytes = 2<sup>9</sup>. Y **dividir es restar exponentes**: 64 KiB / 512 B = 2<sup>16</sup> / 2<sup>9</sup> = 2<sup>7</sup> = 128. Trabajar en potencias de 2 evita las cuentas con números grandes.
+
+Para numerar `N` cosas hacen falta `log₂ N` bits: 128 frames → 7 bits. Si `N` no es potencia de 2, se redondea para arriba (20 páginas → 5 bits).
+
+### División entera con resto
+
+Cuando la dirección viene en **decimal**, cortarla en "número de página + desplazamiento" es **dividir**: el cociente es el número y el resto, el desplazamiento. Está en [Traducción](#traducción), con un ejemplo.
+
 ## Requisitos de la gestión de memoria
 
 | Requisito                        | Qué pide                                                                                                                                                                                      |
@@ -148,9 +181,69 @@ El proceso se divide en **segmentos de tamaño variable**, según la visión del
 
 ```
 
+Una forma de pensarlo: el segmento es una **calle**. La **base** es el número donde empieza, el **desplazamiento** es cuántas casas caminás desde la esquina y el **límite** es la última casa. `DF = base + desplazamiento` es la casa a la que llegás; si te pasás de la última, te caés de la calle (segmentation fault).
+
+### Permisos
+
+El enunciado dice qué operación hace el proceso (leer, escribir, ejecutar). Esa operación tiene que estar permitida en el segmento al que cae la dirección:
+
+| Protección     | Leer | Escribir | Ejecutar |
+| -------------- | ---- | -------- | -------- |
+| **Read only**  | ✓    | ✗        | ✗        |
+| **Exec only**  | ✗    | ✗        | ✓        |
+| **Read write** | ✓    | ✓        | ✗        |
+| **RX**         | ✓    | ✗        | ✓        |
+
+Una dirección puede estar **dentro** del segmento y fallar igual por permiso: escribir en el desplazamiento 0 de un segmento de código no se pasa del límite, pero da **interrupción por modo de acceso inválido**.
+
+> **Segmentation fault no es page fault.** El segmentation fault es un **error**: la dirección se sale del segmento y el proceso normalmente termina. El [page fault](/teoria/parcial-2/memoria-virtual/) es de memoria virtual y **no es un error**: la página existe pero está en disco, el SO la trae y el proceso sigue.
+
+### Cortar la dirección
+
+Para traducir, primero hay que separar la DL en segmento y desplazamiento. Con la DL en binario (ver [Hexa ↔ binario](#hexa--binario)), los bits de arriba son el segmento y los de abajo, el desplazamiento.
+
+**Si el corte cae justo entre dígitos hexa** (por ejemplo, 2 bits de segmento sobre 18 en total, o 4 sobre 16), ni hace falta pasar a binario: el primer dígito es el segmento y los demás, el desplazamiento.
+
+**Si el corte cae en el medio de un dígito**, ese dígito queda partido. Ejemplo: 16 bits con **3 de segmento** y 13 de desplazamiento, DL `3ABC`:
+
+```
+3ABC = 0011 1010 1011 1100
+       001 | 1 1010 1011 1100
+       seg   desplazamiento (13 bits)
+```
+
+- Segmento: `001` = **1**.
+- Desplazamiento: se agrupa de a 4 **desde la derecha** (`1100` = C, `1011` = B, `1010` = A) y el bit que sobra a la izquierda se completa con ceros (`1` → `0001` = 1). Queda **1ABC**.
+
+Si se agrupa desde la izquierda da cualquier cosa. Atajo: con 3 bits de segmento sobre 16, solo se parte el **primer** dígito. Sus 3 bits de arriba son el segmento y el de abajo pasa al desplazamiento; los otros 3 dígitos se copian tal cual.
+
+| Primer dígito | 0   | 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   | …   |
+| ------------- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Segmento      | 0   | 0   | 1   | 1   | 2   | 2   | 3   | 3   | 4   | …   |
+| Bit que pasa  | 0   | 1   | 0   | 1   | 0   | 1   | 0   | 1   | 0   | …   |
+
+### Deducir cuántos bits son de segmento
+
+A veces el enunciado no lo dice y da una pista del tipo _"la DL X pertenece al segmento N"_. Se pasa X a binario y se prueba tomando 1, 2, 3… bits de arriba hasta que den N.
+
+Ejemplo: _"la DL `6004h` es del segmento 3"_, con 16 bits. `6004h` = `0110 0000 0000 0100`. Con 1 bit da `0`; con 2, `01` = 1; con 3, `011` = **3** ✓. Son **3 bits de segmento** y 13 de desplazamiento.
+
+Hay que hacerlo **antes** de cualquier otra cuenta. Con un corte equivocado, una dirección se asigna al segmento que no es: `201Eh` con 2 bits sería segmento 0 con desplazamiento `201E`, y con 3 bits es segmento 1 con desplazamiento `01E`.
+
+### Traducción inversa: reconstruir la tabla
+
+Es la traducción al revés: el enunciado da traducciones ya hechas ("la DL X genera la DF Y") y pide la tabla de segmentos.
+
+- **Base:** de `DF = base + desplazamiento` se despeja `base = DF − desplazamiento`. Ejemplo: si `4010h` (segmento 2, desplazamiento `0010h` con 3 bits de segmento) genera `7020h`, la base del segmento 2 es `7020h − 0010h` = **7010h**.
+- **Límite** (dirección física final), según la pista que haya:
+  - _"X anda y X + 1 da segmentation fault"_ → el último byte válido es la DF de X.
+  - _"los segmentos A y B están adyacentes"_ (A antes que B) → A termina justo antes de que empiece B: `límite de A = base de B − 1`.
+  - _"el segmento está al final de la memoria"_ → termina en la última dirección: `FFFFh` con 16 bits.
+- **Permisos:** si _"escribir en X da modo de acceso inválido"_ y X está dentro del segmento, ese segmento no admite escritura. Si hay que adivinar cuál es, el que no se escribe es el de **código**: datos y pila se modifican todo el tiempo.
+
 ## Paginación
 
-Tanto los procesos como la memoria se dividen en partes **del mismo tamaño**: **páginas** en el proceso y **frames** en la memoria (la guía a veces les dice **marcos**). Cualquier página puede ir a cualquier frame, y no hace falta que estén en orden ni contiguas. Cada proceso tiene una **tabla de páginas** que dice en qué frame está cada página.
+Tanto los procesos como la memoria se dividen en partes **del mismo tamaño**: **páginas** en el proceso y **frames** en la memoria (la cátedra a veces les dice **marcos**; en el sitio se usa siempre "frame"). Cualquier página puede ir a cualquier frame, y no hace falta que estén en orden ni contiguas. Cada proceso tiene una **tabla de páginas** que dice en qué frame está cada página.
 
 - **Sin fragmentación externa:** un frame libre sirve para cualquier página.
 - **Fragmentación interna solo en la última página** del proceso: como mucho, el tamaño de página − 1 byte.
@@ -176,6 +269,34 @@ Sin memoria virtual el proceso tiene que estar **entero** en RAM, así que el es
 ### Traducción
 
 La página se reemplaza por el frame y el desplazamiento **se copia igual**: en binario es concatenar, no sumar. En decimal: `DF = frame × tamaño de página + desplazamiento`. Si la DL viene en decimal, `DL / tamaño de página` da el número de página y el **resto** es el desplazamiento.
+
+**En decimal, cortar es dividir.** Los cuatro pasos:
+
+| Paso                | Cuenta                                                       |
+| ------------------- | ------------------------------------------------------------ |
+| 1. Número de página | `DL ÷ tamaño de página`, división **entera** (sin decimales) |
+| 2. Desplazamiento   | el **resto** de esa división                                 |
+| 3. Frame            | se busca en la tabla de páginas con el número de página      |
+| 4. Dirección física | `frame × tamaño de página + desplazamiento`                  |
+
+Ejemplo con páginas de 1024 bytes y DL **2100**:
+
+1. 2100 ÷ 1024 = **2** (2 × 1024 = 2048 entra; 3 × 1024 = 3072 se pasa).
+2. Resto: 2100 − 2048 = **52**.
+3. Si la tabla dice que la página 2 está en el frame 3…
+4. …la DF es 3 × 1024 + 52 = **3124**.
+
+Si en el paso 3 la página no tiene frame ("–" o bit de presencia en 0), no hay DF: con memoria virtual es un **page fault**.
+
+Para no dividir cada vez, sirve armar la lista de rangos y ver en cuál cae cada dirección:
+
+```
+página 0:    0 – 1023
+página 1: 1024 – 2047
+página 2: 2048 – 3071
+página 3: 3072 – 4095
+…
+```
 
 ```recorrido traduccion-paginacion
 

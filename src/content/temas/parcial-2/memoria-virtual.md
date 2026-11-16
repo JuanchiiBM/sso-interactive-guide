@@ -51,6 +51,12 @@ Las direcciones lógicas pasan a referirse al **espacio virtual** (son más larg
 
 Los bits se calculan igual que en [memoria real](/teoria/parcial-2/memoria-real/#cuántos-bits-tiene-cada-dirección), con una diferencia: la RAM **ya no limita** a la DL. La DL sale de lo que el proceso tiene que poder direccionar (`log₂` de ese tamaño) y la DF sigue saliendo del tamaño de la RAM.
 
+**¿Cuántas páginas puede tener como máximo un programa?** Con memoria virtual, lo que no entra en RAM queda en disco, así que el tamaño de la RAM **no** pone el límite. El límite es cuántas direcciones distintas puede escribir el programa:
+
+`máximo de páginas = 2^(bits de la DL) / tamaño de página`
+
+Con direcciones de 16 bits y páginas de 512 bytes: 2<sup>16</sup> / 2<sup>9</sup> = 2<sup>7</sup> = **128 páginas**, tenga la RAM 32 KiB o 1 GiB. Si el enunciado da el tamaño de la RAM, es para calcular otra cosa (los frames, la DF) o es un distractor. Las cuentas en potencias de 2 están en [Herramientas de cuenta](/teoria/parcial-2/memoria-real/#herramientas-de-cuenta).
+
 ## La tabla de páginas en memoria virtual
 
 Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos son los que aparecen en la materia:
@@ -73,6 +79,32 @@ Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos
 | **U** | El **SO**, en clock, al buscar víctima.                        | El **HW** lo pone en 1 al referenciar la página; el **SO** lo pone en 0 al pasar el puntero. |
 | **M** | El **SO** al reemplazar: si es 1, escribe la víctima en disco. | La **MMU** lo pone en 1 cuando el proceso escribe; el **SO** lo vuelve a 0 al cargarla.      |
 
+### Tabla de páginas y tabla de frames libres
+
+Son **dos tablas distintas** y se preguntan juntas, así que conviene no mezclarlas:
+
+|                  | Tabla de páginas                         | Tabla de frames libres              |
+| ---------------- | ---------------------------------------- | ----------------------------------- |
+| **Cuántas hay**  | Una **por proceso**                      | Una **sola**, del sistema           |
+| **Qué responde** | ¿Dónde está cada página de este proceso? | ¿Qué frames de la RAM están libres? |
+| **Una fila por** | Página                                   | Frame                               |
+
+```
+Tabla de páginas (proceso A)        Bitmap de frames (sistema)
+         P   Frame                  frame: 0 1 2 3 4 5 6 …
+pág 0 →  1   0                      bit:   1 1 0 1 1 0 1 …
+pág 1 →  1   3                             (1 = ocupado, 0 = libre)
+pág 2 →  0   –    ← en disco
+```
+
+- **El número de página no se guarda**: es la posición de la entrada en la tabla, como el número de renglón de un cuaderno.
+- **El bit P hace falta** porque el frame 0 es un frame válido: no se puede usar "frame = 0" para decir "no está".
+- **Bits del campo frame:** `log₂(cantidad de frames)`, con `frames = RAM / tamaño de página`.
+- **Tamaño del bitmap:** 1 bit por frame, así que `frames / 8` bytes. Con 128 frames: 128 bits = 16 bytes. Una alternativa es una **lista de frames libres**, que ocupa menos cuando quedan pocos libres pero cambia de tamaño todo el tiempo.
+- **El formato de una entrada se arma con el enunciado:** P y frame siempre; U si el algoritmo es clock; U y M si es clock mejorado; el instante de referencia si es LRU; R/W/X si habla de permisos. Cada requisito del enunciado es un campo.
+
+**Del mapa de la memoria a la tabla de páginas.** Muchos enunciados dan qué hay en cada frame (`A1` en el frame 3 = la página 1 de A está en el frame 3). La tabla de páginas es ese mapa **dado vuelta**: ordenada por página en lugar de por frame. Una página que no aparece en el mapa no está en RAM: P = 0, y referenciarla es page fault. Las páginas de un proceso no tienen que estar en orden: la página 5 puede estar en un frame anterior a la página 1.
+
 ### Los tres casos de una referencia
 
 ```recorrido casos-tabla-paginas
@@ -87,6 +119,17 @@ Cada entrada de la tabla gana bits. No todos los esquemas usan todos, pero estos
 | Page fault, víctima con M = 1 | 2: escribir la víctima y leer la página |
 
 > **No todo fallo es un page fault.** Si la dirección cae en una página que **no existe** en el proceso (un proceso de 20 páginas que referencia la 21), no hay nada que traer del disco: es una **dirección inválida**, que el SO trata como un segmentation fault. No carga nada en memoria ni cuenta como PF.
+
+### El bit M: escribir en RAM no es escribir en disco
+
+Los enunciados marcan cada referencia como **lectura (L)** o **escritura (E)**. Una (E) es el proceso modificando la página que tiene cargada: pasa en **RAM** y el disco ni se entera. Lo único que hace es dejar **M = 1**, una marca de "la copia del disco quedó vieja".
+
+| Referencia | Si la página ya está (acierto) | Si entra por PF |
+| ---------- | ------------------------------ | --------------- |
+| **(L)**    | M no cambia                    | entra con M = 0 |
+| **(E)**    | M pasa a 1                     | entra con M = 1 |
+
+M no vuelve a 0 mientras la página siga en RAM: una lectura posterior no la baja. Se escribe **a disco** recién cuando la página **sale como víctima con M = 1**. Por eso, cuando piden "páginas escritas a disco", se cuentan las **víctimas con M = 1**, no las referencias (E). Una página escrita 50 veces genera una sola escritura a disco cuando sale, o ninguna si nunca sale.
 
 ## Atención de un page fault
 
@@ -204,6 +247,38 @@ Con la secuencia `2 3 2 1 5 2 4 5 3 2 5 2` y 3 frames: **Óptimo 6 PF, LRU 7, Cl
 - Los frames arrancan vacíos y los fallos de la **carga inicial también cuentan** (se anota "3 PF + N PF = total").
 - En FIFO y clock se marca dónde queda el puntero después de cada referencia. En un **acierto el puntero no se mueve**.
 - En clock, una página que entra lo hace con U = 1, y el puntero queda en el frame **siguiente** al que se reemplazó. Se anota "2 U" si la página 2 tiene U = 1.
+
+Consejo para simular a mano: antes de empezar, escribí la fila de **páginas** (con su L o E) arriba de la grilla y simulá mirando esa fila, no las direcciones. Y anotá el puntero **en todas las columnas**, también en los aciertos (copiando la misma posición), para no reconstruir de memoria dónde quedó.
+
+#### LRU a mano
+
+En la tabla, LRU guarda el **instante de referencia** de cada página. Para simular no hace falta calcularlo: alcanza con llevar, al costado de la grilla, una **fila ordenada de la usada hace más tiempo a la más reciente**.
+
+```
+  SALE ←  [más vieja] → … → [más nueva]  ← entra / se usa
+```
+
+- La víctima es siempre **la primera** de la fila.
+- Cada vez que una página se usa, va **al final**. Eso incluye los **aciertos**: es la diferencia con FIFO, donde un acierto no cambia nada.
+- Si el enunciado arranca de un estado dado con instantes de referencia (por ejemplo 28, 3 y 15), esos números solo dan el **orden inicial** (el más chico es el más viejo). No hay que reconstruir qué pasó antes, y cada página sigue en su frame: la fila es aparte de la grilla.
+
+#### Clock a mano: quién toca la U
+
+La U cambia por dos motivos, cada uno con su responsable:
+
+| Quién        | Cuándo                                                    | Qué hace                              |
+| ------------ | --------------------------------------------------------- | ------------------------------------- |
+| **Hardware** | Cada vez que se **usa** la página: entra por PF o acierta | La pone en **1**                      |
+| **Puntero**  | Cuando **pasa por encima** buscando víctima               | Si está en 1, la baja a **0** y sigue |
+
+Por eso se le dice **algoritmo de la segunda oportunidad**: U = 1 es una vida extra. Y por eso **el puntero no es la víctima**: es **dónde empieza a buscar**. Solo sale una página que tenga U = 0 cuando el puntero llega a ella.
+
+Con la secuencia de arriba (3 frames, puntero en F0 al empezar):
+
+- **Ref. 5, entra el 5.** Los frames tienen `2 U | 3 U | 1 U`, con el puntero en F0. Todas tienen U = 1, así que el puntero da **la vuelta entera** bajándolas y vuelve a F0, donde ahora el 2 tiene U = 0: sale. Queda `5 U | 3 | 1` con el puntero en F1. Si todas tienen U = 1, clock se comporta como FIFO en ese reemplazo.
+- **Ref. 9, entra el 3.** Estado `5 U | 2 U | 4 U`, puntero en F0: otra vuelta entera, sale el 5. Queda `3 U | 2 | 4` con el puntero en F1: **el 2 perdió su U**.
+- **Ref. 10, acierta el 2.** El hardware le **devuelve U = 1**. El puntero no se mueve (sigue en F1): un acierto no lo lleva al frame del acierto ni lo avanza.
+- **Ref. 11, entra el 5.** El puntero arranca en F1: el 2 tiene U = 1 (gracias al acierto), se la baja y sigue. En F2, el 4 tiene U = 0: sale. **El acierto de la ref. 10 salvó al 2.**
 
 #### Clock mejorado
 

@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [contenido, teoría, teoria, ejercicios, markdown, guías]
 tags: [moc, contenido]
-actualizado: 2026-11-10
+actualizado: 2026-11-12
 ---
 
 # Contenido
@@ -18,6 +18,7 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 - [[Content Collections Temas y Ejercicios]] — cómo se cargan y rutean.
 - [[Recorridos de Memoria]] — algoritmos y generadores de los diagramas de memoria.
 - [[Recorridos y cálculos de Filesystem]] — FAT, ext2, links; lib pura de cuentas de FS.
+- [[Huecos de la Teoría detectados resolviendo]] — backlog de lo que trabó al resolver la guía; ejemplos que destrabaron.
 
 ## Inventario 1er parcial
 
