@@ -164,9 +164,47 @@ const calculoSchema = z
         filas: z.array(z.array(z.union([z.string(), z.number(), campoSchema])).min(1)).min(1),
       })
       .optional(),
+    /** Traza de reemplazo a completar; las respuestas salen del simulador (src/lib/calculos/traza.ts). */
+    traza: z
+      .object({
+        // `marcos: 4` = frames 0–3 vacíos; `referencias: [0, 1, 7]` = lecturas de esas páginas
+        marcos: z.preprocess(
+          (v) => (typeof v === 'number' ? Array.from({ length: v }, (_, i) => ({ marco: i })) : v),
+          z
+            .array(
+              z.object({
+                marco: z.number(),
+                pagina: z.union([z.number(), z.string()]).nullable().default(null),
+                u: z.boolean().default(false),
+                m: z.boolean().default(false),
+                ultimoUso: z.number().default(-1),
+              }),
+            )
+            .min(1),
+        ),
+        puntero: z.number().default(0),
+        referencias: z
+          .array(
+            z.preprocess(
+              (v) => (typeof v === 'number' ? { etiqueta: String(v), pagina: v } : v),
+              z.object({
+                etiqueta: z.string(),
+                pagina: z.union([z.number(), z.string()]).nullable(),
+                acceso: z.enum(['L', 'E']).default('L'),
+              }),
+            ),
+          )
+          .min(1),
+        algoritmos: z.array(z.enum(['optimo', 'fifo', 'lru', 'clock', 'clock-mejorado'])).min(1),
+        invalida: z.boolean().default(false),
+      })
+      .optional(),
     justificacion: z.string(),
   })
-  .refine((c) => !!c.campos !== !!c.tabla, 'un cálculo lleva campos o tabla (uno de los dos)')
+  .refine(
+    (c) => [c.campos, c.tabla, c.traza].filter(Boolean).length === 1,
+    'un cálculo lleva campos, tabla o traza (uno solo)',
+  )
 
 const ejercicios = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/ejercicios' }),

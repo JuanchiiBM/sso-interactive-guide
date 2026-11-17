@@ -11,6 +11,7 @@ import { grillasDesafio, variantesPlanificacion } from '@lib/simuladores/planifi
 import type { EjercicioSemaforos } from '@lib/semaforos/tipos'
 import { FAULT, puntajeCalculo, type CampoCalculo } from '@lib/calculos/verificar'
 import { camposDe, type TablaCalculo } from '@lib/calculos/tabla'
+import { marcarDe, trazaDesdeYaml, trazaEsperada, verificarTraza } from '@lib/calculos/traza'
 import { armarParciales } from './catalogo'
 import { notaDeItems, type PuntajeItem } from './nota'
 import { puntajeGantt } from './puntaje-gantt'
@@ -25,7 +26,7 @@ interface Frontmatter {
   preguntas: (Pregunta & { enunciado: string })[]
   semaforos: (EjercicioSemaforos & { solucion: string })[]
   simulaciones: Simulacion[]
-  calculos: { campos?: CampoCalculo[]; tabla?: TablaCalculo }[]
+  calculos: { campos?: CampoCalculo[]; tabla?: TablaCalculo; traza?: Record<string, unknown> }[]
 }
 
 const DIR = 'src/content/ejercicios'
@@ -34,6 +35,7 @@ const ejercicios = readdirSync(DIR, { recursive: true, encoding: 'utf8' })
   .map((f) => {
     const fm = parse(
       readFileSync(join(DIR, f), 'utf8').match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/)![1],
+      { merge: true },
     )
     const data: Frontmatter = {
       ...fm,
@@ -61,6 +63,14 @@ const parciales = armarParciales(ejercicios, TEMAS)
 
 /** Escribir en cada campo su respuesta (o marcar Fault). */
 const calculo = (c: Frontmatter['calculos'][number]) => {
+  if (c.traza) {
+    // completar la grilla con la traza esperada
+    const spec = trazaDesdeYaml(c.traza)
+    const esperadas = spec.algoritmos.map((a) => trazaEsperada(spec, a))
+    const marcar = spec.algoritmos.map((a) => marcarDe(a, spec))
+    const { correctas, total } = verificarTraza(esperadas, esperadas, marcar)
+    return correctas / total
+  }
   const campos = camposDe(c)
   return puntajeCalculo(
     campos,

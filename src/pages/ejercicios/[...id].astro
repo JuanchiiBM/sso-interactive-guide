@@ -4,6 +4,7 @@ import SimuladorStage from '@components/SimuladorStage.astro'
 import MultipleChoice from '@components/MultipleChoice.astro'
 import SemaforosDesafio from '@components/SemaforosDesafio.astro'
 import CalculoDesafio from '@components/CalculoDesafio.astro'
+import TrazaDesafio from '@components/TrazaDesafio.astro'
 import ParteResolucion from '@components/ParteResolucion.astro'
 import { getEntry, render } from 'astro:content'
 import { getEjercicios, ejercicioHref, temaHref, rotuloEjercicio } from '@lib/catalogo'
@@ -145,7 +146,11 @@ const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
         <div class="flex flex-col gap-4" data-encadenado={encadenado || undefined}>
           {calculos.map((c, i) => (
             <ParteResolucion clave={`${href}#calc-${i}`} bloqueada={bloqueada(i)}>
-              <CalculoDesafio calculo={c} clave={String(i)} />
+              {c.traza ? (
+                <TrazaDesafio calculo={{ ...c, traza: c.traza }} clave={String(i)} />
+              ) : (
+                <CalculoDesafio calculo={c} clave={String(i)} />
+              )}
             </ParteResolucion>
           ))}
           {preguntas.map((p, i) => (

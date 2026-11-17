@@ -1,0 +1,327 @@
+---
+/** Traza de reemplazo a completar (grilla de la cátedra). Comportamiento: src/lib/desafios/traza.ts */
+import { markdownAHtml } from '@lib/markdown/marked'
+import {
+  columnaInicial,
+  marcarDe,
+  paginasConTexto,
+  NOMBRE_ALGORITMO,
+  trazaEsperada,
+  type TrazaSpec,
+} from '@lib/calculos/traza'
+
+interface Props {
+  calculo: { enunciado?: string; traza: TrazaSpec; justificacion: string }
+  clave: string
+  modo?: 'practica' | 'examen'
+}
+
+const { calculo, clave, modo = 'practica' } = Astro.props
+const { traza } = calculo
+const enunciado = calculo.enunciado && (await markdownAHtml(calculo.enunciado))
+const justificacion = await markdownAHtml(calculo.justificacion)
+const inicial = columnaInicial(traza)
+const hayEscrituras = traza.referencias.some((r) => r.acceso === 'E')
+const algoritmos = traza.algoritmos.map((a) => ({
+  id: a,
+  nombre: NOMBRE_ALGORITMO[a],
+  marcar: marcarDe(a, traza),
+  esperada: trazaEsperada(traza, a),
+}))
+const datos = {
+  inicial,
+  esperadas: algoritmos.map((a) => a.esperada),
+  marcar: algoritmos.map((a) => a.marcar),
+}
+const resultados = [
+  { id: 'pf', texto: 'PF', titulo: 'Page fault' },
+  ...(traza.invalida
+    ? [{ id: 'invalida', texto: 'INV', titulo: 'Dirección inválida (fuera del proceso)' }]
+    : []),
+]
+---
+
+<section
+  class="rounded-xl border border-line bg-surface-2 p-4 md:p-5"
+  data-traza
+  data-traza-clave={clave}
+  data-traza-modo={modo}
+  data-traza-texto={paginasConTexto(traza) || undefined}
+  data-traza-datos={JSON.stringify(datos)}
+>
+  {enunciado && <div class="prose max-w-none font-medium text-fg" set:html={enunciado} />}
+
+  <details class="traza-ayuda mt-3 text-sm text-fg-soft">
+    <summary>Cómo se completa</summary>
+    <ul>
+      <li>
+        Escribí la página de cada frame <strong>después</strong> de la referencia; vacío = frame
+        libre.
+      </li>
+      <li>
+        <kbd>H</kbd> marca el frame donde hubo hit; <kbd>U</kbd> y <kbd>M</kbd> prenden los bits;{' '}
+        <kbd>P</kbd> deja el puntero en ese frame. También con el teclado, parado en la celda.
+      </li>
+      <li>
+        Abajo, marcá <strong>PF</strong> si hubo page fault
+        {traza.invalida && (
+          <>
+            {' '}
+            o <strong>INV</strong> si la dirección es inválida
+          </>
+        )}
+        ; sin marca = hit.
+      </li>
+      <li>
+        <strong>Disco</strong>: la víctima tenía M = 1 y se escribe a disco.
+      </li>
+      <li>
+        <span aria-hidden="true">⇥</span> copia la columna anterior: después cambiás solo lo que se
+        movió.
+      </li>
+      <li>
+        Moverse: flechas, o <kbd>Tab</kbd>.
+      </li>
+    </ul>
+  </details>
+
+  {algoritmos.length > 1 && (
+    <div class="traza-tabs mt-4" role="tablist" aria-label="Algoritmo">
+      {algoritmos.map((a, i) => (
+        <button
+          type="button"
+          role="tab"
+          class="traza-tab"
+          aria-selected={i === 0 ? 'true' : 'false'}
+          data-traza-tab={i}
+        >
+          {a.nombre}
+        </button>
+      ))}
+    </div>
+  )}
+
+  {algoritmos.map((a, ia) => (
+    <div class="traza-panel" role="tabpanel" data-traza-panel={ia} hidden={ia > 0}>
+      <div class="traza-scroll">
+        <table class="traza-grilla" aria-label={`Traza con ${a.nombre}`}>
+          <thead>
+            <tr>
+              <th class="traza-esquina" scope="col">
+                Frame
+              </th>
+              <th class="traza-ini" scope="col">
+                <span class="traza-dir">Inicial</span>
+              </th>
+              {traza.referencias.map((r, k) => (
+                <th scope="col" data-traza-col={k}>
+                  <span class="traza-ref">
+                    <span class="traza-dir" title={`Dirección ${r.etiqueta}`}>
+                      {r.pagina ?? '✕'}
+                    </span>
+                    {r.etiqueta !== String(r.pagina) && (
+                      <span class="traza-direccion">{r.etiqueta}</span>
+                    )}
+                    {hayEscrituras && (
+                      <span class="traza-acceso" data-acceso={r.acceso}>
+                        {r.acceso}
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    class="traza-copiar"
+                    data-traza-copiar={k}
+                    title="Copiar la columna anterior"
+                    aria-label={`Copiar la columna anterior en la referencia ${k + 1}`}
+                  >
+                    ⇥
+                  </button>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {traza.marcos.map((f, i) => (
+              <tr>
+                <th scope="row" class="traza-frame">
+                  {f.marco}
+                </th>
+                <td class="traza-ini">
+                  <span class="traza-fijo">
+                    {a.marcar.puntero && (
+                      <span
+                        class="traza-bit traza-p"
+                        data-bit="p"
+                        data-on={inicial.puntero === i || undefined}
+                      >
+                        P
+                      </span>
+                    )}
+                    {inicial.paginas[i] ?? '–'}
+                  </span>
+                  <span class="traza-bits">
+                    {a.marcar.u && (
+                      <span class="traza-bit" data-bit="u" data-on={inicial.u[i] || undefined}>
+                        U
+                      </span>
+                    )}
+                    {a.marcar.m && (
+                      <span class="traza-bit" data-bit="m" data-on={inicial.m[i] || undefined}>
+                        M
+                      </span>
+                    )}
+                  </span>
+                </td>
+                {traza.referencias.map((_, k) => (
+                  <td class="traza-celda" data-traza-celda={`${k}-${i}`}>
+                    <span class="traza-fila">
+                      {a.marcar.puntero && (
+                        <button
+                          type="button"
+                          class="traza-bit traza-p"
+                          aria-pressed="false"
+                          data-bit="p"
+                          tabindex="-1"
+                          title="El puntero queda en este frame"
+                        >
+                          P
+                        </button>
+                      )}
+                      <input
+                        type="text"
+                        class="traza-pagina"
+                        inputmode={paginasConTexto(traza) ? 'text' : 'numeric'}
+                        maxlength="5"
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-label={`Frame ${f.marco}, referencia ${k + 1}`}
+                        data-col={k}
+                        data-fila={i}
+                      />
+                    </span>
+                    <span class="traza-bits">
+                      {a.marcar.h && (
+                        <button
+                          type="button"
+                          class="traza-bit"
+                          aria-pressed="false"
+                          data-bit="h"
+                          tabindex="-1"
+                          title="Hit: la página ya estaba en este frame"
+                        >
+                          H
+                        </button>
+                      )}
+                      {a.marcar.u && (
+                        <button
+                          type="button"
+                          class="traza-bit"
+                          aria-pressed="false"
+                          data-bit="u"
+                          tabindex="-1"
+                        >
+                          U
+                        </button>
+                      )}
+                      {a.marcar.m && (
+                        <button
+                          type="button"
+                          class="traza-bit"
+                          aria-pressed="false"
+                          data-bit="m"
+                          tabindex="-1"
+                        >
+                          M
+                        </button>
+                      )}
+                    </span>
+                  </td>
+                ))}
+              </tr>
+            ))}
+            <tr class="traza-pie">
+              <th scope="row">Resultado</th>
+              <td class="traza-ini" />
+              {traza.referencias.map((_, k) => (
+                <td>
+                  <span
+                    class="traza-resultado"
+                    role="radiogroup"
+                    aria-label={`Resultado de la referencia ${k + 1}`}
+                    data-traza-resultado={k}
+                  >
+                    {resultados.map((r) => (
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked="false"
+                        data-valor={r.id}
+                        title={r.titulo}
+                      >
+                        {r.texto}
+                      </button>
+                    ))}
+                  </span>
+                </td>
+              ))}
+            </tr>
+            {a.marcar.disco && (
+              <tr class="traza-pie">
+                <th scope="row">A disco</th>
+                <td class="traza-ini" />
+                {traza.referencias.map((_, k) => (
+                  <td>
+                    <button
+                      type="button"
+                      class="traza-disco"
+                      aria-pressed="false"
+                      data-traza-disco={k}
+                      title="La víctima se escribe a disco"
+                    >
+                      Disco
+                    </button>
+                  </td>
+                ))}
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <p
+        class="traza-cuenta mt-2 font-mono text-xs text-muted"
+        aria-live="polite"
+        data-traza-cuenta
+      >
+        PF: 0 · A disco: 0
+      </p>
+    </div>
+  ))}
+
+  {modo === 'practica' && (
+    <>
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="rounded-lg bg-fg text-surface px-3 py-1.5 text-sm font-medium hover:opacity-90"
+          data-traza-accion="verificar"
+        >
+          Verificar
+        </button>
+        <button
+          type="button"
+          class="ml-auto rounded-lg px-3 py-1.5 text-sm boton-rendirse"
+          data-traza-accion="resolucion"
+        >
+          Me rindo
+        </button>
+      </div>
+      <p class="mt-2 text-sm min-h-5" aria-live="polite" data-traza-feedback></p>
+    </>
+  )}
+
+  <div class="mt-4 border-t border-line pt-4" data-traza-respuesta hidden>
+    <h3 class="font-heading text-sm text-ok mb-2">Respuesta</h3>
+    <div class="prose max-w-none" set:html={justificacion} />
+  </div>
+</section>

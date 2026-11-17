@@ -2,6 +2,7 @@
 import { $, $$ } from '@lib/dom'
 import type { ItemExamen } from '@lib/desafios/tipos'
 import { crearCalculoExamen } from '@lib/desafios/calculo'
+import { crearTrazaExamen } from '@lib/desafios/traza'
 import { crearMCExamen } from '@lib/desafios/multiple-choice'
 import { crearSemaforosExamen } from '@lib/desafios/semaforos'
 import { crearSimuladorExamen } from '@lib/simulador-page'
@@ -27,7 +28,9 @@ function crearItem(el: HTMLElement): ItemSimulacro | null {
     tipo === 'mc'
       ? crearMCExamen(hijo)
       : tipo === 'calc'
-        ? crearCalculoExamen(hijo)
+        ? hijo.hasAttribute('data-traza')
+          ? crearTrazaExamen(hijo)
+          : crearCalculoExamen(hijo)
         : tipo === 'sem'
           ? crearSemaforosExamen(hijo)
           : crearSimuladorExamen(hijo)

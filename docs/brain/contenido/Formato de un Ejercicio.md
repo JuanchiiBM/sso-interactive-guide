@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
 tags: [contenido, ejercicios]
-actualizado: 2026-11-16
+actualizado: 2026-11-17
 ---
 
 # Formato de un Ejercicio
@@ -81,6 +81,9 @@ calculos:
 ```
 
 Ver [[Patrón — Desafío antes de la Resolución]] (sección Cálculo).
+
+**Traza de reemplazo** (páginas por frame, hits, U/M, puntero, PF): `traza` en lugar de `campos`,
+con las respuestas calculadas en build. Ver [[Traza de reemplazo a completar]].
 
 **Ejercicios de parcial:** `fuente.guia` con el examen (`2° Parcial 1C2025 · TT`,
 `2° Recuperatorio 2C2024`, varios: `'2° Parcial 1C2025 · TT y 2C2025 · TT'`) y `dificultad: parcial`.

@@ -2,7 +2,7 @@
 tipo: patron
 aliases: [desafío, desafio, challenge, verificar, respuesta, leetcode, codewars, bloqueo, gating, me rindo, ver resolución, progreso, multiple choice, calculos, cálculo, CalculoDesafio, resultado exacto, fault, encadenado, partes encadenadas, ParteResolucion, so:revelado]
 tags: [patron, simuladores, ux]
-actualizado: 2026-11-10
+actualizado: 2026-11-17
 ---
 # Patrón — Desafío antes de la Resolución
 
@@ -69,6 +69,7 @@ descarte. `calculos:` en el frontmatter (ver [[Formato de un Ejercicio]]), compo
   `camposDe` (`src/lib/calculos/tabla.ts`) la aplana en orden de lectura con etiqueta `fila · columna`, así
   que verificar, puntaje y modo examen son los mismos que con `campos`. Se usa para la tabla de páginas
   final con P/U/M, las tablas de segmentos y de la FAT, la TLB y las trazas de reemplazo.
+- **Traza de reemplazo** (`traza:`): la grilla de la cátedra; ver [[Traza de reemplazo a completar]].
 - **Modo examen:** `modo="examen"` saca Verificar y Me rindo; `crearCalculoExamen` puntúa por campo (ver
   [[Simulacros]]).
 - ⚠️ **Orden fijo en la página:** cálculos → MC → semáforos → Gantt. Un MC del inciso b) queda

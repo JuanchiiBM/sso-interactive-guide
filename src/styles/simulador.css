@@ -500,3 +500,292 @@
 .calc-celda[data-mal] {
   background: color-mix(in srgb, var(--bad) 12%, transparent);
 }
+
+/* Traza de reemplazo a completar (ver src/lib/desafios/traza.ts) */
+.traza-ayuda summary {
+  cursor: pointer;
+  color: var(--muted);
+  width: fit-content;
+}
+.traza-ayuda ul {
+  margin: 0.4rem 0 0 1.1rem;
+  list-style: disc;
+  display: grid;
+  gap: 0.15rem;
+}
+.traza-ayuda kbd {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  padding: 0 0.3em;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+}
+.traza-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--line);
+}
+.traza-tab {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.traza-tab[aria-selected='true'] {
+  color: var(--fg);
+  border-color: var(--accent);
+}
+.traza-scroll {
+  margin-top: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+.traza-grilla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+.traza-grilla th,
+.traza-grilla td {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  padding: 0.25rem;
+  min-width: 4.25rem;
+}
+.traza-grilla thead th {
+  vertical-align: bottom;
+  border-bottom-color: var(--line-strong);
+  padding-top: 0;
+}
+/* la columna de frames queda fija al scrollear en celular */
+.traza-grilla tbody th,
+.traza-esquina {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  min-width: 4.5rem;
+  color: var(--fg-soft);
+  font-weight: 600;
+  text-align: left;
+  padding-left: 0.5rem;
+}
+.traza-esquina {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+.traza-frame::before {
+  content: 'F';
+  color: var(--muted);
+  font-weight: 400;
+  margin-right: 0.1em;
+}
+.traza-ini {
+  background: var(--surface-3);
+  color: var(--fg-soft);
+}
+thead .traza-ini .traza-dir {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+.traza-ref {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding-top: 0.35rem;
+}
+.traza-dir {
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+.traza-direccion {
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+.traza-acceso {
+  font-size: 0.6875rem;
+  padding: 0 0.4em;
+  border-radius: 4px;
+  color: var(--fg-soft);
+  border: 1px solid var(--line-strong);
+}
+.traza-acceso[data-acceso='E'] {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+}
+.traza-copiar {
+  display: block;
+  margin: 0.25rem auto 0;
+  width: 1.75rem;
+  border-radius: 6px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.traza-copiar:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+/* la cabecera toma el color del resultado que marcó el alumno */
+th[data-resultado='pf'] {
+  box-shadow: inset 0 3px 0 var(--bad);
+}
+th[data-resultado='acierto'] {
+  box-shadow: inset 0 3px 0 var(--ok);
+}
+th[data-resultado='invalida'] {
+  box-shadow: inset 0 3px 0 var(--muted);
+}
+.traza-fijo {
+  display: block;
+  font-size: 0.9375rem;
+  line-height: 2rem;
+}
+.traza-fila {
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--traza-gap);
+}
+.traza-fijo .traza-p {
+  margin-right: 0.3em;
+  vertical-align: middle;
+}
+.traza-fijo .traza-p:not([data-on]) {
+  visibility: hidden;
+}
+button.traza-p {
+  width: var(--traza-bit);
+}
+.traza-p:is([aria-pressed='true'], [data-on]) {
+  color: var(--parcial);
+  border-color: var(--parcial);
+  background: color-mix(in srgb, var(--parcial) 12%, transparent);
+}
+.traza-pagina {
+  width: calc(2 * var(--traza-bit) + var(--traza-gap));
+  height: 2rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+}
+.traza-pagina:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+/* la página que entró en esta referencia, como la marca la cátedra */
+.traza-celda[data-cambio] .traza-pagina {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+.traza-bits {
+  display: flex;
+  justify-content: center;
+  gap: var(--traza-gap);
+  margin-top: var(--traza-gap);
+}
+/* P sobre H y la página sobre U+M: el bloque de la celda queda alineado */
+.traza-grilla {
+  --traza-bit: 1.5rem;
+  --traza-gap: 0.2rem;
+}
+.traza-bit {
+  width: var(--traza-bit);
+  padding: 0;
+  font-size: 0.6875rem;
+  line-height: 1.15rem;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+button.traza-bit:hover {
+  border-color: var(--line-strong);
+  color: var(--fg-soft);
+}
+.traza-bit[data-bit='h'][aria-pressed='true'] {
+  color: var(--ok);
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+.traza-bit[data-bit='u']:is([aria-pressed='true'], [data-on]) {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.traza-bit[data-bit='m']:is([aria-pressed='true'], [data-on]) {
+  color: var(--warn);
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+.traza-pie th {
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.traza-pie td {
+  background: color-mix(in srgb, var(--surface) 50%, transparent);
+}
+.traza-resultado {
+  display: flex;
+  justify-content: center;
+  gap: 0.2rem;
+}
+.traza-resultado button,
+.traza-disco {
+  padding: 0 0.45rem;
+  font-size: 0.6875rem;
+  line-height: 1.35rem;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  color: var(--fg-soft);
+}
+.traza-resultado button:hover,
+.traza-disco:hover {
+  border-color: var(--line-strong);
+}
+.traza-resultado [data-valor='acierto'][aria-checked='true'] {
+  color: var(--ok);
+  border-color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+.traza-resultado [data-valor='pf'][aria-checked='true'] {
+  color: var(--bad);
+  border-color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 12%, transparent);
+}
+.traza-resultado [data-valor='invalida'][aria-checked='true'] {
+  color: var(--fg);
+  border-color: var(--fg-soft);
+  background: var(--hover);
+}
+.traza-disco[aria-pressed='true'] {
+  color: var(--warn);
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+.traza-grilla :disabled {
+  cursor: default;
+}
+[data-traza][data-ok] .traza-grilla {
+  outline: 1px solid var(--ok);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.traza-grilla th[data-ok] {
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+}
+.traza-grilla th[data-mal] {
+  background: color-mix(in srgb, var(--bad) 14%, transparent);
+}
