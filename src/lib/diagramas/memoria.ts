@@ -156,7 +156,7 @@ export function reemplazoConEstado(
   inicial: MarcoEstado[],
   punteroInicial: number,
   refs: RefAcceso[],
-  alg: AlgoritmoConEstado,
+  alg: AlgoritmoConEstado | 'fifo' | 'clock',
 ): InstanteUM[] {
   const marcos = inicial.map((m) => ({ ...m }))
   const n = marcos.length
@@ -178,7 +178,7 @@ export function reemplazoConEstado(
     const victima = libre == null ? marcos[marco].pagina : null
     const escrita = libre == null && marcos[marco].m
     Object.assign(marcos[marco], { pagina: ref.pagina, u: true, m: ref.escritura, ultimoUso: t })
-    if (alg === 'clock-mejorado') puntero = (marco + 1) % n
+    if (alg !== 'lru') puntero = (marco + 1) % n
     return foto(ref, { fallo: true, marco, victima, escrita })
   })
 
@@ -186,6 +186,14 @@ export function reemplazoConEstado(
     if (alg === 'lru') {
       const usos = marcos.map((m) => m.ultimoUso)
       return usos.indexOf(Math.min(...usos))
+    }
+    if (alg === 'fifo') return puntero
+    if (alg === 'clock') {
+      while (marcos[puntero].u) {
+        marcos[puntero].u = false
+        puntero = (puntero + 1) % n
+      }
+      return puntero
     }
     const r = clockMejorado(
       marcos.map((m) => ({ pagina: m.pagina!, u: m.u, m: m.m })),
@@ -201,7 +209,7 @@ export function reemplazoConEstado(
       paginas: marcos.map((m) => m.pagina),
       u: marcos.map((m) => m.u),
       m: marcos.map((m) => m.m),
-      puntero: alg === 'clock-mejorado' ? puntero : null,
+      puntero: alg === 'lru' ? null : puntero,
       fallo: false,
       invalida: false,
       marco: null,
