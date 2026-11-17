@@ -4,6 +4,7 @@ import Layout from '@layouts/Layout.astro'
 import SimuladorStage from '@components/SimuladorStage.astro'
 import MultipleChoice from '@components/MultipleChoice.astro'
 import CalculoDesafio from '@components/CalculoDesafio.astro'
+import TrazaDesafio from '@components/TrazaDesafio.astro'
 import SemaforosDesafio from '@components/SemaforosDesafio.astro'
 import { render } from 'astro:content'
 import { getEjercicios, getParciales, ejercicioHref, rotuloEjercicio } from '@lib/catalogo'
@@ -170,7 +171,15 @@ const secundario = 'rounded-lg border border-line px-3 py-1.5 text-sm text-fg-so
                     data-item-seccion="practica"
                     data-item-ejercicio={k}
                   >
-                    <CalculoDesafio calculo={c} clave={`p${k}-c${i}`} modo="examen" />
+                    {c.traza ? (
+                      <TrazaDesafio
+                        calculo={{ ...c, traza: c.traza }}
+                        clave={`p${k}-c${i}`}
+                        modo="examen"
+                      />
+                    ) : (
+                      <CalculoDesafio calculo={c} clave={`p${k}-c${i}`} modo="examen" />
+                    )}
                   </div>
                 ))}
                 {ejercicio.data.preguntas.map((p, i) => (
