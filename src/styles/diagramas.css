@@ -1197,31 +1197,5 @@ rect.t3p-ref {
 .diagrama .rm-fila-vacia text {
   fill: var(--muted);
 }
-/* recorrido-traza.ts: grilla correcta de una traza, una columna por paso */
-.rt-celda rect {
-  fill: var(--surface);
-  stroke: var(--line-strong);
-  stroke-width: 1.1;
-}
-.rt-hit rect {
-  stroke: var(--ok);
-  stroke-width: 2;
-}
-.rt-entra rect {
-  stroke: var(--bad);
-  stroke-width: 2;
-}
-.diagrama .rt-pag {
-  font-size: 12.5px;
-  font-weight: 600;
-}
-.diagrama .rt-bits {
-  font-size: 10px;
-  fill: var(--muted);
-}
-.diagrama .rt-ref {
-  font-size: 12px;
-  fill: var(--fg-soft);
-}
 
 /* fin memoria real y virtual */
