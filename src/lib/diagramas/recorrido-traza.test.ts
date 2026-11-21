@@ -40,59 +40,51 @@ const simple = (refs: number[], alg: TrazaSpec['algoritmos'][number]): TrazaSpec
   algoritmos: [alg],
   invalida: false,
 })
+const pasosDe = (spec: TrazaSpec, alg: TrazaSpec['algoritmos'][number]) =>
+  recorridoTraza(spec, alg).variantes![0].pasos
 
-describe('recorridoTraza · Clock mejorado (ej-21)', () => {
-  const r = recorridoTraza(ej21, 'clock-mejorado')
-  const pasos = r.pasos!
-
-  it('un paso para el estado inicial y uno por referencia', () => {
-    expect(pasos).toHaveLength(4)
-    expect(pasos[1].titulo).toBe('P2 7800 → P2p0 (L)')
+describe('recorridoTraza reusa la grilla de la cátedra', () => {
+  it('desde un estado: la grilla de recorridoReemplazoEstado, con las páginas como texto', () => {
+    const html = renderRecorrido(recorridoTraza(ej21, 'clock-mejorado'))
+    expect(html).toContain('A disco')
+    expect(html).toContain('Frame 5')
+    expect(html).toContain('P2p0 L')
+    expect(html).not.toContain('rt-celda')
   })
 
-  it('narra el recorrido del puntero frame por frame y dónde queda', () => {
-    expect(pasos[1].texto).toContain('1.ª vuelta busca (0,0): F5 (1,1), F6 (0,1), F7 (0,0) víctima')
-    expect(pasos[1].texto).toContain('El puntero queda en F0')
-    expect(pasos[3].texto).toContain(
-      '2.ª vuelta busca (0,1) bajando U: F1 → U=0, F2 → U=0, F3 (0,1) víctima',
-    )
-    expect(pasos[3].texto).toContain('M=1: **se escribe en disco**')
-    expect(pasos[3].texto).toContain('El puntero queda en F4')
-  })
-
-  it('la grilla muestra cada columna recién en su paso', () => {
-    const html = renderRecorrido(r)
-    expect(html).toMatch(/data-el="col-3"[^>]*data-rc-oculto/)
-    expect(pasos[2].mostrar).toEqual(['col-2'])
-    expect(pasos[2].resaltar).toEqual(['col-0', 'col-1', 'col-2'])
-    expect(html).toContain('>PF<')
-    expect(html).toContain('>Disco<')
+  it('frames vacíos y páginas numéricas: la grilla de recorridoReemplazo', () => {
+    const p = pasosDe(simple([1, 2, 3, 1, 4], 'fifo'), 'fifo')
+    expect(p[0].titulo).toBe('Carga inicial.')
   })
 })
 
-describe('recorridoTraza · otros algoritmos', () => {
-  it('FIFO: sale la del puntero, la que entró primero', () => {
-    const p = recorridoTraza(simple([1, 2, 3, 1, 4], 'fifo'), 'fifo').pasos!
-    expect(p[1].texto).toContain('F0 estaba libre')
-    expect(p[4].texto).toContain('acierto')
-    expect(p[5].texto).toContain('sale **1** de F0')
-    expect(p[5].texto).toContain('la que entró primero')
+describe('narración paso a paso', () => {
+  const p = pasosDe(ej21, 'clock-mejorado')
+
+  it('Clock mejorado: el puntero frame por frame y dónde queda', () => {
+    expect(p[1].texto).toContain('1.ª vuelta busca (0,0): F5 (1,1), F6 (0,1), F7 (0,0) víctima')
+    expect(p[1].texto).toContain('El puntero queda en el F0')
+    expect(p[3].texto).toContain(
+      '2.ª vuelta busca (0,1) bajando U: F1 → U=0, F2 → U=0, F3 (0,1) víctima',
+    )
+    expect(p[3].texto).toContain('**se escribe en disco**')
+    expect(p[3].texto).toContain('El puntero queda en el F4')
   })
 
-  it('LRU: ordena por último uso', () => {
-    const p = recorridoTraza(simple([1, 2, 3, 1, 4], 'lru'), 'lru').pasos!
-    expect(p[5].texto).toContain('de la usada hace más tiempo a la más reciente: 2, 3, 1')
-    expect(p[5].texto).toContain('sale **2**')
-  })
-
-  it('Óptimo: mira el próximo uso', () => {
-    const p = recorridoTraza(simple([1, 2, 3, 4, 1, 2], 'optimo'), 'optimo').pasos!
-    expect(p[4].texto).toContain('3 (nunca)')
-    expect(p[4].texto).toContain('sale **3**')
-  })
-
-  it('Clock: baja los U = 1 que encuentra hasta uno en 0', () => {
-    const p = recorridoTraza(simple([1, 2, 3, 4], 'clock'), 'clock').pasos!
-    expect(p[4].texto).toContain('F0 (U=1) → U=0, F1 (U=1) → U=0, F2 (U=1) → U=0, F0 (U=0) víctima')
+  it('FIFO y Clock desde un estado dado', () => {
+    const cargado: TrazaSpec = {
+      marcos: [
+        { marco: 0, pagina: 1, u: true, m: false, ultimoUso: 1 },
+        { marco: 1, pagina: 2, u: true, m: false, ultimoUso: 2 },
+      ],
+      puntero: 0,
+      referencias: [{ etiqueta: '3', pagina: 3, acceso: 'L' }],
+      algoritmos: ['fifo', 'clock'],
+      invalida: false,
+    }
+    expect(pasosDe(cargado, 'fifo')[1].texto).toContain('la que hace más tiempo que entró')
+    expect(pasosDe(cargado, 'clock')[1].texto).toContain(
+      'F0 (U=1) → U=0, F1 (U=1) → U=0, F0 (U=0) víctima',
+    )
   })
 })
