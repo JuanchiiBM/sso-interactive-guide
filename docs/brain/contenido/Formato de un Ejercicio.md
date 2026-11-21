@@ -1,8 +1,8 @@
 ---
 tipo: referencia
-aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
+aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio, opciones, desplegable, select, CalculoEntrada]
 tags: [contenido, ejercicios]
-actualizado: 2026-11-17
+actualizado: 2026-11-21
 ---
 
 # Formato de un Ejercicio
@@ -65,8 +65,18 @@ calculos:
     justificacion: |
       Markdown; se ve recién al acertar.
 ```
-Además: `respuesta: '2^74'`, `texto: true` (EOF, `—`) y `alternativas: [...]`. Para una tabla a
-completar, `tabla` en lugar de `campos`:
+Además: `respuesta: '2^74'` (acepta también el decimal equivalente), `texto: true` (EOF, `—`) y
+`alternativas: [...]`.
+
+**`opciones: [...]` → desplegable** en vez de texto libre (issue #54). Usarlo cuando la respuesta
+sale de un **conjunto cerrado** (tipo de inodo, proceso P1–P4, A/B) o cuando el texto libre no deja
+claro qué escribir (contenido de un bloque: ruta vs. datos). Con opciones, las `alternativas`
+sobran. La `respuesta` tiene que estar en la lista o rompe el build (`esperado()`). Lo dibuja
+`src/components/CalculoEntrada.astro`.
+⚠️ **No** en celdas `FIN`/`—` de una FAT mezcladas con números: el desplegable delataría cuáles
+no son número.
+
+Para una tabla a completar, `tabla` en lugar de `campos`:
 
 ```yaml
 calculos:
