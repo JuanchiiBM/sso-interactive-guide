@@ -1094,4 +1094,108 @@ rect.t3p-ref {
   stroke-width: 1.2;
 }
 
+/* recorrido-memoria.ts (```memoria): huecos rayados, candidatos, movimiento y tabla del paso */
+.rm-raya-fondo {
+  fill: var(--surface-2);
+}
+.rm-raya {
+  stroke: var(--surface-3);
+  stroke-width: 4;
+}
+.rm-seg.rm-hueco.rm-rayado > rect:first-child {
+  fill: url(#rm-rayas);
+}
+.rm-seg.rm-hueco.rm-no-entra > rect:first-child {
+  stroke: var(--bad);
+}
+.rm-seg.rm-hueco.rm-no-elegido > rect:first-child {
+  stroke: var(--warn);
+}
+.rm-seg.rm-hueco.rm-elegido > rect:first-child,
+.rm-seg.rm-hueco.rm-empate > rect:first-child {
+  stroke: var(--ok);
+  stroke-width: 2;
+}
+.rm-seg.rm-hueco.rm-elegido > rect:first-child {
+  stroke-dasharray: none;
+}
+.rm-seg.rm-nuevo > rect:first-child {
+  stroke: var(--ok);
+  stroke-width: 2.4;
+}
+.rm-seg.rm-mov > rect:first-child {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+.diagrama .rm-sub {
+  font-weight: 400;
+  opacity: 0.85;
+}
+.rm-chip rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+}
+.diagrama .rm-chip text {
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+.rm-chip-mal rect {
+  stroke: color-mix(in srgb, var(--bad) 55%, transparent);
+}
+.diagrama .rm-chip-mal text {
+  fill: var(--bad);
+}
+.rm-chip-ok rect {
+  stroke: var(--ok);
+}
+.diagrama .rm-chip-ok text {
+  fill: var(--ok);
+}
+.rm-chip-aviso rect {
+  stroke: color-mix(in srgb, var(--warn) 60%, transparent);
+}
+.diagrama .rm-chip-aviso text {
+  fill: var(--warn);
+}
+.rm-flecha,
+.rm-flecha-punta {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.rm-flecha {
+  stroke-dasharray: 5 4;
+}
+.rm-flecha-fondo {
+  fill: var(--surface-2);
+}
+.diagrama .rm-flecha-etq {
+  font-size: 11px;
+  fill: var(--accent);
+}
+.diagrama .rm-izq {
+  text-anchor: start;
+}
+.diagrama .rm-der {
+  text-anchor: end;
+}
+.diagrama .rm-tabla-tit {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--muted);
+}
+.diagrama .rm-fila text {
+  font-size: 12px;
+}
+.diagrama .rm-fila-mov text {
+  fill: var(--accent);
+}
+.diagrama .rm-fila-nueva text {
+  fill: var(--ok);
+}
+.diagrama .rm-fila-hueco text,
+.diagrama .rm-fila-vacia text {
+  fill: var(--muted);
+}
+
 /* fin memoria real y virtual */
