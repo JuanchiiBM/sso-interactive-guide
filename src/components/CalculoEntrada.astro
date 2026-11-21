@@ -1,0 +1,34 @@
+---
+/** Entrada de un campo de CalculoDesafio: desplegable si tiene `opciones`, texto si no. */
+import type { CampoCalculo } from '@lib/calculos/verificar'
+
+interface Props {
+  campo: CampoCalculo
+  id?: string
+  ariaLabel?: string
+}
+
+const { campo: c, id, ariaLabel } = Astro.props
+const modo = c.base === 16 || c.texto || String(c.respuesta).includes('^') ? 'text' : 'decimal'
+const placeholder = c.base === 16 ? 'hexa' : c.texto ? 'texto' : '?'
+---
+
+{c.opciones ? (
+  <select id={id} class="calc-input" aria-label={ariaLabel}>
+    <option value="">elegí</option>
+    {c.opciones.map((o) => (
+      <option value={o}>{o}</option>
+    ))}
+  </select>
+) : (
+  <input
+    id={id}
+    type="text"
+    class="calc-input"
+    aria-label={ariaLabel}
+    inputmode={modo}
+    autocomplete="off"
+    spellcheck="false"
+    placeholder={placeholder}
+  />
+)}

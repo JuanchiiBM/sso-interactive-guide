@@ -14,7 +14,7 @@ export function initCalculos(): void {
   for (const box of $$<HTMLElement>('[data-calc][data-calc-modo="practica"]')) init(box)
 }
 
-const input = (fila: HTMLElement) => $<HTMLInputElement>('input', fila)!
+const input = (fila: HTMLElement) => $<HTMLInputElement | HTMLSelectElement>('input, select', fila)!
 const fault = (fila: HTMLElement) => $<HTMLButtonElement>('[data-calc-fault]', fila)
 const marcarFault = (fila: HTMLElement, activo: boolean) => {
   fault(fila)?.setAttribute('aria-pressed', String(activo))
