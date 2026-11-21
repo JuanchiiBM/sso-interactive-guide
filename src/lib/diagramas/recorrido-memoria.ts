@@ -219,13 +219,13 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
           '</g>',
       )
       .join('')
-    const antes = p.op
-      ? texto(X0, yAntes - 8, 'Antes', { clase: 'rm-izq rm-nota' }) +
-        barra(p.antes, yAntes, p, true)
-      : ''
+    // si una flecha llega al principio de la barra, los rótulos van a la derecha para no taparla
+    const der = p.movidos.some((m) => px(m.a) < X0 + 90)
+    const rot = (y: number, t: string) =>
+      texto(der ? X0 + W : X0, y, t, { clase: `${der ? 'rm-der' : 'rm-izq'} rm-nota` })
+    const antes = p.op ? rot(yAntes - 8, 'Antes') + barra(p.antes, yAntes, p, true) : ''
     const despues =
-      texto(X0, yDespues - 8, p.op ? 'Después' : 'Memoria', { clase: 'rm-izq rm-nota' }) +
-      barra(p.despues, yDespues, p, false)
+      rot(yDespues - 8, p.op ? 'Después' : 'Memoria') + barra(p.despues, yDespues, p, false)
     return grupo(`paso-${i}`, chips + antes + flechas(p) + despues + tabla(p), { oculto: true })
   }
 
@@ -251,13 +251,13 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     if (p.movidos.length) {
       const libre = p.huecosAntes.reduce((s, h) => s + h.tam, 0)
       const movs = lista(p.movidos.map((m) => `${m.nombre} (${dir(m.de)} → ${dir(m.a)})`))
-      txt = `**${titulo} no entra** en ningún hueco (${lista(p.huecosAntes.map((h) => tam(h.tam)))}), aunque hay **${tam(libre)} libres**: fragmentación externa. Se compacta moviendo ${movs}; ${p.op.carga} va en **${dir(nuevo.inicio)}**.`
+      txt = `**No entra** en ningún hueco (${lista(p.huecosAntes.map((h) => tam(h.tam)))}), aunque hay **${tam(libre)} libres**: fragmentación externa. Se compacta moviendo ${movs}; ${p.op.carga} va en **${dir(nuevo.inicio)}**.`
     } else if (sirven.length === 1) {
-      txt = `**${titulo}** solo entra en el hueco de ${tam(sirven[0].hueco.tam)}: va en **${dir(nuevo.inicio)}**.`
+      txt = `Solo entra en el hueco de ${tam(sirven[0].hueco.tam)}: va en **${dir(nuevo.inicio)}**.`
     } else {
       const empate = p.candidatos.some((c) => c.estado === 'empate')
       txt =
-        `**${titulo}** entra en ${sirven.length} huecos (${lista(sirven.map((c) => tam(c.hueco.tam)))}). ${alg} ${CRITERIO[spec.algoritmo]}: el de **${tam(p.candidatos.find((c) => c.estado === 'elegido')!.hueco.tam)}** en **${dir(nuevo.inicio)}**.` +
+        `Entra en ${sirven.length} huecos (${lista(sirven.map((c) => tam(c.hueco.tam)))}). ${alg} ${CRITERIO[spec.algoritmo]}: el de **${tam(p.candidatos.find((c) => c.estado === 'elegido')!.hueco.tam)}** en **${dir(nuevo.inicio)}**.` +
         (empate ? ' Hay empate: se toma el primero, pero el otro también vale.' : '')
     }
     const hueco = p.movidos.length ? null : p.candidatos.find((c) => c.estado === 'elegido')!.hueco
