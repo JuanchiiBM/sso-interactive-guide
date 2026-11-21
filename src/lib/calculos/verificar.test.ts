@@ -121,3 +121,20 @@ describe('puntajeCalculo', () => {
     expect(puntajeCalculo(campos, [])).toBe(0)
   })
 })
+
+describe('opciones (desplegable)', () => {
+  const campo = {
+    etiqueta: 'Tipo',
+    respuesta: 'soft link',
+    texto: true,
+    opciones: ['directorio', 'soft link'],
+  }
+  it('acierta con la opción correcta y falla con otra o vacía', () => {
+    expect(campoCorrecto(campo, r('soft link'))).toBe(true)
+    expect(campoCorrecto(campo, r('directorio'))).toBe(false)
+    expect(campoCorrecto(campo, r(''))).toBe(false)
+  })
+  it('rompe el build si la respuesta no está entre las opciones', () => {
+    expect(() => esperado({ ...campo, opciones: ['directorio', 'archivo regular'] })).toThrow()
+  })
+})
