@@ -13,6 +13,8 @@ export interface CampoCalculo {
   texto?: boolean
   /** Otras respuestas que también valen (la cátedra acepta dos criterios). */
   alternativas?: (number | string)[]
+  /** Desplegable en vez de texto libre; la respuesta tiene que estar entre ellas. */
+  opciones?: string[]
 }
 
 export interface RespuestaAlumno {
@@ -36,6 +38,8 @@ export function leerNumero(texto: string, base: 10 | 16 = 10): number | null {
 
 /** Valor esperado del campo; en hexa se lee como texto (YAML convierte `30000` a número decimal). */
 export function esperado(campo: CampoCalculo): number | typeof FAULT {
+  if (campo.opciones && !campo.opciones.includes(String(campo.respuesta)))
+    throw new Error(`"${campo.etiqueta}": la respuesta ${campo.respuesta} no está en opciones`)
   if (campo.respuesta === FAULT) return FAULT
   if (campo.texto) return NaN
   const valor = leerNumero(String(campo.respuesta), campo.base)

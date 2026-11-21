@@ -146,6 +146,7 @@ const campoSchema = z.object({
   unidad: z.string().optional(),
   texto: z.boolean().optional(),
   alternativas: z.array(z.union([z.number(), z.string()])).optional(),
+  opciones: z.array(z.coerce.string()).min(2).optional(),
 })
 
 const calculoSchema = z
