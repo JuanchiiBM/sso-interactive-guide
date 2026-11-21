@@ -1,8 +1,9 @@
-/** Bloques de código que se convierten en SVG en build: ```grafo, ```diagrama <id>, ```recorrido <id> y ```gantt. */
+/** Bloques de código que se convierten en SVG en build: ```grafo, ```diagrama <id>, ```recorrido <id>, ```gantt y ```memoria. */
 import { renderGrafo } from '../grafos/asignacion'
 import { renderDiagrama } from '../diagramas/index'
 import { renderGanttEstatico } from '../diagramas/gantt-estatico'
 import { renderRecorridoPorId } from '../diagramas/recorridos/index'
+import { renderMemoria } from '../diagramas/memoria-bloque'
 
 /** Devuelve el SVG del bloque, o null si el lenguaje no es uno de los nuestros. */
 export function bloqueSVG(lang: string | null | undefined, codigo: string): string | null {
@@ -11,6 +12,7 @@ export function bloqueSVG(lang: string | null | undefined, codigo: string): stri
   if (tipo === 'diagrama') return renderDiagrama(args[0] ?? codigo)
   if (tipo === 'recorrido') return renderRecorridoPorId(args[0] ?? codigo)
   if (tipo === 'gantt') return renderGanttEstatico(codigo)
+  if (tipo === 'memoria') return renderMemoria(codigo)
   return null
 }
 
