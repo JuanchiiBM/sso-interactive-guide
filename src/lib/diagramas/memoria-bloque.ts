@@ -1,4 +1,4 @@
-/** Bloque ```memoria: YAML con el estado y los pedidos → recorrido de la barra. Ver brain: Resolución gráfica de huecos. */
+/** Bloque ```memoria: YAML con el estado y los pedidos → recorrido de la barra. Ver brain: Resolución gráfica paso a paso. */
 import { parse } from 'yaml'
 import { renderRecorrido } from './recorrido'
 import { recorridoMemoria, type SpecRecorridoMemoria } from './recorrido-memoria'

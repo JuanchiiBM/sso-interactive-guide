@@ -15,7 +15,7 @@ aliases:
     page fault,
   ]
 tags: [componente, contenido, desafio, memoria]
-actualizado: 2026-11-17
+actualizado: 2026-11-21
 ---
 
 # Traza de reemplazo a completar
@@ -88,6 +88,9 @@ calculos:
 - LRU desde un estado necesita `ultimoUso` en cada marco cargado (el instante de referencia).
 - Clock simple y FIFO desde un estado usan el puntero como la cátedra: la víctima de FIFO es la
   del puntero; en Clock, el puntero baja los U = 1 que encuentra.
+
+**Resolución:** arriba de la justificación se dibuja sola la grilla correcta paso a paso con el
+porqué de cada referencia; ver [[Resolución gráfica paso a paso]].
 
 **Depende de:** [[Recorridos de Memoria]]
 **Conectado con:** [[Formato de un Ejercicio]], [[Patrón — Desafío antes de la Resolución]], [[Simulacros]]

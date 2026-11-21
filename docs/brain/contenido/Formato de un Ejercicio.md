@@ -2,7 +2,7 @@
 tipo: referencia
 aliases: [ejercicio, frontmatter, enunciado, formato ejercicio, codigo-columnas, agregar ejercicio]
 tags: [contenido, ejercicios]
-actualizado: 2026-11-17
+actualizado: 2026-11-21
 ---
 
 # Formato de un Ejercicio
@@ -81,6 +81,9 @@ calculos:
 ```
 
 Ver [[Patrón — Desafío antes de la Resolución]] (sección Cálculo).
+
+**Resolución gráfica de huecos** (Best/Worst/First Fit, compactar): bloque ` ```memoria ` con YAML en
+la `justificacion`. Ver [[Resolución gráfica paso a paso]].
 
 **Traza de reemplazo** (páginas por frame, hits, U/M, puntero, PF): `traza` en lugar de `campos`,
 con las respuestas calculadas en build. Ver [[Traza de reemplazo a completar]].
