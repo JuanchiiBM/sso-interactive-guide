@@ -1,6 +1,8 @@
 ---
 /** Traza de reemplazo a completar (grilla de la cátedra). Comportamiento: src/lib/desafios/traza.ts */
 import { markdownAHtml } from '@lib/markdown/marked'
+import { renderRecorrido } from '@lib/diagramas/recorrido'
+import { recorridoTraza } from '@lib/diagramas/recorrido-traza'
 import {
   columnaInicial,
   marcarDe,
@@ -20,6 +22,8 @@ const { calculo, clave, modo = 'practica' } = Astro.props
 const { traza } = calculo
 const enunciado = calculo.enunciado && (await markdownAHtml(calculo.enunciado))
 const justificacion = await markdownAHtml(calculo.justificacion)
+// la grilla correcta paso a paso, generada de los mismos datos que corrigen la traza
+const recorridos = traza.algoritmos.map((a) => renderRecorrido(recorridoTraza(traza, a)))
 const inicial = columnaInicial(traza)
 const hayEscrituras = traza.referencias.some((r) => r.acceso === 'E')
 const algoritmos = traza.algoritmos.map((a) => ({
@@ -322,6 +326,7 @@ const resultados = [
 
   <div class="mt-4 border-t border-line pt-4" data-traza-respuesta hidden>
     <h3 class="font-heading text-sm text-ok mb-2">Respuesta</h3>
+    {recorridos.map((html) => <Fragment set:html={html} />)}
     <div class="prose max-w-none" set:html={justificacion} />
   </div>
 </section>
