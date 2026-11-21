@@ -20,7 +20,7 @@ const NOMBRE: Record<AlgoritmoEstado, string> = {
   clock: 'Clock',
 }
 
-const COL = 56
+const COL_MIN = 56
 const FILA = 30
 const X0 = 116
 
@@ -41,6 +41,8 @@ export function recorridoReemplazoEstado(o: OpcionesReemplazoEstado): Recorrido 
   const { inicial, refs } = o
   const n = inicial.length
   const cols = refs.length + 1 // columna 0 = estado inicial
+  // con rótulos de texto (`P1p0 UM`) la columna se ensancha para que entren
+  const COL = Math.max(COL_MIN, ...(o.rotulos ?? []).map((r) => r.length * 8 + 32))
   const x = (j: number) => X0 + j * COL
   const yFila = (i: number) => 66 + i * FILA
   const yPF = yFila(n) + 14
