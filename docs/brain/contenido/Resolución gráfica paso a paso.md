@@ -15,6 +15,7 @@ aliases:
     recorridoMemoria,
     simularHuecos,
     recorridoTraza,
+    recorridoReemplazoEstado,
     traza paso a paso,
     Me rindo,
   ]
@@ -77,11 +78,14 @@ operaciones:
 ## Traza: recorrido automático
 
 `TrazaDesafio` dibuja `recorridoTraza(traza, alg)` arriba de la justificación, para **todas** las
-trazas, sin tocar los `.md`. Sale de `trazaEsperada()` (lo mismo que corrige), así que no puede
-contradecir la corrección. Narra por algoritmo: FIFO (la del puntero), LRU (orden por último uso),
-Óptimo (próximo uso o "nunca"), Clock (baja U frame por frame) y Clock mejorado ("1.ª vuelta busca
-(0,0): F5 (1,1)…", "2.ª vuelta busca (0,1) bajando U: F1 → U=0…"), disco y dónde queda el puntero.
-Ubicación: `src/lib/diagramas/recorrido-traza.ts` + test; estilos `rt-*`.
+trazas, sin tocar los `.md`. **Reusa la grilla de la cátedra que ya tenían la teoría y la guía**
+(no hacer otra): `recorrido-traza.ts` es solo un adaptador.
+
+- Frames vacíos, páginas numéricas y solo lecturas (u Óptimo) → `recorridoReemplazo`.
+- Desde un estado dado (páginas como `P2p0`, escrituras, inválidas) → `recorridoReemplazoEstado`,
+  que acepta `rotulos` y FIFO/Clock además de LRU y Clock mejorado; la columna se ensancha sola.
+- Los textos de Clock y Clock mejorado recorren el puntero frame por frame ("1.ª vuelta busca
+  (0,0): F5 (1,1)…", "2.ª vuelta busca (0,1) bajando U: F1 → U=0…") y dicen dónde queda.
 
 ## Gotchas
 
