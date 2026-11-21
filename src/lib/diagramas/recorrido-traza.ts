@@ -203,7 +203,6 @@ export function recorridoTraza(spec: TrazaSpec, alg: AlgoritmoTraza): Recorrido 
     texto: j === 0 ? inicial() : porque(j),
     resaltar: ids.slice(0, j + 1),
     mostrar: [ids[j]],
-    clases: { [ids[j]]: 'rc-aviso', ...(j > 0 ? { [ids[j - 1]]: '' } : {}) },
   }))
   return {
     ancho: Math.max(720, x(cols.length) + 12),
