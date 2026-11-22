@@ -35,11 +35,33 @@ teoria:
 
 Memoria de 128 KiB, páginas de 2 KiB, hasta 8 segmentos de hasta 16 KiB.
 
-| Campo    | Cuenta                                                      | Bits |
-| -------- | ----------------------------------------------------------- | ---- |
-| Offset   | 2 KiB = 2<sup>11</sup>                                      | 11   |
-| Frame    | 2<sup>17</sup> / 2<sup>11</sup> = 64 frames = 2<sup>6</sup> | 6    |
-| Página   | 16 KiB / 2 KiB = 8 páginas = 2<sup>3</sup>                  | 3    |
-| Segmento | 8 segmentos = 2<sup>3</sup>                                 | 3    |
-
-DL = 3 + 3 + 11 = **17 bits**; DF = 6 + 11 = **17 bits**.
+```pasos
+titulo: Armar el formato de la DL y la DF
+pasos:
+  - titulo: Offset
+    texto: 'El offset numera los bytes de una página: 2 KiB = 2¹¹, así que son **11 bits**.'
+    campos: [{ nombre: offset, bits: 11, tipo: off }]
+    grande: '2 KiB = 2¹¹ → **11 bits**'
+    resultado: offset 11
+  - titulo: Frame
+    texto: 'Frames = memoria / página = 128 KiB / 2 KiB = 64 = 2⁶: el número de frame ocupa **6 bits**. La DF es frame | offset.'
+    campos: [{ nombre: frame, bits: 6, tipo: frame }, { nombre: offset, bits: 11, tipo: off }]
+    grande: '128 KiB / 2 KiB = 64 = 2⁶ → **6 bits**'
+    resultado: frame 6
+  - titulo: Página
+    texto: 'Las páginas de un segmento: 16 KiB / 2 KiB = 8 = 2³, así que la página ocupa **3 bits**.'
+    grande: '16 KiB / 2 KiB = 8 = 2³ → **3 bits**'
+    resultado: página 3
+  - titulo: Segmento
+    texto: 'Hasta 8 segmentos = 2³: **3 bits** de segmento.'
+    grande: '8 segmentos = 2³ → **3 bits**'
+    resultado: segmento 3
+  - titulo: Formato
+    texto: 'La DL es segmento | página | offset = 3 + 3 + 11 = **17 bits**. La DF, frame | offset = 6 + 11 = **17 bits**.'
+    limpiar: true
+    campos:
+      - { nombre: segmento, bits: 3, tipo: seg }
+      - { nombre: página, bits: 3, tipo: pag }
+      - { nombre: offset, bits: 11, tipo: off }
+    grande: 'DL = **17 bits** · DF = **17 bits**'
+```
