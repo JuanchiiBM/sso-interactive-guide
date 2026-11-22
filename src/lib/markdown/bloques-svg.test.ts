@@ -191,3 +191,30 @@ procesos:
     ).toThrow(/opcional/)
   })
 })
+
+describe('bloque ```tlb', () => {
+  const yamlT = `titulo: Referencias de A
+bitsPagina: 6
+bitsOffset: 14
+bitsFrame: 4
+entradas: 2
+tlb:
+  - { pagina: 11, frame: 2, proceso: A, ingreso: 50 }
+procesos:
+  A: [{ frame: 2, pagina: 11, acc: 80 }, { frame: 5 }]
+referencias:
+  - { proceso: A, dl: 0x2F022, instante: 90 }
+  - { proceso: A, dl: 0x19333, instante: 95 }
+`
+  it('arma el camino de cada referencia (hexa en el YAML)', () => {
+    const html = bloqueSVG('tlb', yamlT)!
+    expect(html).toContain('data-recorrido')
+    expect(html).toContain('hit: 11 → frame 2, de A')
+    expect(html).toContain('sin víctima: entra en el frame 5, libre')
+  })
+
+  it('rompe el build si falta un dato', () => {
+    expect(() => bloqueSVG('tlb', yamlT.replace('entradas: 2', ''))).toThrow(/falta `entradas`/)
+    expect(() => bloqueSVG('tlb', yamlT.replace('bitsFrame: 4', ''))).toThrow(/bitsFrame/)
+  })
+})

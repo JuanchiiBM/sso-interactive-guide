@@ -1,4 +1,4 @@
-/** Bloques de código que se convierten en SVG en build: ```grafo, ```diagrama <id>, ```recorrido <id>, ```gantt, ```memoria, ```traduccion, ```fat, ```inodo, ```links y ```locks. */
+/** Bloques de código que se convierten en SVG en build: ```grafo, ```diagrama <id>, ```recorrido <id>, ```gantt, ```memoria, ```traduccion, ```fat, ```inodo, ```links, ```locks y ```tlb. */
 import { renderGrafo } from '../grafos/asignacion'
 import { renderDiagrama } from '../diagramas/index'
 import { renderGanttEstatico } from '../diagramas/gantt-estatico'
@@ -9,6 +9,7 @@ import { renderFat } from '../diagramas/fat-bloque'
 import { renderInodo } from '../diagramas/inodo-bloque'
 import { renderLinks } from '../diagramas/links-bloque'
 import { renderLocks } from '../diagramas/locks-bloque'
+import { renderTlb } from '../diagramas/tlb-bloque'
 
 /** Devuelve el SVG del bloque, o null si el lenguaje no es uno de los nuestros. */
 export function bloqueSVG(lang: string | null | undefined, codigo: string): string | null {
@@ -23,6 +24,7 @@ export function bloqueSVG(lang: string | null | undefined, codigo: string): stri
   if (tipo === 'inodo') return renderInodo(codigo)
   if (tipo === 'links') return renderLinks(codigo)
   if (tipo === 'locks') return renderLocks(codigo)
+  if (tipo === 'tlb') return renderTlb(codigo)
   return null
 }
 
