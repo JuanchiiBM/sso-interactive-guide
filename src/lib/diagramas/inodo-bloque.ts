@@ -7,5 +7,10 @@ export function renderInodo(codigo: string): string {
   const spec = (parse(codigo) ?? {}) as Record<string, unknown>
   for (const campo of ['titulo', 'bloque', 'puntero', 'punteros'])
     if (spec[campo] == null) throw new Error(`Bloque inodo: falta \`${campo}\``)
-  return renderRecorrido(recorridoInodo(spec as unknown as SpecInodo))
+  const r = recorridoInodo(spec as unknown as SpecInodo)
+  const html = renderRecorrido(r)
+  // más ancho que los otros recorridos (PIT): en pantalla chica scrollea en vez de achicarse
+  return r.ancho > 760
+    ? html.replace('class="diagrama recorrido"', 'class="diagrama recorrido in-ancho"')
+    : html
 }

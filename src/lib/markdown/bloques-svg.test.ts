@@ -138,4 +138,12 @@ bytes: [10500, 544767]
   it('rompe el build si falta un dato', () => {
     expect(() => bloqueSVG('inodo', yamlI.replace(/puntero: 4\n/, ''))).toThrow(/falta `puntero`/)
   })
+
+  it('el PIT (más ancho) lleva in-ancho para scrollear en pantalla chica', () => {
+    expect(bloqueSVG('inodo', yamlI)).not.toContain('in-ancho')
+    const pit = yamlI
+      .replace('dobles: 1 }', 'dobles: 1, triples: 1 }')
+      .replace('bytes: [10500, 544767]', 'bloques: [0, 70000]')
+    expect(bloqueSVG('inodo', pit)).toContain('class="diagrama recorrido in-ancho"')
+  })
 })
