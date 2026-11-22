@@ -2,7 +2,7 @@
 tipo: modulo
 aliases: [contenido, teoría, teoria, ejercicios, markdown, guías]
 tags: [moc, contenido]
-actualizado: 2026-11-21
+actualizado: 2026-11-22
 ---
 
 # Contenido
@@ -16,6 +16,7 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 - [[Traza de reemplazo a completar]] — grilla de reemplazo (páginas, H/U/M/P, PF, disco) que completa el alumno.
 - [[Resolución gráfica paso a paso]] — resoluciones del 2do parcial: ```memoria (huecos) y recorrido automático de trazas.
 - [[Resolución gráfica del inodo]] — bloque ```inodo: lectura por los punteros del inodo (fat-ufs).
+- [[Resolución gráfica de la TLB]] — bloques ```tlb y ```deducir: camino por la TLB y comparar algoritmos (memoria virtual).
 - [[Celdas a calcular en enunciados]] — celdas `(a calcular)` de tablas → campo para anotar.
 - [[Fuentes y Derechos del Material]] — de dónde sale cada cosa y qué no se sube.
 - [[Content Collections Temas y Ejercicios]] — cómo se cargan y rutean.

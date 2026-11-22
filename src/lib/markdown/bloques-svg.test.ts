@@ -191,3 +191,55 @@ procesos:
     ).toThrow(/opcional/)
   })
 })
+
+describe('bloque ```tlb', () => {
+  const yamlT = `titulo: Referencias de A
+bitsPagina: 6
+bitsOffset: 14
+bitsFrame: 4
+entradas: 2
+tlb:
+  - { pagina: 11, frame: 2, proceso: A, ingreso: 50 }
+procesos:
+  A: [{ frame: 2, pagina: 11, acc: 80 }, { frame: 5 }]
+referencias:
+  - { proceso: A, dl: 0x2F022, instante: 90 }
+  - { proceso: A, dl: 0x19333, instante: 95 }
+`
+  it('arma el camino de cada referencia (hexa en el YAML)', () => {
+    const html = bloqueSVG('tlb', yamlT)!
+    expect(html).toContain('data-recorrido')
+    expect(html).toContain('hit: 11 → frame 2, de A')
+    expect(html).toContain('sin víctima: entra en el frame 5, libre')
+  })
+
+  it('rompe el build si falta un dato', () => {
+    expect(() => bloqueSVG('tlb', yamlT.replace('entradas: 2', ''))).toThrow(/falta `entradas`/)
+    expect(() => bloqueSVG('tlb', yamlT.replace('bitsFrame: 4', ''))).toThrow(/bitsFrame/)
+  })
+})
+
+describe('bloque ```deducir', () => {
+  const yamlD = `titulo: Qué algoritmo sacó a la 6
+bitsOffset: 14
+bitsDL: 16
+bitsDF: 18
+uso: REF
+marcos:
+  - { frame: 2, pagina: 0, tur: 101, u: 1, m: 1 }
+  - { frame: 6, pagina: 2, tur: 77, u: 1, m: 1 }
+  - { frame: 11, pagina: 6, tur: 200, u: 1, m: 0 }
+referencias: [{ dl: 0xC0FF, df: 0x2C0FF }]
+algoritmos: [lru, clock-mejorado]
+`
+  it('arma decodificar + comparar', () => {
+    const html = bloqueSVG('deducir', yamlD)!
+    expect(html).toContain('data-recorrido')
+    expect(html).toContain('sale (única M = 0)')
+  })
+
+  it('rompe el build con un algoritmo que no existe o un dato faltante', () => {
+    expect(() => bloqueSVG('deducir', yamlD.replace('lru,', 'lfu,'))).toThrow(/algoritmo "lfu"/)
+    expect(() => bloqueSVG('deducir', yamlD.replace('bitsDF: 18', ''))).toThrow(/falta `bitsDF`/)
+  })
+})
