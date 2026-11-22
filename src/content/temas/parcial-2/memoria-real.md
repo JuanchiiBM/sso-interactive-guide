@@ -155,6 +155,8 @@ Cuando hay varios huecos donde entra el proceso, el SO elige uno con alguno de e
 
 Según el resumen de la cátedra, el mejor ajuste es el que **peor** fragmentación externa crea (deja huecos tan chicos que no sirven para nada) y el peor ajuste el que menos crea (lo que sobra todavía sirve).
 
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-real/#huecos">Huecos y compactación</a></p>
+
 ## Buddy system
 
 También llamado **descomposición binaria**: combina el particionamiento fijo y el dinámico para compensar sus desventajas. Los bloques tienen tamaños que son potencias de 2. El pedido se **redondea** a la potencia siguiente y, si el bloque libre más chico que alcanza es más grande, se parte por la mitad (en dos **compañeros**) las veces que haga falta. Al liberar, si el compañero también está libre, se unen, y así hacia arriba.
@@ -222,6 +224,8 @@ Si se agrupa desde la izquierda da cualquier cosa. Atajo: con 3 bits de segmento
 | Segmento      | 0   | 0   | 1   | 1   | 2   | 2   | 3   | 3   | 4   | …   |
 | Bit que pasa  | 0   | 1   | 0   | 1   | 0   | 1   | 0   | 1   | 0   | …   |
 
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-real/#dl-df-hexa">DL → DF en hexa</a> · <a href="/metodologia/parcial-2/memoria-real/#dl-df-decimal">DL → DF en decimal</a></p>
+
 ### Deducir cuántos bits son de segmento
 
 A veces el enunciado no lo dice y da una pista del tipo _"la DL X pertenece al segmento N"_. Se pasa X a binario y se prueba tomando 1, 2, 3… bits de arriba hasta que den N.
@@ -240,6 +244,8 @@ Es la traducción al revés: el enunciado da traducciones ya hechas ("la DL X ge
   - _"los segmentos A y B están adyacentes"_ (A antes que B) → A termina justo antes de que empiece B: `límite de A = base de B − 1`.
   - _"el segmento está al final de la memoria"_ → termina en la última dirección: `FFFFh` con 16 bits.
 - **Permisos:** si _"escribir en X da modo de acceso inválido"_ y X está dentro del segmento, ese segmento no admite escritura. Si hay que adivinar cuál es, el que no se escribe es el de **código**: datos y pila se modifican todo el tiempo.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-real/#reconstruir-tabla">Reconstruir la tabla de segmentos</a></p>
 
 ## Paginación
 
@@ -265,6 +271,8 @@ La cuenta va al revés de la de arriba: de cantidades y tamaños a bits. Para nu
 Ejemplo: páginas de 4 KiB (2<sup>12</sup> → 12 bits de desplazamiento), un espacio lógico de 16 páginas (4 bits) y una RAM de 256 KiB = 64 frames (6 bits). La DL tiene 4 + 12 = **16 bits** y la DF, 6 + 12 = **18 bits**.
 
 Sin memoria virtual el proceso tiene que estar **entero** en RAM, así que el espacio lógico útil nunca supera al físico: la DL es **menor o igual** que la DF, y el programa más grande que se puede ejecutar es el **menor** entre 2<sup>bits de la DL</sup> y el tamaño de la RAM. La [memoria virtual](/teoria/parcial-2/memoria-virtual/) es justamente lo que permite una DL más larga que la DF.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-real/#formato-direccion">Formato de la dirección</a></p>
 
 ### Traducción
 
@@ -318,6 +326,8 @@ Intenta quedarse con lo mejor de los dos esquemas: el proceso se divide en segme
 ```
 
 No tiene fragmentación externa y los permisos se ponen bien (por segmento), pero tiene más overhead: son 3 accesos a memoria, y fragmentación interna en la última página de **cada** segmento.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-real/#df-dl">DF → DL</a> · <a href="/metodologia/parcial-2/memoria-real/#dl-df-hexa">DL → DF en hexa</a></p>
 
 ## Comparación
 
