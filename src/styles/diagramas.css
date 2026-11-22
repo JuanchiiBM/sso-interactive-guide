@@ -1197,5 +1197,25 @@ rect.t3p-ref {
 .diagrama .rm-fila-vacia text {
   fill: var(--muted);
 }
+/* recorrido-traduccion.ts: corte de bits, cuenta de la base y la DF sobre la barra */
+.tr-bits-seg rect {
+  fill: color-mix(in srgb, var(--warn) 14%, var(--surface));
+  stroke: var(--warn);
+}
+.tr-bits-off rect {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+}
+.diagrama .tr-cuenta {
+  font-size: 14px;
+}
+.tr-df {
+  stroke: var(--ok);
+  stroke-width: 2;
+}
+.diagrama .tr-df-etq {
+  font-size: 11px;
+  fill: var(--ok);
+}
 
 /* fin memoria real y virtual */
