@@ -132,6 +132,8 @@ Quién hace cumplir ese "no" depende de **quién impone** el lock:
 
 Ejemplo de parcial (cuatro procesos sobre un archivo, con `lock` / `unlock` bloqueantes): P1 y P3 abren en lectura y toman el lock, P2 abre en escritura y lo pide, P4 lee **sin** pedirlo. Con lock **compartido**, P1 y P3 leen a la vez y P2 queda bloqueado hasta que los dos liberan. Lo que cambia según quién lo impone es P4: con lock **sugerido** lee sin problema; con lock **obligatorio** su `read` falla.
 
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/filesystem/#locks">Locks con procesos y planificación</a></p>
+
 ### Métodos de acceso
 
 - **Secuencial:** se lee o escribe desde donde quedó el puntero, y el SO lo avanza solo.
@@ -180,6 +182,8 @@ Sobre un **directorio** los permisos hablan de sus entradas: **r** deja listarla
 - **Contraseñas por archivo:** casi no se usan; hoy se autentica al usuario y eso habilita todos sus archivos.
 
 Ejemplo de permisos UNIX: `-rw-rw---- dan utnso notas.txt` da lectura y escritura a `dan` (el dueño) y al grupo `utnso`, y nada al resto. Cada terna es un número octal: `chmod 660 notas.txt` deja esos mismos permisos (`110 110 000`), y `chmod 777` da todo a todos.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/filesystem/#permisos">Permisos rwx</a></p>
 
 ## Disco lógico: particiones y volúmenes
 
@@ -255,6 +259,8 @@ El FCB tiene una **tabla de índices** con un puntero por cada bloque del archiv
 | Indexada   | No            | Hasta llenar el índice | Sí (una entrada del índice) | Se pierde ese bloque; el índice es crítico |
 
 [FAT](/teoria/parcial-2/fat-ufs/) es asignación **encadenada** con los punteros sacados de los bloques a una tabla aparte (algunos parciales la llaman "enlazada-indexada"); **UFS/ext2** es **indexada** con niveles de indirección.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/filesystem/#metodos-asignacion">Métodos de asignación</a></p>
 
 ## Gestión del espacio libre
 
