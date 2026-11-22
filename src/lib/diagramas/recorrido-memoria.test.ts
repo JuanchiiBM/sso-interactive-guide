@@ -217,6 +217,11 @@ describe('recorridoMemoria: agrandar', () => {
     expect(html07).toContain('>18–25<')
     expect(html07).toContain('>15–17<')
     expect(html07).toContain('>26–31<')
+    expect(html07).toContain('Z: 21–26 → 26–31')
+  })
+
+  it('las marcas van en cada fotograma, debajo de su barra', () => {
+    expect(html07.match(/>32</g)?.length).toBe(2)
   })
 })
 

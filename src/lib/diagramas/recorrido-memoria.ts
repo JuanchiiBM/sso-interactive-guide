@@ -167,9 +167,10 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const yAntes = 14 + filasChips * (CHIP + 6) + 14
   const yDespues = yAntes + BARRA + 52
   const marcaDe = (p: PasoMem) => (p.op && 'marca' in p.op ? p.op : undefined)
-  const conMarca = pasos.some(marcaDe)
-  const yMarcas = yDespues + BARRA + 14 + (conMarca ? 44 : 0)
-  const yTabla = yMarcas + 26 + (lect ? 76 : 0)
+  // las marcas y la tabla bajan solo en los pasos que dibujan algo más (regla de DL, cajas)
+  const conCajas = (p: PasoMem) => !p.op && !!lect
+  const yMarcasDe = (p: PasoMem) => yDespues + BARRA + 14 + (marcaDe(p) ? 44 : 0)
+  const yTablaDe = (p: PasoMem) => yMarcasDe(p) + 26 + (conCajas(p) ? 76 : 0)
 
   type Fila = [string[], string]
   const sufijo = unidad === 'KiB' || unidad === 'MiB' ? ` (${unidad})` : ''
@@ -256,9 +257,13 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const completarDe = (p: PasoMem) =>
     marcaDe(p)?.completar ?? (p.op ? undefined : spec.lectura?.completar)
   const filasTabla = (p: PasoMem) => completarDe(p)?.length ?? (spec.tabla ? filasDe(p).length : 0)
-  const alto = pasos.some(filasTabla)
-    ? yTabla + 40 + Math.max(...pasos.map(filasTabla)) * 20 + 8
-    : yMarcas + 16 + (lect ? 76 : 0)
+  const alto = Math.max(
+    ...pasos.map((p) =>
+      filasTabla(p)
+        ? yTablaDe(p) + 40 + filasTabla(p) * 20 + 8
+        : yMarcasDe(p) + 16 + (conCajas(p) ? 76 : 0),
+    ),
+  )
 
   const op = (p: PasoMem) => (p.op && 'agranda' in p.op ? p.op : undefined)
   const barra = (bloques: BloqueMem[], y: number, p: PasoMem, antes: boolean, marcado = '') => {
@@ -345,7 +350,9 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         const y1 = yAntes + BARRA + 4
         const y2 = yDespues - 6
         const ym = (y1 + y2) / 2
-        const etq = `${m.nombre}: base ${dir(m.de)} → ${dir(m.a)}`
+        const etq = enBloques
+          ? `${m.nombre}: ${sub(m.de, b.tam, false)} → ${sub(m.a, b.tam, false)}`
+          : `${m.nombre}: base ${dir(m.de)} → ${dir(m.a)}`
         const w = etq.length * 6.6 + 12
         return (
           `<path class="rm-flecha" d="M ${x1} ${y1} C ${x1} ${ym}, ${x2} ${ym}, ${x2} ${y2}"/>` +
@@ -359,6 +366,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const tabla = (p: PasoMem) => {
     const completar = completarDe(p)
     if (!spec.tabla && !completar) return ''
+    const yTabla = yTablaDe(p)
     const { titulo, columnas } = completar
       ? { titulo: 'Lo que había que completar', columnas: ['Campo', 'Valor'] }
       : tablaDe
@@ -409,8 +417,8 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   // una caja por bloque leído: su número, su lógico, su rango de bytes y lo que se lee
   const cajas = ({ l, b, primero, ultimo, fin }: NonNullable<typeof lect>) => {
     const n = ultimo - primero + 1
-    const w = Math.min(200, (W - 12 * (n - 1)) / n)
-    const y = yMarcas + 14
+    const w = Math.min(232, (W - 12 * (n - 1)) / n)
+    const y = yMarcasDe(pasos[0]) + 14
     return Array.from({ length: n }, (_, k) => {
       const lg = primero + k
       const [a, z] = [lg * l.bloque, (lg + 1) * l.bloque - 1]
@@ -431,6 +439,15 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       )
     }).join('')
   }
+
+  const marcasEn = (y: number) =>
+    Array.from({ length: 9 }, (_, k) => (spec.total / 8) * k)
+      .map((v, k) =>
+        texto(px(v), y, dir(v), {
+          clase: `rm-marca${k === 0 ? ' rm-izq' : k === 8 ? ' rm-der' : ''}`,
+        }),
+      )
+      .join('')
 
   const fotograma = (p: PasoMem, i: number) => {
     const chips = chipsPorPaso[i]
@@ -463,9 +480,10 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
           p.despues.find((b) => b.nombre === m.marca)!,
           m,
         )
-      return grupo(`paso-${i}`, chips + marca + tabla(p), { oculto: true })
+      return grupo(`paso-${i}`, chips + marca + marcasEn(yMarcasDe(p)) + tabla(p), { oculto: true })
     }
-    return grupo(`paso-${i}`, chips + antes + flechas(p) + despues + tabla(p), { oculto: true })
+    const cuerpo = chips + antes + flechas(p) + despues + marcasEn(yMarcasDe(p)) + tabla(p)
+    return grupo(`paso-${i}`, cuerpo, { oculto: true })
   }
 
   const PALABRA = ['', 'un', 'dos', 'tres', 'cuatro']
@@ -579,11 +597,6 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   }
 
   const ids = pasos.map((_, i) => `paso-${i}`)
-  const marcas = Array.from({ length: 9 }, (_, k) => (spec.total / 8) * k).map((v, k) =>
-    texto(px(v), yMarcas, dir(v), {
-      clase: `rm-marca${k === 0 ? ' rm-izq' : k === 8 ? ' rm-der' : ''}`,
-    }),
-  )
   return {
     ancho: ANCHO,
     alto,
@@ -591,7 +604,6 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     cuerpo: [
       `<defs><pattern id="rm-rayas" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="rm-raya-fondo" width="8" height="8"/><line class="rm-raya" x1="0" y1="0" x2="0" y2="8"/></pattern></defs>`,
       ...pasos.map(fotograma),
-      ...marcas,
     ],
     pasos: pasos.map((p, i) => ({
       ...paso(p),
