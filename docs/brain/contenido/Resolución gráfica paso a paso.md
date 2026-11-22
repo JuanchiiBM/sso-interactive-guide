@@ -12,6 +12,13 @@ aliases:
     worst fit,
     first fit,
     compactación,
+    agranda,
+    agrandar partición,
+    particiones dinámicas,
+    asignación contigua en disco,
+    marca DF,
+    regla de DL,
+    lectura de bloques,
     recorridoMemoria,
     simularHuecos,
     recorridoTraza,
@@ -100,8 +107,36 @@ operaciones:
 - **Compactar no se calcula solo:** la cátedra pide "mover lo mínimo" y eso no es único. Si una
   carga no entra y no trae `compactar`, o un movimiento pisa otro segmento, **rompe el build**.
 - Empates de Best/Worst Fit: se toma el primero y el otro sale como "✓ también vale (empate)".
-- Usado en: memoria-real ej-07, 08, 10. Pendientes con el mismo bloque: fat-ufs ej-32, 34, 37;
-  filesystem ej-07, 08.
+- Usado en: memoria-real ej-07, 08, 10; fat-ufs ej-32, 34, 37; filesystem ej-07, 08.
+
+### Extensiones de #59 (FAT/UFS y Filesystem)
+
+Diseño: página "#59 Memoria en FS" del tablero
+https://claude.ai/artifact/NsqCw5ihjtsM2XFgVb5h9P#page-fs59 (A en bloques + extensiones de A).
+
+```yaml
+unidad: KiB            # KiB | MiB | bloques: números del enunciado sin convertir (KiB justo → "1 MiB")
+tabla: particiones     # o un proceso | todos (segmentos de todos) | directorio (Archivo | Inicio | Bloques)
+lectura:               # solo en bloques: el paso inicial cuenta qué bloques se leen (ej-07 a)
+  { archivo: notas, desde: 8000, bytes: 10240, bloque: 8192, completar: [[Campo, valor, ok]] }
+operaciones:
+  - { agranda: P2, tam: 1538, etiqueta: lo leído, compactar: [{ mover: P2, a: 8192 }] }
+  - { carga: PC, segmentos: [{ nombre: PC.S0, tam: 100 }, { nombre: PC.S1, tam: 100 }], compactar: … }
+  - { marca: P2, dl: 4096, df: 'DF …', titulo: …, texto: …, chips: [{ ok: … }], completar: [[…]] }
+```
+
+- **bloques:** rango inclusivo bajo cada nombre (21–26), rejilla por bloque, la flecha dice el rango.
+- **agranda:** crece al final del bloque; si el hueco de atrás no alcanza, exige `compactar` (y
+  rompe si aun así no entra). Chips: el hueco de atrás primero ("✗ faltan N"), el resto "✗ no está
+  al lado", y el total. La parte nueva se dibuja aparte (`+1538 KiB`, rótulo `etiqueta`).
+- **segmentos juntos:** el hueco que admite uno solo va en ámbar ("entra uno solo").
+- **marca:** paso sin cambios con la barra del paso anterior (con sus bordes), la línea de la DF y
+  la regla de DL bajo el bloque; título, texto y chips son del autor. Con `completar`, la tabla es
+  "Lo que había que completar"; sin, la tabla normal con el bloque en verde.
+- Marcas y tabla se ubican **por fotograma**: solo bajan en el paso con regla o cajas.
+- El reproductor pone título y texto en el mismo renglón: el texto no repite el título.
+- Colores por orden de aparición del proceso (no por bloque), como el resto de las barras.
+- Supuestos (ej-07: el disco no está en el enunciado) se dicen en el `texto` del paso.
 
 ## Traducción inversa: bloque ` ```traduccion `
 
@@ -308,6 +343,9 @@ trazas, sin tocar los `.md`. **Reusa la grilla de la cátedra que ya tenían la 
   (0,0): F5 (1,1)…", "2.ª vuelta busca (0,1) bajando U: F1 → U=0…") y dicen dónde queda.
 
 ## Gotchas
+
+- `astro dev` a veces sigue sirviendo la versión vieja de un `.md` después de editarlo ("An error
+  happened during full reload"): `astro dev stop` y levantarlo de nuevo.
 
 - Un fotograma por paso (`paso-i` / `col-j`, ocultos): el recorrido no cambia tamaños, solo muestra
   y oculta. Ver la técnica en [[Recorridos de Memoria]].
