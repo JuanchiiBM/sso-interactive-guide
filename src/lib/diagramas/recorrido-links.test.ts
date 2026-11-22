@@ -73,3 +73,44 @@ describe('recorridoLinks (directorio → inodos)', () => {
     expect(r.pasos![4].texto).toContain('Llegó a 0: el SO libera el inodo y sus bloques de datos.')
   })
 })
+
+// fat-ufs ej-49, tablero links-M1 (directorios apilados, flecha del soft link por adentro)
+describe('recorridoLinks con varios directorios', () => {
+  const r49 = recorridoLinks({
+    titulo: 'Links de /etc/fixture.txt',
+    inicial: [{ ruta: '/etc/fixture.txt', inodo: '5' }],
+    operaciones: [
+      { ln: '/etc/fixture.txt', a: '/var/h-fixture.txt' },
+      { lns: '/etc/fixture.txt', a: '/temp/s-fixture.txt', inodo: '6' },
+      { rm: '/etc/fixture.txt' },
+      { rm: '/var/h-fixture.txt' },
+    ],
+  })
+  const h = renderRecorrido(r49)
+  const f3 = h.split('data-el="paso-3"')[1].split('data-el="paso-')[0]
+
+  it('una caja por directorio, apiladas en el orden en que aparecen', () => {
+    const ys = ['/etc', '/var', '/temp'].map((d) => {
+      const m = f3.match(new RegExp(String.raw`y="(\d+)"[^>]*>directorio ${d}<`))
+      return Number(m![1])
+    })
+    expect(ys).toEqual([...ys].sort((a, b) => a - b))
+  })
+
+  it('el texto del rm es el de M1', () => {
+    expect(r49.pasos![3].texto).toBe(
+      'Borrar **fixture.txt** quita **esa entrada** de /etc y baja el contador del inodo 5 de 2 a **1**. Como no llegó a 0, el inodo y sus bloques siguen: **/var/h-fixture.txt** abre el mismo contenido. **/temp/s-fixture.txt** guarda la ruta `/etc/fixture.txt`, que ya no existe: queda **colgado**.',
+    )
+  })
+
+  it('las tarjetas de inodo no se pisan', () => {
+    const cards = [
+      ...f3.matchAll(
+        /class="lk-inodo[^"]*"><rect x="\d+" y="(\d+(?:\.\d+)?)" width="\d+" height="(\d+)"/g,
+      ),
+    ].map((m) => [Number(m[1]), Number(m[2])])
+    expect(cards).toHaveLength(2)
+    expect(cards[0][0] + cards[0][1]).toBeLessThanOrEqual(cards[1][0])
+    expect(f3).toContain('6 apunta por ruta')
+  })
+})

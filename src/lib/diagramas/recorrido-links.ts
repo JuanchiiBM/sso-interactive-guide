@@ -35,8 +35,11 @@ const tituloOp = (p: PasoLinks) => {
   return 'ln' in op ? `ln ${op.ln} ${op.a}` : `ln -s ${op.lns} ${op.a}`
 }
 
+// "de I" con letras (links-A), "del inodo 5" con números (M1)
+const de = (id: string) => (/^\d+$/.test(id) ? `del inodo ${id}` : `de ${id}`)
+
 /** Texto del paso, generado del estado (el de rm sigue al tablero links-A). */
-function explicar(p: PasoLinks): string {
+function explicar(p: PasoLinks, varios: boolean): string {
   const op = p.op
   const ino = (id: string) => p.inodos.find((i) => i.id === id)!
   const vivas = (id: string) => p.entradas.filter((e) => e.inodo === id && !e.borrada)
@@ -53,7 +56,7 @@ function explicar(p: PasoLinks): string {
   if ('ln' in op) {
     const e = p.entradas.find((x) => x.ruta === op.a)!
     const i = ino(e.inodo)
-    t = `Un hard link no crea un archivo: suma la entrada **${e.nombre}** → ${i.id} en \`${e.dir}\` y el contador de ${i.id} pasa de ${i.antes} a **${i.contador}**. Los bloques de datos son los mismos.`
+    t = `Un hard link no crea un archivo: suma la entrada **${e.nombre}** → ${i.id} en \`${e.dir}\` y el contador ${de(i.id)} pasa de ${i.antes} a **${i.contador}**. Los bloques de datos son los mismos.`
   } else if ('lns' in op) {
     const dest = p.entradas.find((x) => x.ruta === op.lns && !x.borrada)
     const cont = dest
@@ -65,7 +68,7 @@ function explicar(p: PasoLinks): string {
     const i = ino(e.inodo)
     const quien = (r: { ruta: string; dir: string; nombre: string }) =>
       r.dir === e.dir ? `**${r.nombre}**` : `**${r.ruta}**`
-    t = `Borrar **${e.nombre}** quita **esa entrada** y baja el contador de ${i.id} de ${i.antes} a **${i.contador}**.`
+    t = `Borrar **${e.nombre}** quita **esa entrada**${varios ? ` de ${e.dir}` : ''} y baja el contador ${de(i.id)} de ${i.antes} a **${i.contador}**.`
     if (i.contador > 0) {
       const otras = vivas(i.id).map(quien)
       t += ` Como no llegó a 0, el inodo y sus bloques siguen: ${y(otras)} ${otras.length > 1 ? 'abren' : 'abre'} el mismo contenido.`
@@ -261,7 +264,7 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
 
   const recPasos: Paso[] = pasos.map((p, k) => ({
     titulo: tituloOp(p),
-    texto: explicar(p),
+    texto: explicar(p, cajas.length > 1),
     resaltar: [`paso-${k}`],
     mostrar: [`paso-${k}`],
     ocultar: pasos.map((_, i) => `paso-${i}`).filter((_, i) => i !== k),
