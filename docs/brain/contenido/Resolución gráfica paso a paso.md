@@ -33,6 +33,12 @@ aliases:
     bloque fat,
     recorridoCadenaFat,
     seguir la cadena,
+    bloque links,
+    recorridoLinks,
+    simularLinks,
+    hard link,
+    soft link,
+    contador de hard links,
   ]
 tags: [contenido, recorrido, memoria, decision]
 actualizado: 2026-11-22
@@ -212,6 +218,39 @@ contenido: { 3: SIST, 8: EMAS }   # opcional (ej-30): bajo cada caja, y se arma 
 ## Punteros del inodo: bloque ` ```inodo `
 
 Byte → bloque → accesos, un paso por puntero (PD, PIS, PID, PIT). Ver [[Resolución gráfica del inodo]].
+
+## Links: bloque ` ```links `
+
+Diseño **links-A · Directorio → inodos** (issue #63, tablero
+https://claude.ai/artifact/NsqCw5ihjtsM2XFgVb5h9P#artboard-links-A) con la flecha del soft link **por
+adentro** (de la tarjeta a la entrada que nombra, puede cruzar las otras) y, con varios directorios,
+**M1**: cajas apiladas a la izquierda, inodos a la derecha. Un paso por operación.
+
+```yaml
+titulo: Links de /datos/informe.txt
+volumenes:                     # opcional; con dos o más, una columna por volumen
+  - { nombre: A, directorios: [/datos] }
+inicial: [{ ruta: /datos/informe.txt, inodo: I }]
+operaciones:
+  - { ln: /datos/informe.txt, a: /datos/copia.txt }
+  - { lns: /datos/informe.txt, a: /datos/acceso.txt, inodo: S }   # ln -s: el autor nombra el inodo
+  - { rm: /datos/informe.txt, texto: 'Texto extra del autor.' }
+escenarios:                    # opcional: una pestaña por inciso que arranca del mismo estado
+  - { nombre: 'c) rm java17', operaciones: [{ rm: ... }] }
+```
+
+- Va en la justificación del **último inciso**: la secuencia completa responde los anteriores.
+- Textos generados; el del `rm` es el del tablero. Inodo con letras → "el contador de I", con
+  números → "del inodo 5"; con varios directorios, "quita esa entrada de /etc".
+- La entrada borrada queda tachada en `--bad` en su paso y atenuada después (la flecha del soft link
+  siempre tiene a dónde llegar). Inodo en 0: tarjeta atenuada, "se liberan".
+- Dos volúmenes: el dibujo es más ancho que 820 y se ve a ~80%. El soft link a otro volumen sube
+  por un carril arriba y baja junto a la entrada.
+- La caja del directorio se ensancha con rutas largas (`/usr/lib/java17/bin`).
+- Rompe el build: hard link entre volúmenes, `rm`/`ln` de una ruta que no existe, crear una que ya
+  existe, inodo de `ln -s` repetido, directorio fuera de `volumenes`.
+- Ubicación: `links.ts` (simulación pura) + `recorrido-links.ts` + `links-bloque.ts`, con tests;
+  estilos `lk-*`. Usado en fat-ufs ej-19, 20, 21, 22 (pestañas en 21 y 22) y 49. A mano: ej-25, 48.
 
 ## Traza: recorrido automático
 
