@@ -170,3 +170,10 @@ html {
     scroll-behavior: auto !important;
   }
 }
+
+/* barra lateral escondida en pantalla grande con el botón del header (src/lib/sidebar.ts) */
+@media (min-width: 48rem) {
+  [data-sidebar-oculto] [data-sidebar] {
+    display: none;
+  }
+}
