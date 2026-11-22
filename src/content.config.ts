@@ -263,8 +263,10 @@ const metodologia = defineCollection({
     resumen: z.string(),
     /** Markdown inline; el arranque en negrita. */
     trampas: z.array(z.string()).min(1),
-    /** Anclas de la teoría del tema (slugs de sus títulos). */
-    teoria: z.array(z.string()).default([]),
+    /** Anclas de la teoría del tema (slugs de sus títulos); `texto` si el título solo no alcanza. */
+    teoria: z
+      .array(z.union([z.string(), z.object({ ancla: z.string(), texto: z.string() })]))
+      .default([]),
   }),
 })
 
