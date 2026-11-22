@@ -9,7 +9,7 @@ import {
 
 const CAMPOS = {
   inversa: ['titulo', 'total', 'bitsSegmento', 'bitsOffset', 'proceso', 'direcciones'],
-  directo: ['titulo', 'bitsSegmento', 'bitsOffset', 'segmentos', 'direcciones'],
+  directo: ['titulo', 'segmentos', 'direcciones'],
 } as const
 
 export function renderTraduccion(codigo: string): string {

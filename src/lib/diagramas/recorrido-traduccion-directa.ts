@@ -14,12 +14,14 @@ export interface SegmentoDirecto {
 export interface SpecTraduccionDirecta {
   sentido: 'directo'
   titulo: string
-  bitsSegmento: number
-  bitsOffset: number
+  /** Sin bits, cada dirección viene ya cortada como `{ seg, desp }`. */
+  bitsSegmento?: number
+  bitsOffset?: number
+  unidad?: 'hexa' | 'decimal'
   /** Sin acceso no hay chequeo de permiso. */
   acceso?: 'lectura' | 'escritura' | 'ejecucion'
   segmentos: SegmentoDirecto[]
-  direcciones: { dl: number; texto?: string }[]
+  direcciones: { dl?: number; seg?: number; desp?: number; texto?: string }[]
 }
 
 const X0 = 20
@@ -37,9 +39,10 @@ const LETRA = { lectura: 'r', escritura: 'w', ejecucion: 'x' }
 const VERBO = { lectura: 'leer', escritura: 'escribir', ejecucion: 'ejecutar' }
 
 export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorrido {
-  const bs = spec.bitsSegmento
-  const bo = spec.bitsOffset
-  const hx = (n: number, w: number) => `${n.toString(16).toUpperCase().padStart(w, '0')}h`
+  const bs = spec.bitsSegmento ?? 0
+  const bo = spec.bitsOffset ?? 0
+  const hx = (n: number, w: number) =>
+    spec.unidad === 'decimal' ? String(n) : `${n.toString(16).toUpperCase().padStart(w, '0')}h`
   const d = (n: number) => hx(n, Math.ceil((bs + bo) / 4))
   const o = (n: number) => hx(n, Math.ceil(bo / 4))
   const acceso = spec.acceso
@@ -52,22 +55,35 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
     s.permisos ? (ETIQUETA[s.permisos] ?? s.permisos.toUpperCase()) : '—'
 
   const dirs = spec.direcciones.map((x) => {
-    if (x.dl < 0 || x.dl >= 2 ** (bs + bo))
-      throw new Error(`traduccion: ${d(x.dl)} no entra en ${bs + bo} bits`)
-    const seg = x.dl >> bo
-    const desp = x.dl & (2 ** bo - 1)
+    const { dl } = x
+    if (dl == null && (x.seg == null || x.desp == null))
+      throw new Error('traduccion: cada dirección lleva `dl` o `{ seg, desp }`')
+    if (dl != null && (!spec.bitsSegmento || !spec.bitsOffset))
+      throw new Error(`traduccion: para cortar ${d(dl)} faltan bitsSegmento y bitsOffset`)
+    if (dl != null && (dl < 0 || dl >= 2 ** (bs + bo)))
+      throw new Error(`traduccion: ${d(dl)} no entra en ${bs + bo} bits`)
+    const seg = dl != null ? dl >> bo : x.seg!
+    const desp = dl != null ? dl & (2 ** bo - 1) : x.desp!
+    const nombre = dl != null ? d(dl) : `(${seg}, ${o(desp)})`
     const fila = spec.segmentos.find((s) => s.seg === seg)
-    if (!fila) throw new Error(`traduccion: falta el segmento ${seg} en la tabla (${d(x.dl)})`)
+    if (!fila) throw new Error(`traduccion: falta el segmento ${seg} en la tabla (${nombre})`)
     const limiteOk = desp < fila.largo
     const permisoOk = !acceso || (fila.permisos ?? '').includes(LETRA[acceso])
     const fault = !limiteOk ? 'límite' : !permisoOk ? 'permiso' : null
     const df = fila.base + desp
-    return { ...x, seg, desp, fila, limiteOk, permisoOk, fault, df }
+    return { ...x, dl, nombre, seg, desp, fila, limiteOk, permisoOk, fault, df }
   })
   type Dir = (typeof dirs)[number]
   const resultado = (x: Dir) => (x.fault ? `Fault (${x.fault})` : d(x.df))
 
   const corte = (x: Dir) => {
+    if (x.dl == null)
+      return texto(
+        X0,
+        12,
+        `1. La dirección lógica ya viene cortada: segmento ${x.seg} · desplazamiento ${o(x.desp)}`,
+        { clase: 'rm-izq rm-tabla-tit' },
+      )
     const b = bits(x.dl, bs + bo)
     let cx = X0
     const celdas = [...b].map((v, i) => {
@@ -89,7 +105,7 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
     )
   }
 
-  const y2 = 100
+  const y2 = dirs.some((x) => x.dl != null) ? 100 : 40
   const columnas = acceso ? ['Seg', 'Base', 'Largo', 'Protección'] : ['Seg', 'Base', 'Largo']
   const anchos = [44, 84, 84, 104]
   const xs = anchos.map((_, j) => X0 + anchos.slice(0, j).reduce((a, b) => a + b, 0))
@@ -185,7 +201,7 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
     let cx = X0
     let fila = 0
     return dirs.map((x, i) => {
-      const t = `${d(x.dl)} → ${i <= k ? resultado(x) : '?'}`
+      const t = `${x.nombre} → ${i <= k ? resultado(x) : '?'}`
       const clase =
         i > k
           ? 'tr-chip-pendiente'
@@ -219,7 +235,7 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
             ? `Pasa los dos chequeos: ${o(x.desp)} < ${o(l)} y el segmento ${x.seg} es **${et}**, que permite ${verbo}. DF = ${d(x.fila.base)} + ${o(x.desp)} = **${d(x.df)}**.`
             : `El desplazamiento ${o(x.desp)} es menor que el largo ${o(l)}: DF = ${d(x.fila.base)} + ${o(x.desp)} = **${d(x.df)}**.`
     return {
-      titulo: `${d(x.dl)} → ${resultado(x)}`,
+      titulo: `${x.nombre} → ${resultado(x)}`,
       texto: [porque, x.texto].filter(Boolean).join(' '),
       resaltar: [`paso-${k}`],
       mostrar: [`paso-${k}`],
