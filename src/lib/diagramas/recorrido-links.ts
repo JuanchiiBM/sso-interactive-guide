@@ -1,10 +1,19 @@
 /** Recorrido de links (```links): directorio → inodos, un fotograma por operación. Diseño links-A + M1. */
-import type { Paso, Recorrido } from './recorrido'
-import { abre, simularLinks, type InodoLinks, type PasoLinks, type SpecLinksSim } from './links'
+import type { Paso, Recorrido, Variante } from './recorrido'
+import {
+  abre,
+  simularLinks,
+  type InodoLinks,
+  type OpLinks,
+  type PasoLinks,
+  type SpecLinksSim,
+} from './links'
 import { grupo, texto } from './svg'
 
 export interface SpecLinks extends SpecLinksSim {
   titulo: string
+  /** Una pestaña por escenario: las operaciones comunes y después las suyas. */
+  escenarios?: { nombre: string; operaciones: OpLinks[] }[]
 }
 
 const ANCHO = 820
@@ -17,14 +26,15 @@ const GEO_VOLS = { dw: 190, gap: 90, cw: 294 }
 
 const altoInodo = (i: InodoLinks) => (i.tipo === 'soft' ? 112 : 86)
 
-const nombreOp = (p: PasoLinks) => {
+// "rm informe" como en el tablero; la ruta entera si otro archivo se llama igual
+const nombreOp = (p: PasoLinks, rutas: string[]) => {
   const op = p.op
   if (!op) return 'inicial'
-  if ('rm' in op)
-    return `rm ${op.rm
-      .split('/')
-      .pop()!
-      .replace(/\.[^.]*$/, '')}`
+  if ('rm' in op) {
+    const base = op.rm.split('/').pop()!
+    const repetido = rutas.filter((r) => r.split('/').pop() === base).length > 1
+    return `rm ${repetido ? op.rm : base.replace(/\.[^.]*$/, '')}`
+  }
   return 'ln' in op ? 'ln' : 'ln -s'
 }
 
@@ -85,8 +95,27 @@ function explicar(p: PasoLinks, varios: boolean): string {
 }
 
 export function recorridoLinks(spec: SpecLinks): Recorrido {
-  const pasos = simularLinks(spec)
-  const ultimo = pasos.at(-1)!
+  const escenarios = spec.escenarios?.length
+    ? spec.escenarios.map((e) => ({
+        nombre: e.nombre,
+        pasos: simularLinks({ ...spec, operaciones: [...spec.operaciones, ...e.operaciones] }),
+      }))
+    : [{ nombre: '', pasos: simularLinks(spec) }]
+  // Todo lo que aparece en algún escenario, para que el dibujo no cambie de lugar entre pestañas.
+  const finales = escenarios.map((e) => e.pasos.at(-1)!)
+  const unicos = <T>(xs: T[], clave: (x: T) => string) => [
+    ...new Map(xs.map((x) => [clave(x), x])).values(),
+  ]
+  const ultimo = {
+    entradas: unicos(
+      finales.flatMap((f) => f.entradas),
+      (e) => e.ruta,
+    ),
+    inodos: unicos(
+      finales.flatMap((f) => f.inodos),
+      (i) => i.id,
+    ),
+  }
 
   // Una columna por volumen (directorios apilados | tarjetas de inodo); las filas no cambian entre pasos.
   const vols = spec.volumenes ?? [
@@ -286,26 +315,38 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
     )
   }
   const yPasos = yT + 24 + ultimo.entradas.length * 24 + 26
-  const resumen = texto(ancho - 10, yPasos, `Pasos: ${pasos.map(nombreOp).join(' · ')}`, {
-    clase: 'rm-der lk-pasos',
+  const rutas = ultimo.entradas.map((e) => e.ruta)
+  const cuerpo: string[] = []
+  const variantes: Variante[] = escenarios.map(({ nombre, pasos }, j) => {
+    const id = (k: number) => (escenarios.length > 1 ? `e${j}-paso-${k}` : `paso-${k}`)
+    const resumen = texto(
+      ancho - 10,
+      yPasos,
+      `Pasos: ${pasos.map((p) => nombreOp(p, rutas)).join(' · ')}`,
+      {
+        clase: 'rm-der lk-pasos',
+      },
+    )
+    pasos.forEach((p, k) =>
+      cuerpo.push(grupo(id(k), dibujo(p) + tabla(p) + resumen, { oculto: true })),
+    )
+    return {
+      nombre,
+      pasos: pasos.map((p, k): Paso => ({
+        titulo: tituloOp(p),
+        texto: explicar(p, cajas.length > 1),
+        resaltar: [id(k)],
+        mostrar: [id(k)],
+        ocultar: pasos.map((_, i) => id(i)).filter((_, i) => i !== k),
+      })),
+    }
   })
-
-  const recPasos: Paso[] = pasos.map((p, k) => ({
-    titulo: tituloOp(p),
-    texto: explicar(p, cajas.length > 1),
-    resaltar: [`paso-${k}`],
-    mostrar: [`paso-${k}`],
-    ocultar: pasos.map((_, i) => `paso-${i}`).filter((_, i) => i !== k),
-  }))
 
   return {
     ancho,
     alto: yPasos + 14,
     titulo: spec.titulo,
-    cuerpo: [
-      ...pasos.map((p, k) => grupo(`paso-${k}`, dibujo(p) + tabla(p), { oculto: true })),
-      resumen,
-    ],
-    pasos: recPasos,
+    cuerpo,
+    ...(variantes.length > 1 ? { variantes } : { pasos: variantes[0].pasos }),
   }
 }

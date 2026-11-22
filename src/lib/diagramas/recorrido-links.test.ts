@@ -149,3 +149,40 @@ describe('recorridoLinks con dos volúmenes', () => {
     expect(r20.pasos![4].texto).toContain('**/backup/informe_link.txt** guarda la ruta')
   })
 })
+
+// fat-ufs ej-22: c), d) y e) arrancan del mismo estado → una pestaña por inciso
+describe('recorridoLinks con escenarios', () => {
+  const r22 = recorridoLinks({
+    titulo: 'Versión por defecto con hard link',
+    inicial: [{ ruta: '/usr/lib/java17/bin/java', inodo: 'J17' }],
+    operaciones: [{ ln: '/usr/lib/java17/bin/java', a: '/etc/alternatives/java' }],
+    escenarios: [
+      { nombre: 'c) rm java17', operaciones: [{ rm: '/usr/lib/java17/bin/java' }] },
+      { nombre: 'd) rm del link', operaciones: [{ rm: '/etc/alternatives/java' }] },
+      {
+        nombre: 'e) rm de los dos',
+        operaciones: [{ rm: '/usr/lib/java17/bin/java' }, { rm: '/etc/alternatives/java' }],
+      },
+    ],
+  })
+  const h = renderRecorrido(r22)
+
+  it('una pestaña por escenario, cada una con los pasos comunes y los suyos', () => {
+    expect(r22.pasos).toBeUndefined()
+    expect(r22.variantes!.map((v) => [v.nombre, v.pasos.length])).toEqual([
+      ['c) rm java17', 3],
+      ['d) rm del link', 3],
+      ['e) rm de los dos', 4],
+    ])
+    expect(r22.variantes![1].pasos[2].titulo).toBe('rm /etc/alternatives/java')
+    expect(h).toContain('data-rc-pestana="2"')
+  })
+
+  it('cada escenario tiene sus fotogramas y su resumen de pasos', () => {
+    expect(h).toContain('data-el="e2-paso-3"')
+    expect(h).toContain(
+      'Pasos: inicial · ln · rm /usr/lib/java17/bin/java · rm /etc/alternatives/java',
+    )
+    expect(r22.variantes![2].pasos[3].texto).toContain('Llegó a 0')
+  })
+})
