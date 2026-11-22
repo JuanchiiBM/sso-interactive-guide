@@ -121,3 +121,21 @@ byte: 12000
     expect(() => bloqueSVG('fat', yamlF.replace(/inicio:.*\n/, ''))).toThrow(/inicio/)
   })
 })
+
+describe('bloque ```inodo', () => {
+  const yamlI = `titulo: Leer del byte 10500 al 544767
+bloque: 1024
+puntero: 4
+punteros: { directos: 10, simples: 1, dobles: 1 }
+bytes: [10500, 544767]
+`
+  it('arma el recorrido por los punteros', () => {
+    const html = bloqueSVG('inodo', yamlI)!
+    expect(html).toContain('data-recorrido')
+    expect(html).toContain('se leen 10 (522–531)')
+  })
+
+  it('rompe el build si falta un dato', () => {
+    expect(() => bloqueSVG('inodo', yamlI.replace(/puntero: 4\n/, ''))).toThrow(/falta `puntero`/)
+  })
+})
