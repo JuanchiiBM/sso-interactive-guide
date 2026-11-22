@@ -33,8 +33,22 @@ teoria:
 
 Bloques de 2 KiB, punteros de 32 bits, partición de 2 TiB.
 
-| Pregunta   | Cuenta                                                       |
-| ---------- | ------------------------------------------------------------ |
-| P          | 2048 B / 4 B = **512**                                       |
-| FS teórico | 2<sup>32</sup> × 2<sup>11</sup> = 2<sup>43</sup> = **8 TiB** |
-| FS real    | mínimo(8 TiB, 2 TiB) = **2 TiB**                             |
+```pasos
+titulo: P y tamaño del FS en ext2
+pasos:
+  - titulo: Todo en bytes
+    texto: 'Un puntero de 32 bits ocupa 32 / 8 = **4 B**. Antes de dividir, todo en bytes.'
+    grande: '32 bits / 8 = **4 B**'
+    resultado: puntero 4 B
+  - titulo: P
+    texto: 'Un bloque de punteros es un bloque lleno de punteros: 2048 B / 4 B = **512**.'
+    grande: 'P = 2048 B / 4 B = **512**'
+    resultado: P = 512
+  - titulo: FS teórico
+    texto: 'Acá sí van los bits: un puntero de 32 bits numera 2³² bloques de 2¹¹ B = 2⁴³ = **8 TiB**.'
+    grande: '2³² × 2¹¹ = 2⁴³ = **8 TiB**'
+    resultado: teórico 8 TiB
+  - titulo: FS real
+    texto: 'La partición es más chica: el mínimo es **2 TiB**.'
+    grande: 'mín(8 TiB, 2 TiB) = **2 TiB**'
+```

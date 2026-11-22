@@ -35,9 +35,24 @@ teoria:
 
 Bloques de 1 KiB, P = 256. Requisitos: archivos de hasta 12 KiB con la menor cantidad de accesos; el byte 200.000 en ≤ 2 accesos; ningún byte en más de 3; archivos de al menos 60 MiB.
 
-| Requisito        | Decisión                                              |
-| ---------------- | ----------------------------------------------------- |
-| hasta 12 KiB     | **12 PD**                                             |
-| byte 200.000     | bloque 195; el IS cubre del 12 al 267: **1 IS**       |
-| máximo 3 accesos | hasta el doble: **1 ID**, sin triple                  |
-| al menos 60 MiB  | (12 + 256 + 65.536) × 1 KiB = 65.804 KiB ≈ 64,3 MiB ✓ |
+```pasos
+titulo: Un requisito, una pieza del inodo
+pasos:
+  - titulo: Hasta 12 KiB
+    texto: 'Para leerlos con 1 acceso por bloque, todos sus bloques van en directos: 12 KiB / 1 KiB = **12 PD**.'
+    tabla: { titulo: Inodo, columnas: [Punteros, Cubre bloques], filas: [['12 PD', '0 a 11']], marca: 0, foco: 0 }
+    resultado: 12 PD
+  - titulo: Byte 200.000
+    texto: 'Está en el bloque 200.000 div 1024 = 195. Con 12 PD, el simple cubre del 12 al 267: cae ahí, **2 accesos**. Hace falta **1 IS**.'
+    tabla: { titulo: Inodo, columnas: [Punteros, Cubre bloques], filas: [['12 PD', '0 a 11'], ['1 IS', '12 a 267']], marca: 1, foco: 1 }
+    chequeo: { ok: true, texto: 'bloque 195 en el IS' }
+    resultado: 1 IS
+  - titulo: Máximo 3 accesos
+    texto: 'El doble son 3 accesos y el triple 4: se puede usar hasta el **doble**, sin triple.'
+    tabla: { titulo: Inodo, columnas: [Punteros, Cubre bloques], filas: [['12 PD', '0 a 11'], ['1 IS', '12 a 267'], ['1 ID', '268 a 65.803']], marca: 2, foco: 0 }
+    resultado: 1 ID
+  - titulo: Al menos 60 MiB
+    texto: 'Se verifica con el archivo máximo: (12 + 256 + 65.536) × 1 KiB = 65.804 KiB ≈ 64,3 MiB. Alcanza.'
+    grande: '65.804 KiB ≈ **64,3 MiB** ≥ 60 MiB'
+    chequeo: { ok: true, texto: '12 PD + 1 IS + 1 ID alcanza' }
+```

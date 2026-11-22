@@ -38,10 +38,26 @@ Cluster más grande: tabla más chica, pero más fragmentación interna.
 
 FAT16 con clusters de 4 KiB en un disco de 512 MiB, y un archivo de 10.000 B.
 
-| Pregunta              | Cuenta                                                         |
-| --------------------- | -------------------------------------------------------------- |
-| FS teórico            | 2<sup>16</sup> × 2<sup>12</sup> = 2<sup>28</sup> = **256 MiB** |
-| FS real               | mínimo(256 MiB, 512 MiB) = **256 MiB**                         |
-| Tamaño de la tabla    | 2<sup>16</sup> clusters × 2 B = **128 KiB**                    |
-| Espacio asignado      | 10.000 / 4096 = 2,44 → 3 clusters × 4 KiB = **12.288 B**       |
-| Fragmentación interna | 12.288 − 10.000 = **2.288 B**                                  |
+```pasos
+titulo: Cuentas en una FAT16
+pasos:
+  - titulo: FS teórico
+    texto: 'FAT16 numera 2¹⁶ clusters de 2¹² B: 2²⁸ = **256 MiB**.'
+    grande: '2¹⁶ × 2¹² = 2²⁸ = **256 MiB**'
+    resultado: teórico 256 MiB
+  - titulo: FS real
+    texto: 'No puede direccionar más de lo que numera: el mínimo entre 256 MiB y el disco de 512 MiB es **256 MiB**.'
+    grande: 'mín(256 MiB, 512 MiB) = **256 MiB**'
+    resultado: real 256 MiB
+  - titulo: Tamaño de la tabla
+    texto: 'Una entrada de 2 B por cluster del FS real: 2¹⁶ × 2 B = **128 KiB**.'
+    grande: '2¹⁶ entradas × 2 B = **128 KiB**'
+    resultado: tabla 128 KiB
+  - titulo: Espacio asignado
+    texto: 'Se asignan clusters enteros: 10.000 / 4096 = 2,44 → **3 clusters** = 12.288 B.'
+    grande: '3 clusters × 4 KiB = **12.288 B**'
+    resultado: asignado 12.288 B
+  - titulo: Fragmentación interna
+    texto: 'Lo que sobra del último cluster: 12.288 − 10.000 = **2.288 B**.'
+    grande: '12.288 − 10.000 = **2.288 B**'
+```
