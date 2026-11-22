@@ -220,6 +220,8 @@ const ejercicios = defineCollection({
     /** 'parcial' = ejercicio tomado de un examen (más exigente que los de guía). */
     dificultad: z.enum(['facil', 'media', 'dificil', 'parcial']).default('media'),
     tags: z.array(z.string()).default([]),
+    /** Tipos de la Metodología de su tema (ids, p. ej. `dl-df-hexa`); uno inexistente rompe el build. */
+    metodo: z.array(z.string()).default([]),
     /** Resoluciones paso a paso generadas por simulador (una por inciso). */
     simulaciones: z.array(simulacionSchema).default([]),
     /** Desafíos de código con semáforos (uno por inciso). */
@@ -248,4 +250,22 @@ const ejercicios = defineCollection({
   }),
 })
 
-export const collections = { temas, ejercicios }
+/** Un tipo de ejercicio por archivo: `metodologia/<parcial>/<tema>/<id>.md` (ver brain). */
+const metodologia = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/metodologia' }),
+  schema: z.object({
+    titulo: z.string(),
+    tema: reference('temas'),
+    orden: z.number(),
+    /** Fila del mapa de tipos: "Si el enunciado…". */
+    reconocer: z.string(),
+    /** Qué te dan y qué te piden, una línea bajo el título. */
+    resumen: z.string(),
+    /** Markdown inline; el arranque en negrita. */
+    trampas: z.array(z.string()).min(1),
+    /** Anclas de la teoría del tema (slugs de sus títulos). */
+    teoria: z.array(z.string()).default([]),
+  }),
+})
+
+export const collections = { temas, ejercicios, metodologia }
