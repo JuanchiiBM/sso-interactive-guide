@@ -39,6 +39,13 @@ aliases:
     hard link,
     soft link,
     contador de hard links,
+    bloque locks,
+    locks,
+    cerrojo,
+    lock obligatorio,
+    lock sugerido,
+    recorridoLocks,
+    simularLocks,
   ]
 tags: [contenido, recorrido, memoria, decision]
 actualizado: 2026-11-22
@@ -251,6 +258,38 @@ escenarios:                    # opcional: una pestaña por inciso que arranca d
   existe, inodo de `ln -s` repetido, directorio fuera de `volumenes`.
 - Ubicación: `links.ts` (simulación pura) + `recorrido-links.ts` + `links-bloque.ts`, con tests;
   estilos `lk-*`. Usado en fat-ufs ej-19, 20, 21, 22 (pestañas en 21 y 22) y 49. A mano: ej-25, 48.
+
+## Locks en el tiempo: bloque ` ```locks `
+
+Diseño **B · Código lado a lado** (issue #64, tablero
+https://claude.ai/artifact/NsqCw5ihjtsM2XFgVb5h9P#artboard-locks-B). Un paso por **turno de RR**: una
+columna de código por proceso (`--p1…`, estado arriba: ready · con lock / bloqueado / ejecuta /
+terminó), la línea donde terminó el turno en `--accent`, "✗ sin lock" en `--warn` y "espera ✗" en
+`--bad`; abajo los recuadros **Cerrojo** (modo, dueños, cola), **Archivo** y **Pantalla** (lo nuevo en
+`--warn`), y "Tabla a completar en este paso" con la fila del paso en `--ok`.
+
+```yaml
+titulo: Locks obligatorios compartidos con RR
+cerrojo: obligatorio     # obligatorio | sugerido
+modo: compartido         # compartido: el modo sale del open (read → compartido) | exclusivo: siempre
+archivo: { nombre: f, contenido: A }
+procesos:                # en el orden de Ready
+  - { nombre: P1, codigo: ["open(f, read)", "var = '-'", "lock(f)", "read(f, var)", "print(var)", "unlock(f)"] }
+```
+
+- Reglas (las de la cátedra en ej-09/10): el clock llega **después de cada `print`**; un `lock`
+  incompatible bloquea y va a la cola; un compartido entra aunque haya un exclusivo esperando (no hay
+  prioridad al escritor); `unlock` despierta a la cola en orden mientras sea compatible y los pasa a
+  Ready con el lock ya tomado. Con **obligatorio**, `read`/`write` sin lock mientras otro lo tiene
+  **falla sin bloquear** (las syscalls de archivo no son bloqueantes); con **sugerido**, pasa.
+- Se corta en el último `print`: los `unlock` que siguen no cambian la tabla. Por eso ej-09 da 7
+  pasos y no los 6 del tablero (el tablero juntaba los dos `unlock`).
+- El texto del paso se genera de los eventos (toma / bloquea / falla / pasa / libera e imprime).
+- Rompe el build: una instrucción que no sea `open`, `var = '…'`, `lock`, `unlock`, `read`, `write`
+  o `print`; otro archivo; `unlock` sin tener el lock; un `cerrojo` o `modo` inventado.
+- Ubicación: `locks-rr.ts` (simulación pura, + test), `recorrido-locks.ts` (+ test),
+  `locks-bloque.ts`; estilos `ck-*`. Usado en filesystem ej-09 y ej-10.
+- **Fuera:** ej-02, 03, 05 y 06 (MC teóricos sin línea de tiempo: P1 tiene el lock y P2 pide).
 
 ## Traza: recorrido automático
 
