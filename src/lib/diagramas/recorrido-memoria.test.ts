@@ -414,3 +414,56 @@ describe('recorridoMemoria: marca', () => {
     expect(h).toMatch(/rm-fila-ok[^>]*>[^]*?>P0</)
   })
 })
+
+describe('recorridoMemoria: lectura de un archivo contiguo', () => {
+  const spec = {
+    titulo: 'notas',
+    unidad: 'bloques' as const,
+    total: 32,
+    algoritmo: 'primer' as const,
+    textoInicial: '**Frames:** 2.',
+    inicial: [
+      { nombre: 'X', inicio: 0, tam: 4 },
+      { nombre: 'notas', inicio: 15, tam: 3 },
+    ],
+    lectura: {
+      archivo: 'notas',
+      desde: 8000,
+      bytes: 10240,
+      bloque: 8192,
+      titulo: 'qué bloques se leen',
+      rotulo: 'Disco (mismo supuesto que b-i)',
+      completar: [['Bloques leídos', '3', 'ok']],
+    },
+    operaciones: [],
+  }
+  const r = recorridoMemoria(spec)
+  const html = renderRecorrido(r)
+
+  it('el paso inicial cuenta qué bloques se leen', () => {
+    expect(r.pasos![0].titulo).toBe('qué bloques se leen')
+    expect(r.pasos![0].texto).toBe(
+      'El puntero está en el byte **8000** y se leen **10 KiB** (10240 B): los bytes 8000 a 18239. Con bloques de 8192 B, el 8000 cae en el lógico 0 y el 18239 en el lógico 2. Como la asignación es **contigua**, el lógico k es el bloque 15 + k del FS: se leen **15, 16 y 17**. **Frames:** 2.',
+    )
+  })
+
+  it('chips de la cuenta, el archivo marcado y una caja por bloque leído', () => {
+    expect(html).toContain('8000 / 8192 = 0,98 → lógico 0')
+    expect(html).toContain('18239 / 8192 = 2,23 → lógico 2')
+    expect(html).toContain('bloque del FS = 15 + lógico')
+    expect(html).toContain('>Disco (mismo supuesto que b-i)<')
+    expect(html).toContain('rm-marcado')
+    expect(html).toContain('>bloque 15 · lógico 0<')
+    expect(html).toContain('>bytes 16384 – 24575<')
+    expect(html).toContain('>lee 8000 – 8191 · 192 B<')
+    expect(html).toContain('>lee el bloque entero · 8192 B<')
+    expect(html).toContain('>lee 16384 – 18239 · 1856 B<')
+    expect(html).toContain('>Lo que había que completar<')
+  })
+
+  it('rompe si la lectura se pasa del archivo', () => {
+    expect(() => recorridoMemoria({ ...spec, lectura: { ...spec.lectura, bytes: 99999 } })).toThrow(
+      'se pasa de notas',
+    )
+  })
+})

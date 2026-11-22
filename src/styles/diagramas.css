@@ -1995,3 +1995,18 @@ rect.t3p-ref {
   font-size: 11px;
   fill: var(--muted);
 }
+.diagrama .rm-caja-tit {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+.diagrama .rm-caja-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+.diagrama .rm-caja-lee {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ok);
+}

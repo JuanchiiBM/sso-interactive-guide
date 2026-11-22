@@ -19,6 +19,16 @@ export interface SpecRecorridoMemoria extends SpecMemoria {
   tabla?: string
   /** Texto extra del autor para el estado inicial. */
   textoInicial?: string
+  /** El paso inicial cuenta qué bloques de un archivo contiguo se leen (solo en bloques). */
+  lectura?: {
+    archivo: string
+    desde: number
+    bytes: number
+    bloque: number
+    titulo?: string
+    rotulo?: string
+    completar?: string[][]
+  }
 }
 
 const NOMBRE: Record<AlgoritmoUbicacion, string> = {
@@ -43,6 +53,20 @@ const CHIP = 20
 const lista = (xs: string[]) =>
   xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}`
 
+function leer(
+  l: NonNullable<SpecRecorridoMemoria['lectura']>,
+  bloques: BloqueMem[],
+  unidad: string,
+) {
+  if (unidad !== 'bloques') throw new Error('memoria: `lectura` va con `unidad: bloques`')
+  const b = bloques.find((x) => x.nombre === l.archivo)
+  if (!b) throw new Error(`memoria: no existe ${l.archivo} para leer`)
+  const fin = l.desde + l.bytes - 1
+  const [primero, ultimo] = [Math.floor(l.desde / l.bloque), Math.floor(fin / l.bloque)]
+  if (ultimo >= b.tam) throw new Error(`memoria: la lectura se pasa de ${l.archivo}`)
+  return { l, b, primero, ultimo, fin }
+}
+
 export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const unidad = spec.unidad ?? 'hexa'
   const hexa = unidad === 'hexa'
@@ -65,6 +89,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const alg = NOMBRE[spec.algoritmo]
 
   const pasos = simularHuecos(spec)
+  const lect = spec.lectura && leer(spec.lectura, pasos[0].despues, unidad)
   const procesos = [
     ...new Set(pasos.flatMap((p) => [...p.antes, ...p.despues]).map((b) => b.proceso)),
   ]
@@ -80,6 +105,15 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     'neutro',
   ]
   const chipsDe = (p: PasoMem): [string, string][] => {
+    if (!p.op && lect) {
+      const { desde, bloque } = lect.l
+      const coc = (n: number) => `${n} / ${bloque} = ${(n / bloque).toFixed(2).replace('.', ',')}`
+      return [
+        [`${coc(desde)} → lógico ${lect.primero}`, 'neutro'],
+        [`${coc(lect.fin)} → lógico ${lect.ultimo}`, 'neutro'],
+        [`bloque del FS = ${lect.b.inicio} + lógico`, 'ok'],
+      ]
+    }
     if (!p.op) return p.huecosAntes.map((h) => [`hueco ${rango(h)} ${tam(h.tam)}`, 'neutro'])
     if ('libera' in p.op)
       return p.liberados.map((b) => [`${b.nombre} libera ${rango(b)}`, 'neutro'])
@@ -135,7 +169,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const marcaDe = (p: PasoMem) => (p.op && 'marca' in p.op ? p.op : undefined)
   const conMarca = pasos.some(marcaDe)
   const yMarcas = yDespues + BARRA + 14 + (conMarca ? 44 : 0)
-  const yTabla = yMarcas + 26
+  const yTabla = yMarcas + 26 + (lect ? 76 : 0)
 
   type Fila = [string[], string]
   const sufijo = unidad === 'KiB' || unidad === 'MiB' ? ` (${unidad})` : ''
@@ -219,12 +253,12 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     })
     return [...filas, ...huecos.map((h) => hueco(h, 'Hueco'))]
   }
-  const alto = spec.tabla
-    ? yTabla +
-      40 +
-      Math.max(...pasos.map((p) => (marcaDe(p)?.completar ?? filasDe(p)).length)) * 20 +
-      8
-    : yMarcas + 16
+  const completarDe = (p: PasoMem) =>
+    marcaDe(p)?.completar ?? (p.op ? undefined : spec.lectura?.completar)
+  const filasTabla = (p: PasoMem) => completarDe(p)?.length ?? (spec.tabla ? filasDe(p).length : 0)
+  const alto = pasos.some(filasTabla)
+    ? yTabla + 40 + Math.max(...pasos.map(filasTabla)) * 20 + 8
+    : yMarcas + 16 + (lect ? 76 : 0)
 
   const op = (p: PasoMem) => (p.op && 'agranda' in p.op ? p.op : undefined)
   const barra = (bloques: BloqueMem[], y: number, p: PasoMem, antes: boolean, marcado = '') => {
@@ -323,7 +357,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       .join('')
 
   const tabla = (p: PasoMem) => {
-    const completar = marcaDe(p)?.completar
+    const completar = completarDe(p)
     if (!spec.tabla && !completar) return ''
     const { titulo, columnas } = completar
       ? { titulo: 'Lo que había que completar', columnas: ['Campo', 'Valor'] }
@@ -372,6 +406,32 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     )
   }
 
+  // una caja por bloque leído: su número, su lógico, su rango de bytes y lo que se lee
+  const cajas = ({ l, b, primero, ultimo, fin }: NonNullable<typeof lect>) => {
+    const n = ultimo - primero + 1
+    const w = Math.min(200, (W - 12 * (n - 1)) / n)
+    const y = yMarcas + 14
+    return Array.from({ length: n }, (_, k) => {
+      const lg = primero + k
+      const [a, z] = [lg * l.bloque, (lg + 1) * l.bloque - 1]
+      const [d, h] = [Math.max(a, l.desde), Math.min(z, fin)]
+      const lee =
+        d === a && h === z
+          ? `lee el bloque entero · ${l.bloque} B`
+          : `lee ${d} – ${h} · ${h - d + 1} B`
+      const x = X0 + k * (w + 12)
+      return (
+        `<g class="rm-seg ${color(b)} rm-marcado"><rect x="${x}" y="${y}" width="${w}" height="58" rx="6"/>` +
+        texto(x + 10, y + 14, `bloque ${b.inicio + lg} · lógico ${lg}`, {
+          clase: 'rm-izq rm-caja-tit',
+        }) +
+        texto(x + 10, y + 31, `bytes ${a} – ${z}`, { clase: 'rm-izq rm-caja-sub' }) +
+        texto(x + 10, y + 47, lee, { clase: 'rm-izq rm-caja-lee' }) +
+        '</g>'
+      )
+    }).join('')
+  }
+
   const fotograma = (p: PasoMem, i: number) => {
     const chips = chipsPorPaso[i]
       .map(
@@ -387,7 +447,11 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       texto(der ? X0 + W : X0, y, t, { clase: `${der ? 'rm-der' : 'rm-izq'} rm-nota` })
     const antes = p.op ? rot(yAntes - 8, 'Antes') + barra(p.antes, yAntes, p, true) : ''
     const despues =
-      rot(yDespues - 8, p.op ? 'Después' : 'Memoria') + barra(p.despues, yDespues, p, false)
+      !p.op && lect
+        ? rot(yDespues - 8, lect.l.rotulo ?? 'Disco') +
+          barra(p.despues, yDespues, p, false, lect.b.nombre) +
+          cajas(lect)
+        : rot(yDespues - 8, p.op ? 'Después' : 'Memoria') + barra(p.despues, yDespues, p, false)
     const m = marcaDe(p)
     if (m) {
       // la barra es la del paso anterior (con lo que mostraba), más la DF y la regla de DL
@@ -439,6 +503,19 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   }
 
   const paso = (p: PasoMem): Omit<Paso, 'resaltar' | 'mostrar' | 'ocultar'> => {
+    if (!p.op && lect) {
+      const { l, b, primero, ultimo, fin } = lect
+      const kib =
+        l.bytes % 1024 === 0 ? `**${l.bytes / 1024} KiB** (${l.bytes} B)` : `**${l.bytes} B**`
+      const leidos = Array.from({ length: ultimo - primero + 1 }, (_, k) =>
+        String(b.inicio + primero + k),
+      )
+      const txt = `El puntero está en el byte **${l.desde}** y se leen ${kib}: los bytes ${l.desde} a ${fin}. Con bloques de ${l.bloque} B, el ${l.desde} cae en el lógico ${primero} y el ${fin} en el lógico ${ultimo}. Como la asignación es **contigua**, el lógico k es el bloque ${b.inicio} + k del FS: se leen **${lista(leidos)}**.`
+      return {
+        titulo: l.titulo ?? 'Qué bloques se leen',
+        texto: [txt, spec.textoInicial].filter(Boolean).join(' '),
+      }
+    }
     if (!p.op) {
       const hs = p.huecosAntes.map((h) => `${rango(h)} ${tam(h.tam)}`)
       return {
