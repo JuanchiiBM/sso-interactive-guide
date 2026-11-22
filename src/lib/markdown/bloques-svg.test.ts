@@ -167,3 +167,27 @@ operaciones:
     expect(() => bloqueSVG('links', yaml + '  - { rm: /etc/otro.txt }\n')).toThrow(/no existe/)
   })
 })
+
+describe('bloque ```locks', () => {
+  const yamlL = `
+titulo: Locks obligatorios compartidos
+cerrojo: obligatorio
+modo: compartido
+archivo: { nombre: f, contenido: A }
+procesos:
+  - { nombre: P1, codigo: ["open(f, read)", "var = '-'", "lock(f)", "read(f, var)", "print(var)", "unlock(f)"] }
+  - { nombre: P2, codigo: ["open(f, read)", "var = '-'", "read(f, var)", "print(var)"] }
+`
+  it('corre los turnos y dibuja el cerrojo', () => {
+    const svg = bloqueSVG('locks', yamlL)!
+    expect(svg).toContain('>Cerrojo de f (obligatorio)<')
+    expect(svg).toContain('read(f, var)  ✗ sin lock')
+  })
+
+  it('rompe el build con un campo que falta o un tipo de cerrojo inventado', () => {
+    expect(() => bloqueSVG('locks', yamlL.replace(/modo:.*\n/, ''))).toThrow(/modo/)
+    expect(() =>
+      bloqueSVG('locks', yamlL.replace('cerrojo: obligatorio', 'cerrojo: opcional')),
+    ).toThrow(/opcional/)
+  })
+})
