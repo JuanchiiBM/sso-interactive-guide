@@ -185,4 +185,9 @@ describe('recorridoLinks con escenarios', () => {
     )
     expect(r22.variantes![2].pasos[3].texto).toContain('Llegó a 0')
   })
+
+  it('la caja del directorio se ensancha si el título no entra', () => {
+    const w = Number(h.match(/<g class="lk-dir"><rect x="\d+" y="\d+" width="([\d.]+)"/)![1])
+    expect(w).toBeGreaterThanOrEqual('directorio /usr/lib/java17/bin'.length * 7.2 + 24)
+  })
 })

@@ -121,10 +121,19 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
   const vols = spec.volumenes ?? [
     { nombre: '', directorios: [...new Set(ultimo.entradas.map((e) => e.dir))] },
   ]
-  const g = vols.length > 1 ? GEO_VOLS : GEO_UNO
+  const g0 = vols.length > 1 ? GEO_VOLS : GEO_UNO
+  // la caja crece si un título o una entrada no entra (≈ 7.2 px por carácter a 12 px, 7.8 a 13 px)
+  const dw = Math.max(
+    g0.dw,
+    ...vols.flatMap((v) => v.directorios).map((d) => (11 + d.length) * 7.2 + 24),
+    ...ultimo.entradas.map((e) => (e.nombre.length + e.inodo.length + 2) * 7.8 + 40),
+  )
+  const gap = vols.length > 1 ? g0.gap : Math.max(120, g0.gap - (dw - g0.dw))
+  const g = { dw, gap, cw: g0.cw }
   const col = g.dw + g.gap + g.cw
   const y0Vol = vols.length > 1 ? 54 : 20
-  const ancho = vols.length > 1 ? vols.length * col + (vols.length - 1) * 40 + 20 : ANCHO
+  const ancho =
+    vols.length > 1 ? vols.length * col + (vols.length - 1) * 40 + 20 : Math.max(ANCHO, col + 20)
   const xs0 = new Map(vols.map((v, k) => [v.nombre, DX + k * (col + 40)]))
   const dx = (vol: string) => xs0.get(vol)!
   const cx = (vol: string) => dx(vol) + g.dw + g.gap
