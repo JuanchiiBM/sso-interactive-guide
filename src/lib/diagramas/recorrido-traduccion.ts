@@ -41,6 +41,17 @@ export function recorridoTraduccion(spec: SpecTraduccion): Recorrido {
     dir = s.base + s.tam
   }
   if (dir < spec.total) huecos.push({ inicio: dir, tam: spec.total - dir })
+  // lo que todavía no se sabe qué es: se dibuja con "?" hasta la tabla final
+  const desconocidos = (vistos: { base: number; tam: number }[]) => {
+    const r: { inicio: number; tam: number }[] = []
+    let d = 0
+    for (const v of [...vistos].sort((a, b) => a.base - b.base)) {
+      if (v.base > d) r.push({ inicio: d, tam: v.base - d })
+      d = v.base + v.tam
+    }
+    if (d < spec.total) r.push({ inicio: d, tam: spec.total - d })
+    return r
+  }
   const rango = (h: { inicio: number; tam: number }) =>
     `[${hx(h.inicio)}, ${hx(h.inicio + h.tam)}) ${kib(h.tam)}`
 
@@ -73,7 +84,9 @@ export function recorridoTraduccion(spec: SpecTraduccion): Recorrido {
             kib(h.tam),
           ),
         )
-      : []
+      : desconocidos(vistos).map((h) =>
+          parte(px(h.inicio), px(h.inicio + h.tam) - px(h.inicio), 'rm-hueco', '?', ''),
+        )
     return [...libres, ...ocupados].join('')
   }
 
