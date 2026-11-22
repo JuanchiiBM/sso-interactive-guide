@@ -15,6 +15,8 @@ export interface SpecCadenaFat {
   desde?: number
   /** Qué completaba el alumno en la cadena completa: los bloques en orden o las entradas de la FAT. */
   completar?: 'bloques' | 'fat'
+  /** Contenido de cada bloque (ej-30): va bajo la caja y se arma el del archivo. */
+  contenido?: Record<number, string>
 }
 
 const X0 = 20
@@ -155,6 +157,20 @@ export function recorridoCadenaFat(spec: SpecCadenaFat): Recorrido {
   function modoCadena(): Modo {
     const sig = (k: number) => String(k < n - 1 ? cadena[k + 1] : spec.tabla[cadena[k]])
     const total = `${n} bloque${n > 1 ? 's' : ''} × ${B} B = ${bytes(n * B)} asignados`
+    const cont = spec.contenido
+    for (const b of cont ? cadena : [])
+      if (cont![b] == null) throw new Error(`fat: falta el contenido del bloque ${b}`)
+    const leido = (i: number) =>
+      cadena
+        .slice(0, i + 1)
+        .map((b) => cont![b])
+        .join('')
+    const aporta = (k: number) =>
+      !cont
+        ? ''
+        : k === n - 1
+          ? ` El contenido es \`${leido(k)}\`.`
+          : ` Aporta \`${cont[cadena[k]]}\`.`
     return {
       foco: (i) => i,
       marca: '',
@@ -170,19 +186,25 @@ export function recorridoCadenaFat(spec: SpecCadenaFat): Recorrido {
             ],
             k < i ? 'fat-linea-pasada' : k === n - 1 ? 'fat-linea-ok' : '',
           ])
+        if (spec.contenido) out.push([[['contenido: '], [leido(i), 'fat-inicio']], ''])
         if (i === n - 1) out.push([[[total]], 'fat-linea-ok'])
         return out
       },
-      completar: cadena.map((b, k) =>
-        spec.completar === 'fat'
-          ? [`FAT[${b}]`, sig(k), k]
-          : [`${ORDINAL[k] ?? `${k + 1}.º`} bloque`, String(b), k],
-      ),
+      completar: spec.contenido
+        ? [
+            ['Primer cluster', String(cadena[0]), 0],
+            ['Contenido', leido(n - 1), n - 1],
+          ]
+        : cadena.map((b, k) =>
+            spec.completar === 'fat'
+              ? [`FAT[${b}]`, sig(k), k]
+              : [`${ORDINAL[k] ?? `${k + 1}.º`} bloque`, String(b), k],
+          ),
       textos: cadena.map((b, k) =>
         k === n - 1
           ? {
               titulo: `FAT[${b}] = ${sig(k)}: fin`,
-              texto: `El lógico ${L(k)} es el bloque **${b}** y **FAT[${b}] = ${sig(k)}**: es el último. Son **${total}**.`,
+              texto: `El lógico ${L(k)} es el bloque **${b}** y **FAT[${b}] = ${sig(k)}**: es el último. Son **${total}**.${aporta(k)}`,
             }
           : {
               titulo: `${k === 0 ? `Bloque ${b}` : `FAT[${cadena[k - 1]}] = ${b}`} (lógico ${L(k)}): seguir`,
@@ -190,7 +212,7 @@ export function recorridoCadenaFat(spec: SpecCadenaFat): Recorrido {
                 (k === 0
                   ? `El directorio da el primer bloque: **${b}** (lógico ${L(0)}). Cada entrada de la FAT dice cuál sigue: `
                   : `El lógico ${L(k)} es el bloque **${b}**; `) +
-                `**FAT[${b}] = ${sig(k)}** → se sigue.`,
+                `**FAT[${b}] = ${sig(k)}** → se sigue.${aporta(k)}`,
             },
       ),
     }
@@ -228,6 +250,9 @@ export function recorridoCadenaFat(spec: SpecCadenaFat): Recorrido {
           texto(cx, y + 36, String(b), { clase: 'fat-caja-n' }) +
           texto(cx, y + 70, `lógico ${L(k)}`, { clase: 'fat-logico' }) +
           texto(cx, y + 84, rango(k), { clase: 'fat-rango' }) +
+          (spec.contenido
+            ? texto(cx, y + 100, spec.contenido[b], { clase: 'fat-contenido' })
+            : '') +
           '</g>' +
           sig
         )

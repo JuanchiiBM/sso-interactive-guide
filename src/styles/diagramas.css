@@ -1419,6 +1419,13 @@ rect.t3p-ref {
 .diagrama .fat-eof {
   font-size: 11px;
 }
+.diagrama .fat-contenido {
+  font-size: 12px;
+  font-weight: 600;
+}
+.diagrama .fat-resto .fat-contenido {
+  fill: var(--muted);
+}
 .diagrama .fat-flecha {
   fill: var(--muted);
 }

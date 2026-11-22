@@ -180,3 +180,75 @@ describe('recorridoCadenaFat sin byte: la cadena completa', () => {
     expect(f).toMatch(/fat-comp fat-comp-ok"><text[^>]*>FAT\[10\]<\/text><text[^>]*>FIN</)
   })
 })
+
+describe('recorridoCadenaFat con el contenido de cada cluster (ej-30)', () => {
+  const t30 = {
+    0: 0,
+    1: 'FIN',
+    2: 9,
+    3: 8,
+    4: 'FIN',
+    5: 11,
+    6: 1,
+    7: 'error',
+    8: 13,
+    9: 'FIN',
+    10: 'FIN',
+    11: 10,
+    12: 14,
+    13: 6,
+    14: 4,
+    15: 2,
+  }
+  const c30 = {
+    0: '@@@@',
+    1: 'VOS!',
+    2: '_NO_',
+    3: 'SIST',
+    4: 'STA!',
+    5: 'KERN',
+    6: 'RATI',
+    7: 'AFER',
+    8: 'EMAS',
+    9: 'ES',
+    10: 'ANIC',
+    11: 'EL_P',
+    12: 'ACA_',
+    13: '_OPE',
+    14: 'NO_E',
+    15: 'ESTE',
+  }
+  const r30 = recorridoCadenaFat({ titulo: 'a)', tabla: t30, inicio: 3, bloque: 4, contenido: c30 })
+  const h = renderRecorrido(r30)
+  const fr = (k: number) => h.split(`data-el="paso-${k}"`)[1].split('data-el="paso-')[0]
+
+  it('el contenido va bajo cada caja y se suma paso a paso', () => {
+    expect(
+      fr(0)
+        .match(/class="fat-contenido"[^>]*>([^<]+)</g)!
+        .map((m) => m.split('>')[1].slice(0, -1)),
+    ).toEqual(['SIST', 'EMAS', '_OPE', 'RATI', 'VOS!'])
+    expect(fr(1)).toContain('contenido: <tspan class="fat-inicio">SISTEMAS</tspan>')
+    expect(r30.pasos![1].texto).toContain('Aporta `EMAS`.')
+    expect(r30.pasos![4].texto).toContain('El contenido es `SISTEMAS_OPERATIVOS!`.')
+  })
+
+  it('completa el primer cluster y el contenido', () => {
+    expect(fr(0)).toMatch(/fat-comp fat-comp-ok"><text[^>]*>Primer cluster<\/text><text[^>]*>3</)
+    expect(fr(4)).toMatch(
+      /fat-comp-ok"><text[^>]*>Contenido<\/text><text[^>]*>SISTEMAS_OPERATIVOS!</,
+    )
+  })
+
+  it('rompe el build si falta el contenido de un cluster de la cadena', () => {
+    expect(() =>
+      recorridoCadenaFat({
+        titulo: 'a)',
+        tabla: t30,
+        inicio: 3,
+        bloque: 4,
+        contenido: { 3: 'SIST' },
+      }),
+    ).toThrow('falta el contenido del bloque 8')
+  })
+})
