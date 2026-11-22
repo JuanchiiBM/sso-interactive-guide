@@ -7,6 +7,9 @@ import {
   accesosBloque,
   accesosByte,
   accesosRango,
+  accesosPorPuntero,
+  totalBP,
+  type AccesosPuntero,
   archivoMaximoRealFat,
   bitsNecesarios,
   clusterMinimo,
@@ -201,5 +204,53 @@ describe('ext2: accesos en resoluciones de parciales (sin contar el inodo)', () 
       punteros: 1032,
       total: 1053941,
     })
+  })
+})
+
+describe('ext2: desglose por puntero (accesosPorPuntero)', () => {
+  const fila = (p: AccesosPuntero) => [p.rotulo, p.leidos, p.datos, p.bp]
+
+  it('1C2026 TM (ej-47): PD sin leer, PIS entero, PID con 1 + 2', () => {
+    const ps = accesosPorPuntero({ directos: 10, simples: 1, dobles: 1 }, KiB, 4, 10, 531)
+    expect(ps.map(fila)).toEqual([
+      ['10 PD', null, 0, []],
+      ['PIS', [10, 265], 256, [1]],
+      ['PID', [266, 531], 266, [1, 2]],
+    ])
+    expect(ps.map((p) => [p.inicio, p.fin])).toEqual([
+      [0, 9],
+      [10, 265],
+      [266, 65801],
+    ])
+  })
+
+  it('2C2025 TM (ej-38): rótulos numerados y el PIT con 1 + 126 + 16.125', () => {
+    const c = { directos: 10, simples: 3, dobles: 2, triples: 1 }
+    const ps = accesosPorPuntero(c, KiB, 8, 0, 2 ** 21 - 1)
+    expect(ps.map((p) => p.rotulo)).toEqual([
+      '10 PD',
+      'PIS 1',
+      'PIS 2',
+      'PIS 3',
+      'PID 1',
+      'PID 2',
+      'PIT',
+    ])
+    expect(fila(ps[6])).toEqual(['PIT', [33162, 2097151], 2063990, [1, 126, 16125]])
+    expect(ps.reduce((s, p) => s + totalBP(p), 0)).toBe(16513)
+  })
+
+  it('2C2025 TT (ej-42): PIS desde la mitad y el 2.º PID con 1 + 5', () => {
+    const ps = accesosPorPuntero({ directos: 12, simples: 1, dobles: 2 }, 8 * KiB, 8, 800, 1053708)
+    expect(ps.map(fila)).toEqual([
+      ['12 PD', null, 0, []],
+      ['PIS', [800, 1035], 236, [1]],
+      ['PID 1', [1036, 1049611], 1048576, [1, 1024]],
+      ['PID 2', [1049612, 1053708], 4097, [1, 5]],
+    ])
+  })
+
+  it('rompe si el rango pasa el máximo del archivo', () => {
+    expect(() => accesosPorPuntero({ directos: 2 }, KiB, 4, 0, 2)).toThrow(/excede/)
   })
 })

@@ -153,6 +153,64 @@ export interface Accesos {
   total: number
 }
 
+export const SIGLA = ['PD', 'PIS', 'PID', 'PIT'] as const
+
+/** Lo que aporta un puntero del inodo (los directos van juntos) a la lectura de un rango de bloques. */
+export interface AccesosPuntero {
+  /** `10 PD`, `PIS`, `PID 2`… (con número solo si hay más de uno de ese nivel). */
+  rotulo: string
+  nivel: number
+  /** Bloques lógicos que cubre el puntero. */
+  inicio: number
+  fin: number
+  /** Bloques lógicos que se leen por este puntero, o null si ninguno. */
+  leidos: [number, number] | null
+  datos: number
+  /** Bloques de punteros que se leen en cada profundidad (1.er nivel primero). */
+  bp: number[]
+}
+
+/** Desglose por puntero de la lectura de los bloques lógicos [primero, ultimo] (base 0). */
+export function accesosPorPuntero(
+  conf: Conformacion,
+  bloque: number,
+  puntero: number,
+  primero: number,
+  ultimo: number,
+): AccesosPuntero[] {
+  const ppb = punterosPorBloque(bloque, puntero)
+  const indirectos = regiones(conf, ppb).filter((r) => r.nivel > 0)
+  const grupos = [
+    ...(conf.directos ? [{ nivel: 0, bloques: conf.directos, rotulo: `${conf.directos} PD` }] : []),
+    ...indirectos.map((r, i) => {
+      const iguales = indirectos.filter((o) => o.nivel === r.nivel).length
+      const n = indirectos.slice(0, i).filter((o) => o.nivel === r.nivel).length + 1
+      return { ...r, rotulo: SIGLA[r.nivel] + (iguales > 1 ? ` ${n}` : '') }
+    }),
+  ]
+  let inicio = 0
+  const out = grupos.map(({ nivel, bloques, rotulo }): AccesosPuntero => {
+    const desde = inicio
+    const fin = inicio + bloques - 1
+    inicio = fin + 1
+    const a = Math.max(primero, desde)
+    const b = Math.min(ultimo, fin)
+    if (a > b)
+      return { rotulo, nivel, inicio: desde, fin, leidos: null, datos: 0, bp: Array(nivel).fill(0) }
+    // en cada profundidad, los bloques de punteros que cubren [a, b]
+    const bp = Array.from({ length: nivel }, (_, prof) => {
+      const alcance = ppb ** (nivel - prof)
+      return Math.floor((b - desde) / alcance) - Math.floor((a - desde) / alcance) + 1
+    })
+    return { rotulo, nivel, inicio: desde, fin, leidos: [a, b], datos: b - a + 1, bp }
+  })
+  if (ultimo >= inicio) throw new Error('el rango excede el tamaño máximo del archivo')
+  return out
+}
+
+/** Bloques de punteros que se leen en total por un puntero. */
+export const totalBP = (p: AccesosPuntero) => p.bp.reduce((s, n) => s + n, 0)
+
 /**
  * Bloques que se leen para leer los bytes [desde, hasta] (base 0). Criterio de la cátedra:
  * bloques de datos + bloques de punteros, sin contar el inodo.
@@ -164,28 +222,16 @@ export function accesosRango(
   desde: number,
   hasta: number,
 ): Accesos {
-  const ppb = punterosPorBloque(bloque, puntero)
-  const regs = regiones(conf, ppb)
-  const primero = Math.floor(desde / bloque)
-  const ultimo = Math.floor(hasta / bloque)
-  const bloquesPunteros = new Set<string>()
-  let inicio = 0
-  for (let p = 0; p < regs.length; p++) {
-    const { nivel, bloques } = regs[p]
-    const a = Math.max(primero, inicio)
-    const b = Math.min(ultimo, inicio + bloques - 1)
-    // en cada profundidad, los bloques de punteros que cubren [a, b]
-    for (let prof = 0; a <= b && prof < nivel; prof++) {
-      const alcance = ppb ** (nivel - prof)
-      const desdeBP = Math.floor((a - inicio) / alcance)
-      const hastaBP = Math.floor((b - inicio) / alcance)
-      for (let k = desdeBP; k <= hastaBP; k++) bloquesPunteros.add(`${p}:${prof}:${k}`)
-    }
-    inicio += bloques
-  }
-  if (ultimo >= inicio) throw new Error('el rango excede el tamaño máximo del archivo')
-  const datos = ultimo - primero + 1
-  return { datos, punteros: bloquesPunteros.size, total: datos + bloquesPunteros.size }
+  const ps = accesosPorPuntero(
+    conf,
+    bloque,
+    puntero,
+    Math.floor(desde / bloque),
+    Math.floor(hasta / bloque),
+  )
+  const datos = ps.reduce((s, p) => s + p.datos, 0)
+  const punteros = ps.reduce((s, p) => s + totalBP(p), 0)
+  return { datos, punteros, total: datos + punteros }
 }
 
 export const accesosByte = (conf: Conformacion, bloque: number, puntero: number, byte: number) =>
