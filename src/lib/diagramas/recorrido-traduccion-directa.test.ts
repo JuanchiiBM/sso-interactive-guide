@@ -56,8 +56,8 @@ describe('recorridoTraduccionDirecta (DL → DF con límite y permiso)', () => {
     expect(f).toContain('2. Buscar la fila del segmento 0')
     expect(f).toContain('>Protección<')
     expect(f.match(/tr-fila-sel/g)).toHaveLength(1)
-    expect(f).toMatch(/class="tr-mal"[^>]*>0ABCDh</)
-    expect(frame(1)).toMatch(/class="tr-mal"[^>]*>Exec only</)
+    expect(f).toMatch(/class="rm-izq tr-mal"[^>]*>0ABCDh</)
+    expect(frame(1)).toMatch(/class="rm-izq tr-mal"[^>]*>Exec only</)
   })
 
   it('3. el límite falla primero y lo que sigue no se llega', () => {
@@ -88,7 +88,7 @@ describe('recorridoTraduccionDirecta (DL → DF con límite y permiso)', () => {
   it('chips: resueltos hasta el paso, el actual marcado y el resto con "?"', () => {
     const f = frame(2)
     expect(f).toMatch(/rm-chip-ok[^"]*"[^]*?20000h → 1B800h/)
-    expect(f).toMatch(/rm-chip-mal[^"]*"[^]*?10000h → Fault \(permiso\)/)
+    expect(f).toMatch(/rm-chip-mal tr-chip-pasado"[^]*?10000h → Fault \(permiso\)/)
     expect(f).toMatch(/rm-chip-mal tr-chip-actual"[^]*?0BEEFh → Fault \(límite\)/)
     expect(f).toMatch(/tr-chip-pendiente"[^]*?00ACEh → \?/)
   })

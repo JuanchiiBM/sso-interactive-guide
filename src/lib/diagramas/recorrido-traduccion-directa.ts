@@ -107,12 +107,12 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
 
   const y2 = dirs.some((x) => x.dl != null) ? 100 : 40
   const columnas = acceso ? ['Seg', 'Base', 'Largo', 'Protección'] : ['Seg', 'Base', 'Largo']
-  const anchos = [44, 84, 84, 104]
+  const anchos = [40, 76, 76, 100]
   const xs = anchos.map((_, j) => X0 + anchos.slice(0, j).reduce((a, b) => a + b, 0))
   const anchoTabla = xs[columnas.length - 1] + anchos[columnas.length - 1] - X0
   const tabla = (x: Dir) =>
     texto(X0, y2, `2. Buscar la fila del segmento ${x.seg}`, { clase: 'rm-izq rm-tabla-tit' }) +
-    columnas.map((t, j) => texto(xs[j] + anchos[j] / 2, y2 + 22, t, { clase: 'rm-enc' })).join('') +
+    columnas.map((t, j) => texto(xs[j] + 10, y2 + 22, t, { clase: 'rm-izq rm-enc' })).join('') +
     spec.segmentos
       .map((s, i) => {
         const y = y2 + 34 + i * 24
@@ -124,7 +124,7 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
           (sel ? `<rect x="${X0}" y="${y}" width="${anchoTabla}" height="24" rx="3"/>` : '') +
           celdas
             .map((c, j) =>
-              texto(xs[j] + anchos[j] / 2, y + 12, c, { clase: j === mal ? 'tr-mal' : '' }),
+              texto(xs[j] + 10, y + 12, c, { clase: j === mal ? 'rm-izq tr-mal' : 'rm-izq' }),
             )
             .join('') +
           '</g>'
@@ -132,11 +132,11 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
       })
       .join('')
 
-  const xc = X0 + 360
+  const xc = X0 + 310
   const chequeo = (i: number, estado: 'ok' | 'mal' | 'no', titulo: string, detalle?: string) => {
     const y = y2 + 12 + i * 48
     return (
-      `<g class="tr-chk tr-chk-${estado}"><rect x="${xc}" y="${y}" width="${W - 360}" height="40" rx="6"/>` +
+      `<g class="tr-chk tr-chk-${estado}"><rect x="${xc}" y="${y}" width="${W - 310}" height="40" rx="6"/>` +
       texto(xc + 16, y + 20, estado === 'ok' ? '✓' : estado === 'mal' ? '✗' : '–', {
         clase: 'tr-marca',
       }) +
@@ -205,7 +205,7 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
       const clase =
         i > k
           ? 'tr-chip-pendiente'
-          : `rm-chip-${x.fault ? 'mal' : 'ok'}${i === k ? ' tr-chip-actual' : ''}`
+          : `rm-chip-${x.fault ? 'mal' : 'ok'}${i === k ? ' tr-chip-actual' : ' tr-chip-pasado'}`
       const w = t.length * 6.6 + 16
       if (cx + w > X0 + W && cx > X0) {
         cx = X0

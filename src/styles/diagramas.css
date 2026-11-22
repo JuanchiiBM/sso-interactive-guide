@@ -1277,7 +1277,7 @@ rect.t3p-ref {
   font-family: var(--font-sans);
 }
 .diagrama .tr-det {
-  font-size: 12px;
+  font-size: 11px;
   fill: var(--fg-soft);
 }
 .diagrama .tr-chk-ok .tr-marca,
@@ -1300,6 +1300,9 @@ rect.t3p-ref {
 }
 .rm-chip-mal.tr-chip-actual rect {
   stroke: var(--bad);
+}
+.diagrama .rm-chip-mal.tr-chip-pasado text {
+  fill: color-mix(in srgb, var(--bad) 70%, var(--fg));
 }
 .tr-chip-pendiente rect {
   stroke-dasharray: 4 3;
