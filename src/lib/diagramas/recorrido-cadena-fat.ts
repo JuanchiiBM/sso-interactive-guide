@@ -13,7 +13,7 @@ export interface SpecCadenaFat {
 }
 
 const X0 = 20
-const W_DIR = 150
+const W_DIR = 166
 const X_COL = X0 + W_DIR + 24
 const COL = 92
 const PASO_COL = 104
