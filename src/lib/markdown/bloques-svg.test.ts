@@ -87,4 +87,23 @@ direcciones:
 `
     expect(bloqueSVG('traduccion', yaml03)).toContain('500 ≥ 100 → segmentation fault')
   })
+
+  const yamlB = `
+sentido: busqueda
+titulo: DF a DL
+bitsSegmento: 1
+bitsPagina: 3
+bitsOffset: 12
+bitsFrame: 4
+procesos:
+  - pid: PID1
+    segmentos:
+      - { seg: 1, paginas: { 0: 5 } }
+direcciones:
+  - { df: 0x5111 }
+`
+  it('con sentido busqueda encuentra el frame y arma la DL', () => {
+    expect(bloqueSVG('traduccion', yamlB)).toContain('= 8111h')
+    expect(() => bloqueSVG('traduccion', yamlB.replace(/bitsFrame:.*\n/, ''))).toThrow(/bitsFrame/)
+  })
 })

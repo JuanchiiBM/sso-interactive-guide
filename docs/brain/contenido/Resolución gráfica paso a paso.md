@@ -25,6 +25,10 @@ aliases:
     segmentation fault,
     chequeo de límite,
     protección,
+    segmentación paginada,
+    tabla de páginas,
+    inversa con búsqueda,
+    recorridoTraduccionBusqueda,
   ]
 tags: [contenido, recorrido, memoria, decision]
 actualizado: 2026-11-22
@@ -123,14 +127,52 @@ direcciones:
   - { dl: 0x0BEEF, texto: 'Texto extra del autor.' }
 ```
 
-- Compara `desplazamiento < largo` (la cátedra da el **largo**, ver la `nota` de ej-03).
+- Cada segmento lleva `largo` (se compara con <, ej-03/04) o `limite` (última dirección válida,
+  con ≤, ej-09): es lo que dice el enunciado, no se convierte uno en otro.
+- `permisos` en minúsculas se muestra como etiqueta (`r` → Read only); en mayúsculas o con guiones
+  (`RW-`) se muestra tal cual, como en el enunciado.
 - "(además es Read only)" sale solo cuando el permiso también hubiera fallado.
 - Rompe el build: una DL que no entra en los bits, un segmento que no está en la tabla, permisos con
   otra letra que r/w/x, una dirección sin `dl` ni `{ seg, desp }`.
 - Ubicación: `recorrido-traduccion-directa.ts` (+ test); `traduccion-bloque.ts` elige por `sentido`.
   Estilos `tr-bit-*`, `tr-fila-*`, `tr-chk-*`, `tr-chip-*`. Usado en memoria-real ej-03 y ej-04.
-- **Pendiente:** segmentación paginada (ej-06, 09, 11: una tabla de páginas por segmento y un tercer
-  corte) y la inversa con búsqueda. El YAML las admite como campos nuevos o como otro `sentido`.
+
+### Segmentación paginada (mismo `sentido: directo`)
+
+Diseños `trad-P1` (hexa) y `trad-P2` (decimal) del mismo tablero, extensión de B. Con `bitsPagina`
+cada segmento lleva `paginas: { pág: frame }` (puede ser parcial) y `bitsOffset` pasa a ser el offset
+dentro de la página.
+
+- Hexa: corte en 3 colores (segmento `--warn`, página `--p5`, offset neutro); DF = frame | offset.
+- Decimal: corte por división (DL = seg × 2^(pág+off) + desplazamiento; desplazamiento = pág × tamaño
+  + offset); DF = frame × tamaño + offset.
+- La tabla de segmentos solo aparece si hay límite/largo o `acceso`; si no (ej-06), los permisos van
+  como columna de la tabla de páginas. Chequeos: límite → permiso → la página tiene frame → DF; si
+  falla algo de la tabla de segmentos, la de páginas se atenúa (`tr-tabla-no`).
+- Página sin frame → "Fault (página)". Usado en memoria-real ej-06 y ej-09.
+
+## Inversa con búsqueda: ` ```traduccion ` con `sentido: busqueda`
+
+Diseño `trad-I`. DF → frame | offset → se busca el frame en **todas** las tablas de páginas (la que
+lo tiene, marcada; las otras, atenuadas) → DL = segmento | página | offset.
+
+```yaml
+sentido: busqueda
+bitsSegmento: 1
+bitsPagina: 3
+bitsOffset: 12
+bitsFrame: 4
+procesos:
+  - pid: PID1
+    segmentos:
+      - { seg: 0, nombre: RO, paginas: { 0: 7, 1: 6, 2: 10 } }
+direcciones:
+  - { df: 0x5111 }
+```
+
+Frame en ninguna tabla → "libre". Frame en dos tablas (compartido) **rompe el build**: la DL no
+sería única. Ubicación: `recorrido-traduccion-busqueda.ts` (+ test); estilos `tr-caja-*`,
+`tr-bit-frame`. Usado en memoria-real ej-11 a).
 
 ## Traza: recorrido automático
 

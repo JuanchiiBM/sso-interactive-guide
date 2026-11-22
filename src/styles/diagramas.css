@@ -1227,6 +1227,53 @@ rect.t3p-ref {
   fill: var(--surface-3);
   stroke: var(--line-strong);
 }
+.tr-bit-pag rect {
+  fill: color-mix(in srgb, var(--p5) 12%, var(--surface));
+  stroke: var(--p5);
+  stroke-width: 1.4;
+}
+.diagrama .tr-val-pag {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  fill: var(--p5);
+}
+.diagrama .tr-acento {
+  fill: var(--accent);
+  font-weight: 600;
+}
+.tr-tabla-no {
+  opacity: 0.55;
+}
+/* recorrido-traduccion-busqueda.ts: frame de la DF y la tabla de páginas que lo tiene */
+.tr-bit-frame rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 1.4;
+}
+.tr-caja rect {
+  fill: none;
+  stroke: var(--line);
+}
+.tr-caja-sel > rect {
+  stroke: var(--accent);
+  stroke-width: 1.4;
+}
+.tr-caja-otra {
+  opacity: 0.6;
+}
+.diagrama .tr-caja-tit {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--fg-soft);
+}
+.diagrama .tr-caja-sel .tr-caja-tit {
+  fill: var(--fg);
+}
+.diagrama .tr-dl-res {
+  font-size: 15px;
+  font-weight: 600;
+  fill: var(--ok);
+}
 .diagrama .tr-bit text {
   font-size: 14px;
 }
