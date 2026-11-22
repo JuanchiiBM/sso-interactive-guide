@@ -74,7 +74,10 @@ export function armador() {
     encab: string[],
     filas: { celdas: string[]; sel: boolean; foco?: number; tenue?: boolean }[],
   ) => {
-    const anchos = encab.map((h) => Math.max(56, h.length * 9 + 24))
+    // cada columna mide lo que su texto más largo (encabezado o celda)
+    const anchos = encab.map((h, j) =>
+      Math.max(56, h.length * 9 + 24, ...filas.map((f) => (f.celdas[j] ?? '').length * 8.6 + 24)),
+    )
     const xs = anchos.map((_, j) => x + anchos.slice(0, j).reduce((a, b) => a + b, 0))
     const w = anchos.reduce((a, b) => a + b, 0)
     return {
