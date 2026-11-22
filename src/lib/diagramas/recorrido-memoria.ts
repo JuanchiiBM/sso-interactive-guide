@@ -45,19 +45,19 @@ const lista = (xs: string[]) =>
 export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const unidad = spec.unidad ?? 'hexa'
   const hexa = unidad === 'hexa'
-  const bloques = unidad === 'bloques'
+  const enBloques = unidad === 'bloques'
   const dir = (n: number) =>
     hexa ? `${n.toString(16).toUpperCase().padStart(4, '0')}h` : String(n)
   const tam = (n: number) => {
     if (unidad === 'MiB') return `${n} MiB`
-    if (bloques) return `${n} ${n === 1 ? 'bloque' : 'bloques'}`
+    if (enBloques) return `${n} ${n === 1 ? 'bloque' : 'bloques'}`
     const kib = unidad === 'KiB' || n % 1024 === 0
     if (unidad === 'decimal' || !kib) return `${n} B`
     return n % 1024 === 0 ? `${n / 1024} ${hexa ? 'KiB' : 'MiB'}` : `${n} KiB`
   }
   // en bloques, cada parte muestra su rango inclusivo (21–26) en vez de la base o el tamaño
   const sub = (inicio: number, t: number, hueco: boolean) =>
-    bloques ? `${inicio}–${inicio + t - 1}` : hueco ? tam(t) : dir(inicio)
+    enBloques ? `${inicio}–${inicio + t - 1}` : hueco ? tam(t) : dir(inicio)
   const tamCol = (n: number) => (hexa ? dir(n) : String(n))
   const rango = (h: Hueco) => `[${dir(h.inicio)}, ${dir(h.inicio + h.tam)})`
   const px = (v: number) => X0 + (v / spec.total) * W
@@ -69,10 +69,28 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   ]
   const color = (b: BloqueMem) => `rm-p${(procesos.indexOf(b.proceso) % 8) + 1}`
 
+  const libreDe = (p: PasoMem) => p.huecosAntes.reduce((s, h) => s + h.tam, 0)
+  const compactarChip = (p: PasoMem, t: number): [string, string] => [
+    `total libre ${tam(libreDe(p))} ≥ ${tam(t)} → compactar`,
+    'neutro',
+  ]
   const chipsDe = (p: PasoMem): [string, string][] => {
     if (!p.op) return p.huecosAntes.map((h) => [`hueco ${rango(h)} ${tam(h.tam)}`, 'neutro'])
     if ('libera' in p.op)
       return p.liberados.map((b) => [`${b.nombre} libera ${rango(b)}`, 'neutro'])
+    if ('agranda' in p.op) {
+      const { agranda, tam: t } = p.op
+      const chips: [string, string][] = p.candidatos.map(({ hueco, estado }) => {
+        const r = `${rango(hueco)} ${tam(hueco.tam)}`
+        if (estado === 'no-al-lado') return [`${r} ✗ no está al lado`, 'mal']
+        if (estado === 'elegido') return [`después de ${agranda}: ${r} ✓ alcanza`, 'ok']
+        return [`después de ${agranda}: ${r} ✗ faltan ${tam(t - hueco.tam)}`, 'mal']
+      })
+      if (!p.candidatos.some((c) => c.estado !== 'no-al-lado'))
+        chips.unshift([`después de ${agranda}: sin hueco ✗`, 'mal'])
+      if (p.movidos.length) chips.push(compactarChip(p, t))
+      return chips
+    }
     const chips: [string, string][] = p.candidatos.map(({ hueco, estado }) => {
       const t = `${rango(hueco)} ${tam(hueco.tam)}`
       if (estado === 'no-entra') return [`${t} ✗ no entra`, 'mal']
@@ -80,10 +98,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       if (estado === 'empate') return [`${t} ✓ también vale (empate)`, 'ok']
       return [`${t} · entra, pero ${alg} no lo elige`, 'aviso']
     })
-    if (p.movidos.length) {
-      const libre = p.huecosAntes.reduce((s, h) => s + h.tam, 0)
-      chips.push([`total libre ${tam(libre)} ≥ ${tam(p.op.tam)} → compactar`, 'neutro'])
-    }
+    if (p.movidos.length) chips.push(compactarChip(p, p.op.tam))
     return chips
   }
 
@@ -124,24 +139,46 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     segsTabla.length + Math.max(...pasos.map((p) => huecosDe(spec.total, p.despues).length))
   const alto = spec.tabla ? yTabla + 40 + filasTabla * 20 + 8 : yMarcas + 16
 
+  const op = (p: PasoMem) => (p.op && 'agranda' in p.op ? p.op : undefined)
   const barra = (bloques: BloqueMem[], y: number, p: PasoMem, antes: boolean) => {
     const estadoHueco = (h: Hueco) => {
       if (!antes || !p.op || 'libera' in p.op) return ''
       const c = p.candidatos.find((x) => x.hueco.inicio === h.inicio)
-      return c ? ` rm-${c.estado}` : ''
+      return c ? ` rm-${c.estado === 'no-al-lado' ? 'no-entra' : c.estado}` : ''
     }
     const parte = (x0: number, w: number, clase: string, l1: string, l2: string) => {
       const chica = w < 46 ? ' rm-chica' : ''
       const textos =
         w < 22
           ? ''
-          : w < (bloques ? 38 : 60)
+          : w < (enBloques ? 38 : 60)
             ? texto(x0 + w / 2, y + BARRA / 2, l1, { clase: `rm-etq${chica}` })
             : texto(x0 + w / 2, y + BARRA / 2 - 7, l1, { clase: 'rm-etq' }) +
               texto(x0 + w / 2, y + BARRA / 2 + 9, l2, { clase: 'rm-etq rm-chica rm-sub' })
       return `<g class="rm-seg ${clase}"><rect x="${x0}" y="${y}" width="${w}" height="${BARRA}" rx="3"/>${textos}</g>`
     }
     const segs = bloques.map((b) => {
+      const c = !antes ? p.crece : undefined
+      if (c?.nombre === b.nombre) {
+        const viejo = { ...b, tam: b.tam - c.tam }
+        const mov = p.movidos.some((m) => m.nombre === b.nombre) ? ' rm-mov' : ''
+        return (
+          parte(
+            px(viejo.inicio),
+            px(c.inicio) - px(viejo.inicio),
+            color(b) + mov,
+            b.nombre,
+            sub(viejo.inicio, viejo.tam, false),
+          ) +
+          parte(
+            px(c.inicio),
+            px(c.inicio + c.tam) - px(c.inicio),
+            `${color(b)} rm-nuevo`,
+            `+${enBloques ? c.tam : tam(c.tam)}`,
+            op(p)?.etiqueta ?? sub(c.inicio, c.tam, false),
+          )
+        )
+      }
       const extra =
         !antes && p.nuevo?.nombre === b.nombre
           ? ' rm-nuevo'
@@ -165,7 +202,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         sub(h.inicio, h.tam, true),
       ),
     )
-    const rejilla = bloques
+    const rejilla = enBloques
       ? Array.from({ length: spec.total - 1 }, (_, k) => {
           const x = px(k + 1)
           return `<line class="rm-rejilla" x1="${x}" y1="${y + 3}" x2="${x}" y2="${y + BARRA - 3}"/>`
@@ -177,7 +214,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const flechas = (p: PasoMem) =>
     p.movidos
       .map((m) => {
-        const b = p.despues.find((x) => x.nombre === m.nombre)!
+        const b = p.antes.find((x) => x.nombre === m.nombre)!
         const x1 = px(m.de + b.tam / 2)
         const x2 = px(m.a + b.tam / 2)
         const y1 = yAntes + BARRA + 4
@@ -261,6 +298,27 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       const libre = hs.reduce((s, h) => s + h.tam, 0)
       const txt = `**${p.op.libera} termina**: libera ${lista(p.liberados.map((b) => b.nombre))}. Quedan **${tam(libre)} libres** en ${hs.length} ${hs.length === 1 ? 'hueco' : 'huecos'}.`
       return { titulo: `${p.op.libera} termina`, texto: [txt, extra].filter(Boolean).join(' ') }
+    }
+    if ('agranda' in p.op) {
+      const { agranda, tam: t } = p.op
+      const b = p.antes.find((x) => x.nombre === agranda)!
+      const lugar = p.candidatos.find((c) => c.estado !== 'no-al-lado')
+      const libres = huecosDe(spec.total, p.despues)
+      const sobra = libres.find((h) => h.inicio === p.crece!.inicio + t)?.tam ?? 0
+      const cuenta = `(${hexa ? tam(b.tam) : b.tam} → ${tam(b.tam + t)})`
+      const alLado = lugar
+        ? `El hueco de al lado mide ${tam(lugar.hueco.tam)}`
+        : 'Atrás no tiene hueco'
+      let txt = `**${agranda} crece ${tam(t)}** ${cuenta}. `
+      if (p.movidos.length) {
+        const movs = lista(p.movidos.map((m) => `${m.nombre} (${dir(m.de)} → ${dir(m.a)})`))
+        txt += `${alLado}: no alcanza. Libres hay ${tam(libreDe(p))} en ${p.huecosAntes.length} huecos: fragmentación externa → hay que **compactar**. Se ${p.movidos.length > 1 ? 'mueven' : 'mueve'} ${movs} y crece ahí.`
+      } else txt += `${alLado}: alcanza, crece en su lugar.`
+      txt += sobra ? ` Sobran **${tam(sobra)}**.` : ' Encaja justo.'
+      return {
+        titulo: p.op.titulo ?? `${agranda} crece ${tam(t)}`,
+        texto: [txt, p.op.texto].filter(Boolean).join(' '),
+      }
     }
     const titulo = `${p.op.carga} (${tam(p.op.tam)})`
     const nuevo = p.nuevo!

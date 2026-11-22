@@ -19,6 +19,16 @@ export type OpMem =
       texto?: string
     }
   | { libera: string; texto?: string }
+  | {
+      /** El bloque crece al final; si atrás no alcanza, compacta (como `carga`). */
+      agranda: string
+      tam: number
+      /** Rótulo de la parte nueva en la barra (por defecto, su base). */
+      etiqueta?: string
+      titulo?: string
+      compactar?: { mover: string; a: number }[]
+      texto?: string
+    }
 
 export interface SpecMemoria {
   total: number
@@ -27,7 +37,7 @@ export interface SpecMemoria {
   operaciones: OpMem[]
 }
 
-export type EstadoCandidato = 'elegido' | 'empate' | 'no-elegido' | 'no-entra'
+export type EstadoCandidato = 'elegido' | 'empate' | 'no-elegido' | 'no-entra' | 'no-al-lado'
 
 export interface PasoMem {
   /** null en el estado inicial. */
@@ -39,6 +49,8 @@ export interface PasoMem {
   movidos: { nombre: string; de: number; a: number }[]
   nuevo: BloqueMem | null
   liberados: BloqueMem[]
+  /** Parte nueva de un bloque que crece. */
+  crece?: { nombre: string; inicio: number; tam: number }
 }
 
 const procesoDe = (nombre: string) => nombre.split('.')[0]
@@ -72,6 +84,27 @@ function candidatos(huecos: Hueco[], tam: number, elegido: number, alg: Algoritm
   }))
 }
 
+function compactar(bloques: BloqueMem[], movs: { mover: string; a: number }[], total: number) {
+  const movidos = movs.map(({ mover, a }) => {
+    const b = bloques.find((x) => x.nombre === mover)
+    if (!b) throw new Error(`memoria: no existe ${mover} para mover`)
+    return { nombre: mover, de: b.inicio, a }
+  })
+  const nuevos = ordenar(
+    bloques.map((b) => {
+      const m = movidos.find((x) => x.nombre === b.nombre)
+      return m ? { ...b, inicio: m.a } : b
+    }),
+  )
+  try {
+    return { movidos, bloques: nuevos, huecos: huecosDe(total, nuevos) }
+  } catch {
+    throw new Error(`memoria: mover ${movidos.map((m) => m.nombre).join(', ')} pisa otro segmento`)
+  }
+}
+
+const atras = (huecos: Hueco[], b: BloqueMem) => huecos.find((h) => h.inicio === b.inicio + b.tam)
+
 export function simularHuecos(spec: SpecMemoria): PasoMem[] {
   let bloques = ordenar(
     spec.inicial.map((b) => ({ ...b, proceso: b.proceso ?? procesoDe(b.nombre) })),
@@ -99,30 +132,51 @@ export function simularHuecos(spec: SpecMemoria): PasoMem[] {
       pasos.push({ op, antes, despues: bloques, huecosAntes, ...vacio, liberados })
       continue
     }
+    if ('agranda' in op) {
+      const b = antes.find((x) => x.nombre === op.agranda)
+      if (!b) throw new Error(`memoria: no existe ${op.agranda} para agrandar`)
+      const lugar = atras(huecosAntes, b)
+      const alcanza = (lugar?.tam ?? 0) >= op.tam
+      const cands = huecosAntes.map((hueco) => ({
+        hueco,
+        estado: (hueco !== lugar
+          ? 'no-al-lado'
+          : alcanza
+            ? 'elegido'
+            : 'no-entra') as EstadoCandidato,
+      }))
+      let movidos: PasoMem['movidos'] = []
+      let actual = b
+      if (!alcanza) {
+        if (!op.compactar) throw new Error(`memoria: ${op.agranda} no crece y no hay compactación`)
+        const c = compactar(antes, op.compactar, spec.total)
+        movidos = c.movidos
+        actual = c.bloques.find((x) => x.nombre === b.nombre)!
+        if ((atras(c.huecos, actual)?.tam ?? 0) < op.tam)
+          throw new Error(`memoria: ${op.agranda} no crece ni después de compactar`)
+        bloques = c.bloques
+      }
+      const crece = { nombre: b.nombre, inicio: actual.inicio + actual.tam, tam: op.tam }
+      bloques = bloques.map((x) => (x === actual ? { ...x, tam: x.tam + op.tam } : x))
+      pasos.push({
+        op,
+        antes,
+        despues: bloques,
+        huecosAntes,
+        ...vacio,
+        candidatos: cands,
+        movidos,
+        crece,
+      })
+      continue
+    }
     let i = ubicar(huecosAntes, op.tam, spec.algoritmo, ultima)
     const cands = candidatos(huecosAntes, op.tam, i, spec.algoritmo)
     let movidos: PasoMem['movidos'] = []
     let huecos = huecosAntes
     if (i < 0) {
       if (!op.compactar) throw new Error(`memoria: ${op.carga} no entra y no hay compactación`)
-      movidos = op.compactar.map(({ mover, a }) => {
-        const b = bloques.find((x) => x.nombre === mover)
-        if (!b) throw new Error(`memoria: no existe ${mover} para mover`)
-        return { nombre: mover, de: b.inicio, a }
-      })
-      bloques = ordenar(
-        bloques.map((b) => {
-          const m = movidos.find((x) => x.nombre === b.nombre)
-          return m ? { ...b, inicio: m.a } : b
-        }),
-      )
-      try {
-        huecos = huecosDe(spec.total, bloques)
-      } catch {
-        throw new Error(
-          `memoria: mover ${movidos.map((m) => m.nombre).join(', ')} pisa otro segmento`,
-        )
-      }
+      ;({ movidos, bloques, huecos } = compactar(bloques, op.compactar, spec.total))
       i = ubicar(huecos, op.tam, spec.algoritmo, ultima)
       if (i < 0) throw new Error(`memoria: ${op.carga} no entra ni después de compactar`)
     }

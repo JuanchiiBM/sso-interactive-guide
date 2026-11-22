@@ -71,6 +71,7 @@ describe('recorridoMemoria', () => {
     expect(html).toContain('B.S1: base B000h → 0000h')
     expect(html).toContain('rm-mov')
     expect(html).toContain('rm-nuevo')
+    expect(html).not.toContain('rm-rejilla')
   })
 
   it('tabla de segmentos del proceso en cada paso', () => {
@@ -150,5 +151,71 @@ describe('recorridoMemoria en KiB y en bloques', () => {
     expect(bloques).toContain('Y (1 bloque)')
     expect(bloques).toContain('rm-rejilla')
     expect(bloques).toContain('>28<')
+  })
+})
+
+describe('recorridoMemoria: agrandar', () => {
+  const r37 = recorridoMemoria({
+    titulo: 'P2 crece',
+    unidad: 'KiB',
+    total: 16384,
+    algoritmo: 'primer',
+    inicial: [
+      { nombre: 'P1', inicio: 0, tam: 8192 },
+      { nombre: 'P2', inicio: 9216, tam: 4096 },
+      { nombre: 'P3', inicio: 14336, tam: 2048 },
+    ],
+    operaciones: [
+      { agranda: 'P2', tam: 1538, etiqueta: 'lo leído', compactar: [{ mover: 'P2', a: 8192 }] },
+    ],
+  })
+  const html37 = renderRecorrido(r37)
+  const r07 = recorridoMemoria({
+    titulo: 'notas crece',
+    unidad: 'bloques',
+    total: 32,
+    algoritmo: 'primer',
+    inicial: [
+      { nombre: 'X', inicio: 0, tam: 4 },
+      { nombre: 'Y', inicio: 6, tam: 9 },
+      { nombre: 'notas', inicio: 15, tam: 3 },
+      { nombre: 'Z', inicio: 21, tam: 6 },
+    ],
+    operaciones: [
+      {
+        agranda: 'notas',
+        tam: 8,
+        titulo: 'extender notas 8 bloques',
+        compactar: [{ mover: 'Z', a: 26 }],
+      },
+    ],
+  })
+  const html07 = renderRecorrido(r07)
+
+  it('chips: el hueco de atrás, los que no están al lado y el total', () => {
+    expect(html37).toContain('después de P2: [13312, 14336) 1 MiB ✗ faltan 514 KiB')
+    expect(html37).toContain('[8192, 9216) 1 MiB ✗ no está al lado')
+    expect(html37).toContain('total libre 2 MiB ≥ 1538 KiB → compactar')
+    expect(html07).toContain('después de notas: [18, 21) 3 bloques ✗ faltan 5 bloques')
+  })
+
+  it('título y texto generados (o el título del autor)', () => {
+    const p = r37.pasos![1]
+    expect(p.titulo).toBe('P2 crece 1538 KiB')
+    expect(p.texto).toBe(
+      '**P2 crece 1538 KiB** (4096 → 5634 KiB). El hueco de al lado mide 1 MiB: no alcanza. Libres hay 2 MiB en 2 huecos: fragmentación externa → hay que **compactar**. Se mueve P2 (9216 → 8192) y crece ahí. Sobran **510 KiB**.',
+    )
+    expect(r07.pasos![1].titulo).toBe('extender notas 8 bloques')
+    expect(r07.pasos![1].texto).toContain('Se mueve Z (21 → 26) y crece ahí. Encaja justo.')
+  })
+
+  it('después: la parte nueva aparte, con su rótulo, y la flecha del bloque movido', () => {
+    expect(html37).toContain('>+1538 KiB<')
+    expect(html37).toContain('>lo leído<')
+    expect(html37).toContain('P2: base 9216 → 8192')
+    expect(html07).toContain('>+8<')
+    expect(html07).toContain('>18–25<')
+    expect(html07).toContain('>15–17<')
+    expect(html07).toContain('>26–31<')
   })
 })

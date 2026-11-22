@@ -152,3 +152,46 @@ describe('empates y otros algoritmos', () => {
     expect(p.nuevo?.inicio).toBe(43008)
   })
 })
+
+// FAT/UFS ej-37: particiones dinámicas de 16 MiB (en KiB); P2 crece 1538 KiB
+const ej37: SpecMemoria = {
+  total: 16384,
+  algoritmo: 'primer',
+  inicial: [
+    { nombre: 'P1', inicio: 0, tam: 8192 },
+    { nombre: 'P2', inicio: 9216, tam: 4096 },
+    { nombre: 'P3', inicio: 14336, tam: 2048 },
+  ],
+  operaciones: [{ agranda: 'P2', tam: 1538, compactar: [{ mover: 'P2', a: 8192 }] }],
+}
+
+describe('simularHuecos: agrandar', () => {
+  it('crece en su lugar si el hueco de atrás alcanza', () => {
+    const [, p] = simularHuecos({ ...ej37, operaciones: [{ agranda: 'P2', tam: 1000 }] })
+    expect(p.despues.find((b) => b.nombre === 'P2')).toMatchObject({ inicio: 9216, tam: 5096 })
+    expect(p.crece).toEqual({ nombre: 'P2', inicio: 13312, tam: 1000 })
+    expect(p.candidatos.map((c) => c.estado)).toEqual(['no-al-lado', 'elegido'])
+  })
+
+  it('si no alcanza, compacta con los movimientos del autor y crece', () => {
+    const [, p] = simularHuecos(ej37)
+    expect(p.candidatos.map((c) => c.estado)).toEqual(['no-al-lado', 'no-entra'])
+    expect(p.movidos).toEqual([{ nombre: 'P2', de: 9216, a: 8192 }])
+    expect(p.despues.find((b) => b.nombre === 'P2')).toMatchObject({ inicio: 8192, tam: 5634 })
+    expect(p.crece).toEqual({ nombre: 'P2', inicio: 12288, tam: 1538 })
+    expect(huecosDe(16384, p.despues)).toEqual([{ inicio: 13826, tam: 510 }])
+  })
+
+  it('rompe sin compactación, si no alcanza después de compactar o si no existe', () => {
+    expect(() => simularHuecos({ ...ej37, operaciones: [{ agranda: 'P2', tam: 1538 }] })).toThrow(
+      'no hay compactación',
+    )
+    expect(() =>
+      simularHuecos({
+        ...ej37,
+        operaciones: [{ agranda: 'P2', tam: 1538, compactar: [{ mover: 'P3', a: 14336 }] }],
+      }),
+    ).toThrow('ni después de compactar')
+    expect(() => simularHuecos({ ...ej37, operaciones: [{ agranda: 'P9', tam: 1 }] })).toThrow('P9')
+  })
+})
