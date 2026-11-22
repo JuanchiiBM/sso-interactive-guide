@@ -12,7 +12,8 @@ import { grupo, texto } from './svg'
 
 export interface SpecRecorridoMemoria extends SpecMemoria {
   titulo: string
-  unidad?: 'hexa' | 'decimal'
+  /** KiB, MiB y bloques: los números del enunciado, sin convertir. */
+  unidad?: 'hexa' | 'decimal' | 'KiB' | 'MiB' | 'bloques'
   /** Proceso cuya tabla de segmentos se muestra en cada paso. */
   tabla?: string
   /** Texto extra del autor para el estado inicial. */
@@ -42,10 +43,21 @@ const lista = (xs: string[]) =>
   xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} y ${xs[xs.length - 1]}`
 
 export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
-  const hexa = spec.unidad !== 'decimal'
+  const unidad = spec.unidad ?? 'hexa'
+  const hexa = unidad === 'hexa'
+  const bloques = unidad === 'bloques'
   const dir = (n: number) =>
     hexa ? `${n.toString(16).toUpperCase().padStart(4, '0')}h` : String(n)
-  const tam = (n: number) => (hexa && n % 1024 === 0 ? `${n / 1024} KiB` : `${n} B`)
+  const tam = (n: number) => {
+    if (unidad === 'MiB') return `${n} MiB`
+    if (bloques) return `${n} ${n === 1 ? 'bloque' : 'bloques'}`
+    const kib = unidad === 'KiB' || n % 1024 === 0
+    if (unidad === 'decimal' || !kib) return `${n} B`
+    return n % 1024 === 0 ? `${n / 1024} ${hexa ? 'KiB' : 'MiB'}` : `${n} KiB`
+  }
+  // en bloques, cada parte muestra su rango inclusivo (21–26) en vez de la base o el tamaño
+  const sub = (inicio: number, t: number, hueco: boolean) =>
+    bloques ? `${inicio}–${inicio + t - 1}` : hueco ? tam(t) : dir(inicio)
   const tamCol = (n: number) => (hexa ? dir(n) : String(n))
   const rango = (h: Hueco) => `[${dir(h.inicio)}, ${dir(h.inicio + h.tam)})`
   const px = (v: number) => X0 + (v / spec.total) * W
@@ -123,7 +135,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       const textos =
         w < 22
           ? ''
-          : w < 60
+          : w < (bloques ? 38 : 60)
             ? texto(x0 + w / 2, y + BARRA / 2, l1, { clase: `rm-etq${chica}` })
             : texto(x0 + w / 2, y + BARRA / 2 - 7, l1, { clase: 'rm-etq' }) +
               texto(x0 + w / 2, y + BARRA / 2 + 9, l2, { clase: 'rm-etq rm-chica rm-sub' })
@@ -141,7 +153,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         px(b.inicio + b.tam) - px(b.inicio),
         color(b) + extra,
         b.nombre,
-        dir(b.inicio),
+        sub(b.inicio, b.tam, false),
       )
     })
     const huecos = huecosDe(spec.total, bloques).map((h) =>
@@ -150,10 +162,16 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         px(h.inicio + h.tam) - px(h.inicio),
         `rm-hueco rm-rayado${estadoHueco(h)}`,
         'libre',
-        tam(h.tam),
+        sub(h.inicio, h.tam, true),
       ),
     )
-    return [...huecos, ...segs].join('')
+    const rejilla = bloques
+      ? Array.from({ length: spec.total - 1 }, (_, k) => {
+          const x = px(k + 1)
+          return `<line class="rm-rejilla" x1="${x}" y1="${y + 3}" x2="${x}" y2="${y + BARRA - 3}"/>`
+        })
+      : []
+    return [...huecos, ...segs, ...rejilla].join('')
   }
 
   const flechas = (p: PasoMem) =>

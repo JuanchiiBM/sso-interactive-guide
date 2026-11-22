@@ -107,3 +107,48 @@ describe('recorridoMemoria en decimal', () => {
     expect(html07).toContain('8192 (nuevo)')
   })
 })
+
+describe('recorridoMemoria en KiB y en bloques', () => {
+  const kib = renderRecorrido(
+    recorridoMemoria({
+      titulo: 'Particiones',
+      unidad: 'KiB',
+      total: 16384,
+      algoritmo: 'primer',
+      inicial: [
+        { nombre: 'P1', inicio: 0, tam: 8192 },
+        { nombre: 'P2', inicio: 9216, tam: 4096 },
+      ],
+      operaciones: [{ carga: 'P3', tam: 512 }],
+    }),
+  )
+  const bloques = renderRecorrido(
+    recorridoMemoria({
+      titulo: 'Disco',
+      unidad: 'bloques',
+      total: 32,
+      algoritmo: 'primer',
+      inicial: [
+        { nombre: 'X', inicio: 0, tam: 4 },
+        { nombre: 'notas', inicio: 15, tam: 3 },
+      ],
+      operaciones: [{ carga: 'Y', tam: 1 }],
+    }),
+  )
+
+  it('KiB: los números del enunciado, y MiB cuando da justo', () => {
+    expect(kib).toContain('[8192, 9216) 1 MiB ✓ elegido')
+    expect(kib).toContain('[13312, 16384) 3 MiB')
+    expect(kib).toContain('>16384<')
+    expect(kib).toContain('P3 (512 KiB)')
+  })
+
+  it('bloques: rango inclusivo bajo cada nombre, rejilla y marcas cada 4', () => {
+    expect(bloques).toContain('>15–17<')
+    expect(bloques).toContain('>0–3<')
+    expect(bloques).toContain('[4, 15) 11 bloques ✓ elegido')
+    expect(bloques).toContain('Y (1 bloque)')
+    expect(bloques).toContain('rm-rejilla')
+    expect(bloques).toContain('>28<')
+  })
+})

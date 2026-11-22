@@ -1952,3 +1952,7 @@ rect.t3p-ref {
 .diagrama .ded-resp .ded-tit {
   fill: var(--fg);
 }
+.rm-rejilla {
+  stroke: var(--line);
+  stroke-width: 1;
+}
