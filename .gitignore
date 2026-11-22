@@ -50,3 +50,4 @@ docs/planes/
 # ── Python (scripts de la skill project-brain) ──
 __pycache__/
 *.pyc
+docs/designs/
