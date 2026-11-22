@@ -46,6 +46,8 @@ export interface PasoTlb {
   hit: number | null
   pf: boolean
   frame: number
+  /** Frames del proceso que tenían página antes de esta referencia. */
+  ocupados: number[]
   /** Frames del proceso antes del PF (para explicar LRU); solo si hubo víctima. */
   usos?: { pagina: number; acc: number }[]
   victima?: { pagina: number; frame: number; acc: number }
@@ -59,6 +61,9 @@ export interface PasoTlb {
   accesosTP: number
   pfs: number
 }
+
+/** "A" → "PA", como en los enunciados; "P1" queda igual. */
+export const rotuloProceso = (p: string) => (p.startsWith('P') ? p : `P${p}`)
 
 export function simularTlb(spec: SpecTlb): PasoTlb[] {
   const nombres = Object.keys(spec.procesos)
@@ -135,6 +140,7 @@ export function simularTlb(spec: SpecTlb): PasoTlb[] {
       hit: h >= 0 ? h : null,
       pf: inst.fallo,
       frame,
+      ocupados: marcos.filter((m) => m.pagina != null).map((m) => m.frame),
       tlbAntes,
       tlb,
       hits,

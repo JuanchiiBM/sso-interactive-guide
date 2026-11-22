@@ -1806,3 +1806,92 @@ rect.t3p-ref {
 .diagrama .ck-tabla-nueva {
   fill: var(--ok);
 }
+
+/* recorrido-tlb: camino de la referencia (tablero tlb-B) */
+.diagrama .tlb-paso text {
+  font-size: 12px;
+}
+.diagrama .tlb-paso .tlb-etq,
+.diagrama .tlb-paso .tlb-porque,
+.diagrama .tlb-paso .tlb-tit {
+  font-family: var(--font-sans);
+}
+.diagrama .tlb-paso .tlb-etq,
+.diagrama .tlb-enc text {
+  fill: var(--muted);
+}
+.diagrama .tlb-paso .tlb-tit {
+  font-size: 13px;
+  font-weight: 600;
+}
+.diagrama .tlb-paso .tlb-dato {
+  font-size: 13px;
+}
+.diagrama .tlb-paso .tlb-porque,
+.diagrama .tlb-paso .tlb-hasta {
+  fill: var(--fg-soft);
+}
+.diagrama .tlb-enc text {
+  font-size: 11px;
+}
+.tlb-linea {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+.tlb-etapa circle {
+  fill: var(--surface);
+  stroke-width: 1.5;
+}
+.diagrama .tlb-paso .tlb-num {
+  font-size: 11px;
+}
+.tlb-caja rect {
+  stroke-width: 1;
+}
+.tlb-celda {
+  fill: none;
+  stroke: var(--line);
+}
+.diagrama .tlb-nueva text {
+  fill: var(--ok);
+}
+.tlb-ok circle,
+.tlb-ok rect {
+  stroke: var(--ok);
+}
+.tlb-mal circle,
+.tlb-mal rect {
+  stroke: var(--bad);
+}
+.tlb-aviso circle,
+.tlb-aviso rect {
+  stroke: var(--warn);
+}
+.tlb-neutro circle,
+.tlb-neutro rect {
+  stroke: color-mix(in srgb, var(--fg) 28%, transparent);
+}
+.tlb-ok rect {
+  fill: color-mix(in srgb, var(--ok) 8%, var(--surface));
+}
+.tlb-mal rect {
+  fill: color-mix(in srgb, var(--bad) 8%, var(--surface));
+}
+.tlb-aviso rect {
+  fill: color-mix(in srgb, var(--warn) 8%, var(--surface));
+}
+.tlb-neutro rect {
+  fill: var(--surface-3);
+}
+.diagrama .tlb-ok .tlb-num {
+  fill: var(--ok);
+}
+.diagrama .tlb-mal .tlb-num {
+  fill: var(--bad);
+}
+.diagrama .tlb-aviso .tlb-num {
+  fill: var(--warn);
+}
+.diagrama .tlb-neutro .tlb-num {
+  fill: var(--fg-soft);
+}
