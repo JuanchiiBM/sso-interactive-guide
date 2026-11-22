@@ -330,6 +330,10 @@ procesos:                # en el orden de Ready
 
 Camino de cada referencia por la TLB, y víctima real contra cada algoritmo. Ver [[Resolución gráfica de la TLB]].
 
+## Metodología: pasos cortos
+
+` ```traduccion ` con `sentido: pasos`, ` ```pasos ` y ` ```traza `: ver [[Metodología de resolución]].
+
 ## Traza: recorrido automático
 
 `TrazaDesafio` dibuja `recorridoTraza(traza, alg)` arriba de la justificación, para **todas** las

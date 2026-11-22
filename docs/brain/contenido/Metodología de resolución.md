@@ -18,6 +18,12 @@ aliases:
     en-ejercicios,
     getMetodologias,
     ChecklistEntrega,
+    bloque pasos,
+    bloque traza,
+    recorridoPasos,
+    recorridoTraduccionPasos,
+    slides,
+    armador,
   ]
 tags: [componente, contenido, rutas]
 actualizado: 2026-11-22
@@ -65,6 +71,29 @@ El **id** del tipo es el nombre del archivo y es su ancla en la página (`#dl-df
 arma sola, después del cuerpo: "Practicalo en …" (los ejercicios con ese `metodo`), Trampas y "En la
 teoría" (el texto sale del título real de la sección si no se da `texto`).
 
+## Ejemplos: siempre con gráfico, una slide por paso
+
+Pedido del dueño (ronda 3): ejemplos interactivos, **4 pasos cortos mejor que 1 enorme**. Todos los
+tipos tienen gráfico. Lenguaje visual común (diseño `Traduccion-pasos` del lienzo): chips arriba con
+lo ya resuelto, y abajo tabla con fila marcada, chequeo ✓/✗ y resultado grande.
+
+- ` ```traduccion ` con `sentido: pasos` (`recorrido-traduccion-pasos.ts`): DL → DF con `dl` y
+  `esquemas` (una **pestaña por esquema**: segmentación pura, paginación pura, segmentada paginada,
+  con la misma DL), DF → DL con `df` y `procesos`, y reconstruir con `pistas`
+  (`{ dl, df }`, `{ ultima }`, `{ alFinal: true }` + `total`). Los ejercicios siguen con
+  `directo`/`busqueda`/inversa: esto es solo para la Metodología.
+- ` ```pasos ` (`pasos-bloque.ts`): genérico, en YAML. Cada paso: `titulo`, `texto`, y opcionales
+  `campos` (barra de bits), `tabla` (`marca`, `foco`), `chequeo`, `grande` (`**x**` en acento),
+  `resultado` (chip para los siguientes), `limpiar`. `variantes` → pestañas.
+- ` ```traza ` (`traza-bloque.ts`): la grilla de reemplazo desde un estado (rótulos `A0`), la misma
+  de los ejercicios.
+- Piezas comunes en `slides.ts` (`armador`, `filaBits`, `recorridoDeSlides`).
+- Reusados: ` ```deducir `, ` ```fat `, ` ```inodo `, ` ```links `, ` ```locks `, ` ```memoria ` y el
+  recorrido `metodos-asignacion` de la teoría.
+
+⚠️ El `texto` de un paso se escapa (solo `código` y **negrita**): superíndices en Unicode (2¹¹), no
+`<sup>`.
+
 ## Cómo se llega
 
 - **Sidebar:** Teoría · Metodología · ejercicios, solo en temas con tipos.
@@ -88,6 +117,9 @@ teoría" (el texto sale del título real de la sección si no se da `texto`).
   en la página. Nada los usa (el índice va por los `##` de los tipos).
 - **"De dónde sale" sin encabezados:** `thead` con todas las celdas vacías se oculta, y en celular
   esas tablas y el mapa se apilan (filas en vez de columnas).
+- **Dev server:** el plugin de markdown queda cacheado; si cambia un bloque (`*-bloque.ts`,
+  `bloques-svg.ts`), `pnpm astro dev stop`, `rm -rf .astro node_modules/.astro` y volver a levantar.
+  Un error de bloque en dev deja el cuerpo vacío (solo se ve en `astro dev logs`).
 - El checklist tilda pero **no guarda**: es a propósito, sin progreso.
 - Buscador: `tipo:Metodología` entra en el grupo de Teoría (`agrupar` en `resultados.ts`).
 - Fuera, por decisión del dueño: §0 "Herramientas de cuenta" (ya está en la teoría de Memoria real)
