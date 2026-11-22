@@ -49,7 +49,7 @@ Para que exista hacen falta dos cosas que ya aparecieron en memoria real:
 
 Las direcciones lógicas pasan a referirse al **espacio virtual** (son más largas) y las físicas a la memoria real. La MMU sigue traduciendo, ahora con un dato más: si la página está o no en RAM.
 
-Los bits se calculan igual que en [memoria real](/teoria/parcial-2/memoria-real/#cuántos-bits-tiene-cada-dirección), con una diferencia: la RAM **ya no limita** a la DL. La DL sale de lo que el proceso tiene que poder direccionar (`log₂` de ese tamaño) y la DF sigue saliendo del tamaño de la RAM.
+Los bits se calculan igual que en [memoria real](/teoria/parcial-2/memoria-real/#cuántos-bits-tiene-cada-dirección), con una diferencia: la RAM **ya no limita** a la DL. La DL sale de lo que el proceso tiene que poder direccionar (`2^DL` = ese tamaño) y la DF sigue saliendo del tamaño de la RAM.
 
 **¿Cuántas páginas puede tener como máximo un programa?** Con memoria virtual, lo que no entra en RAM queda en disco, así que el tamaño de la RAM **no** pone el límite. El límite es cuántas direcciones distintas puede escribir el programa:
 
@@ -99,7 +99,7 @@ pág 2 →  0   –    ← en disco
 
 - **El número de página no se guarda**: es la posición de la entrada en la tabla, como el número de renglón de un cuaderno.
 - **El bit P hace falta** porque el frame 0 es un frame válido: no se puede usar "frame = 0" para decir "no está".
-- **Bits del campo frame:** `log₂(cantidad de frames)`, con `frames = RAM / tamaño de página`.
+- **Bits del campo frame:** `2^bits = cantidad de frames`, con `frames = RAM / tamaño de página`.
 - **Tamaño del bitmap:** 1 bit por frame, así que `frames / 8` bytes. Con 128 frames: 128 bits = 16 bytes. Una alternativa es una **lista de frames libres**, que ocupa menos cuando quedan pocos libres pero cambia de tamaño todo el tiempo.
 - **El formato de una entrada se arma con el enunciado:** P y frame siempre; U si el algoritmo es clock; U y M si es clock mejorado; el instante de referencia si es LRU; R/W/X si habla de permisos. Cada requisito del enunciado es un campo.
 

@@ -54,7 +54,7 @@ Ejemplo: `2F0A` = `0010 1111 0000 1010`. Para volver a hexa, se agrupa de a 4 **
 
 Cualquier otro tamaño sale sumando exponentes: 4 KiB = 2<sup>2</sup> × 2<sup>10</sup> = 2<sup>12</sup>; 64 KiB = 2<sup>16</sup>; 0,5 KiB = 512 bytes = 2<sup>9</sup>. Y **dividir es restar exponentes**: 64 KiB / 512 B = 2<sup>16</sup> / 2<sup>9</sup> = 2<sup>7</sup> = 128. Trabajar en potencias de 2 evita las cuentas con números grandes.
 
-Para numerar `N` cosas hacen falta `log₂ N` bits: 128 frames → 7 bits. Si `N` no es potencia de 2, se redondea para arriba (20 páginas → 5 bits).
+Para numerar `N` cosas hacen falta `b` bits, con `2^b = N`: 128 frames = 2<sup>7</sup> → 7 bits. Si `N` no es potencia de 2, se toma la potencia siguiente (20 páginas → 2<sup>5</sup> = 32 → 5 bits).
 
 ### División entera con resto
 
@@ -258,15 +258,15 @@ Tanto los procesos como la memoria se dividen en partes **del mismo tamaño**: *
 
 ### Cuántos bits tiene cada dirección
 
-La cuenta va al revés de la de arriba: de cantidades y tamaños a bits. Para numerar `N` cosas hacen falta `log₂ N` bits (si `N` no es potencia de 2, se redondea para arriba: 20 páginas piden 5 bits).
+La cuenta va al revés de la de arriba: de cantidades y tamaños a bits. Para numerar `N` cosas hacen falta `b` bits, con `2^b = N` (si `N` no es potencia de 2, se toma la potencia siguiente: 20 páginas → 2<sup>5</sup> = 32 → 5 bits).
 
-| Parte                     | Bits                                                                                                                                                |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Desplazamiento**        | `log₂(tamaño de página)`. Es igual en la DL y en la DF, porque página y frame miden lo mismo.                                                       |
-| **Número de página**      | `log₂(cantidad de páginas)`; las páginas son `tamaño del espacio lógico / tamaño de página`.                                                        |
-| **Número de frame**       | `log₂(cantidad de frames)`; los frames son `tamaño de la RAM / tamaño de página`. Es también lo que ocupa el campo de frame en la tabla de páginas. |
-| **Dirección lógica (DL)** | página + desplazamiento = `log₂(tamaño del espacio lógico)`.                                                                                        |
-| **Dirección física (DF)** | frame + desplazamiento = `log₂(tamaño de la RAM)`.                                                                                                  |
+| Parte                     | Bits                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Desplazamiento**        | `2^desplazamiento = tamaño de página`. Es igual en la DL y en la DF, porque página y frame miden lo mismo.                                              |
+| **Número de página**      | `2^página = cantidad de páginas`; las páginas son `tamaño del espacio lógico / tamaño de página`.                                                       |
+| **Número de frame**       | `2^frame = cantidad de frames`; los frames son `tamaño de la RAM / tamaño de página`. Es también lo que ocupa el campo de frame en la tabla de páginas. |
+| **Dirección lógica (DL)** | página + desplazamiento, con `2^DL = tamaño del espacio lógico`.                                                                                        |
+| **Dirección física (DF)** | frame + desplazamiento, con `2^DF = tamaño de la RAM`.                                                                                                  |
 
 Ejemplo: páginas de 4 KiB (2<sup>12</sup> → 12 bits de desplazamiento), un espacio lógico de 16 páginas (4 bits) y una RAM de 256 KiB = 64 frames (6 bits). La DL tiene 4 + 12 = **16 bits** y la DF, 6 + 12 = **18 bits**.
 
