@@ -107,3 +107,17 @@ direcciones:
     expect(() => bloqueSVG('traduccion', yamlB.replace(/bitsFrame:.*\n/, ''))).toThrow(/bitsFrame/)
   })
 })
+
+describe('bloque ```fat', () => {
+  const yamlF = `
+titulo: c) Byte 12000
+tabla: { 3: Fin de Archivo, 5: 10, 6: 8, 8: 3, 10: 6 }
+inicio: 5
+bloque: 8192
+byte: 12000
+`
+  it('sigue la cadena hasta el bloque del byte', () => {
+    expect(bloqueSVG('fat', yamlF)).toContain('FAT[5] = 10 (lógico 1): 8192–16383 · ✓ está acá')
+    expect(() => bloqueSVG('fat', yamlF.replace(/inicio:.*\n/, ''))).toThrow(/inicio/)
+  })
+})
