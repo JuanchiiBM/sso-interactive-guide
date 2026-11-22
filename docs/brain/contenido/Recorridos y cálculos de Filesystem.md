@@ -66,7 +66,8 @@ el inodo no cuenta) están en [[Convenciones de la Cátedra FRBA]].
   FAT real están reservadas.
 
 La **resolución** de los ejercicios que siguen una cadena de la FAT (con su tabla) usa el bloque
-` ```fat ` (generado de datos, no es el recorrido de teoría): ver [[Resolución gráfica paso a paso]].
+` ```fat ` (generado de datos, no es el recorrido de teoría); la de los locks con RR (ej-09, 10), el
+bloque ` ```locks `: ver [[Resolución gráfica paso a paso]].
 
 ## Gotchas
 
