@@ -20,9 +20,14 @@ aliases:
     Me rindo,
     bloque traduccion,
     recorridoTraduccion,
+    traducción directa,
+    recorridoTraduccionDirecta,
+    segmentation fault,
+    chequeo de límite,
+    protección,
   ]
 tags: [contenido, recorrido, memoria, decision]
-actualizado: 2026-11-21
+actualizado: 2026-11-22
 ---
 
 # Resolución gráfica paso a paso
@@ -95,7 +100,37 @@ direcciones:
 
 El `tam` lo pone el autor (dato, última dirección válida, fin de memoria) y lo justifica en `texto`.
 Ubicación: `recorrido-traduccion.ts` + `traduccion-bloque.ts`; estilos `tr-*`. Usado en
-memoria-real ej-10 a). Falta el sentido **directo** (DL → DF chequeando el límite, segfault).
+memoria-real ej-10 a).
+
+## Traducción directa: ` ```traduccion ` con `sentido: directo`
+
+Diseño **B · bits + tabla + checklist** (issue #60, tablero
+https://claude.ai/artifact/NsqCw5ihjtsM2XFgVb5h9P#artboard-trad-B). Un paso por dirección: **1.**
+corte bit a bit (los de segmento en `--warn`), **2.** la tabla con la fila del segmento marcada y el
+dato que falla en `--bad`, **3.** los chequeos de la MMU en orden (límite → permiso → DF; el que falla
+con ✗ y lo que sigue "no se llega"), y abajo los chips con el resultado de cada dirección.
+
+```yaml
+sentido: directo
+titulo: Escrituras en 18 bits con segmentación y protección
+bitsSegmento: 2          # sin bits: cada dirección viene como { seg, desp } (ej-03)
+bitsOffset: 16
+unidad: hexa             # hexa | decimal
+acceso: escritura        # lectura | escritura | ejecucion; sin acceso no hay chequeo de permiso
+segmentos:
+  - { seg: 0, base: 0x00000, largo: 0x0ABCD, permisos: r }   # r Read only · x Exec only · rw Read write
+direcciones:
+  - { dl: 0x0BEEF, texto: 'Texto extra del autor.' }
+```
+
+- Compara `desplazamiento < largo` (la cátedra da el **largo**, ver la `nota` de ej-03).
+- "(además es Read only)" sale solo cuando el permiso también hubiera fallado.
+- Rompe el build: una DL que no entra en los bits, un segmento que no está en la tabla, permisos con
+  otra letra que r/w/x, una dirección sin `dl` ni `{ seg, desp }`.
+- Ubicación: `recorrido-traduccion-directa.ts` (+ test); `traduccion-bloque.ts` elige por `sentido`.
+  Estilos `tr-bit-*`, `tr-fila-*`, `tr-chk-*`, `tr-chip-*`. Usado en memoria-real ej-03 y ej-04.
+- **Pendiente:** segmentación paginada (ej-06, 09, 11: una tabla de páginas por segmento y un tercer
+  corte) y la inversa con búsqueda. El YAML las admite como campos nuevos o como otro `sentido`.
 
 ## Traza: recorrido automático
 
