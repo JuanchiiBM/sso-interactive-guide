@@ -1449,3 +1449,80 @@ rect.t3p-ref {
 .diagrama .fat-comp-falta text {
   fill: var(--muted);
 }
+
+/* recorrido-inodo: punteros del inodo, BP y barras de cuánto se lee (tablero inodo-A) */
+.diagrama .in-paso text {
+  font-size: 12px;
+}
+.diagrama .in-paso .in-etq {
+  font-family: var(--font-sans);
+  fill: var(--muted);
+}
+.diagrama .in-bp {
+  font-weight: 700;
+  fill: var(--warn);
+}
+.diagrama .in-bd {
+  font-weight: 700;
+  fill: var(--ok);
+}
+.in-inodo {
+  fill: none;
+  stroke: color-mix(in srgb, var(--fg) 28%, transparent);
+  stroke-width: 1.4;
+}
+.in-ptr rect {
+  fill: var(--surface-3);
+}
+.diagrama .in-ptr text {
+  fill: var(--fg-soft);
+}
+.diagrama .in-ptr-nada text {
+  fill: var(--muted);
+}
+.in-ptr-hecho rect {
+  stroke: color-mix(in srgb, var(--ok) 50%, transparent);
+}
+.in-ptr-actual rect {
+  fill: color-mix(in srgb, var(--accent) 16%, transparent);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.diagrama .in-ptr-actual text {
+  fill: var(--fg);
+}
+.in-flecha {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.in-caja-bp .in-caja {
+  fill: color-mix(in srgb, var(--warn) 8%, transparent);
+  stroke: var(--warn);
+  stroke-width: 2;
+}
+.in-caja-bd .in-caja {
+  fill: none;
+  stroke: var(--line-strong);
+}
+.in-entrada rect {
+  fill: none;
+  stroke: var(--accent);
+}
+.diagrama .in-sin-usar text,
+.diagrama .in-paso .in-muted {
+  fill: var(--muted);
+}
+.diagrama .in-paso .in-gris {
+  fill: var(--fg-soft);
+}
+.diagrama .in-paso .in-ok {
+  fill: var(--ok);
+}
+.in-barra {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+}
+.in-barra-ok {
+  fill: var(--ok);
+}

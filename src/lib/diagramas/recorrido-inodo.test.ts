@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { renderRecorrido } from './recorrido'
 import { recorridoInodo, reparto, type SpecInodo } from './recorrido-inodo'
 
 // fat-ufs ej-47: 10 PD + PIS + PID, bloques de 1 KiB, punteros de 4 B
@@ -127,5 +128,80 @@ describe('recorridoInodo: pasos y textos', () => {
     })
     expect(reparto(5, 300, 256)).toMatchObject({ k: 2, primero: 251, ultimo: 49, expr: '251 + 49' })
     expect(reparto(0, 512, 256).expr).toBe('2 × 256')
+  })
+})
+
+describe('recorridoInodo: dibujo de cada puntero (tablero inodo-A)', () => {
+  const html = renderRecorrido(recorridoInodo(ej47))
+  const frame = (k: number) => html.split(`data-el="paso-${k}"`)[1].split('data-el="paso-')[0]
+  const textosDe = (f: string) =>
+    [...f.matchAll(/<text[^>]*>(.*?)<\/text>/g)].map((m) => m[1].replace(/<[^>]+>/g, ''))
+
+  it('PID (paso 4): inodo, BP con sus entradas y los dos BP de 2.º nivel', () => {
+    const t = textosDe(frame(3))
+    expect(t).toEqual(
+      expect.arrayContaining([
+        'Inodo (en memoria)',
+        '10 PD · 0–9',
+        'PIS · 10–265 ✓',
+        'PID · 266–65.801',
+        'Bloque del PID BP',
+        '[0] → 266–521',
+        '[1] → 522–777',
+        '[2..255] sin usar',
+        'PID · 2.º nivel #0 BP',
+        '256 punteros → bloques 266–521',
+        'se leen los 256',
+        'PID · 2.º nivel #1 BP',
+        'bloques 522–777',
+        'se leen 10 (522–531)',
+      ]),
+    )
+    expect(frame(3)).toMatch(/in-ptr-nada[^]*10 PD/)
+    expect(frame(3)).toMatch(/in-ptr-hecho[^]*PIS/)
+    expect(frame(3)).toMatch(/in-ptr-actual[^]*PID/)
+  })
+
+  it('PD y PIS (pasos 2 y 3): la caja de BD sin leer y el BP entero', () => {
+    expect(textosDe(frame(1))).toEqual(
+      expect.arrayContaining([
+        'Bloques de los PD BD',
+        '10 PD → bloques 0–9',
+        'no se lee ninguno (empieza en el 10)',
+      ]),
+    )
+    expect(textosDe(frame(2))).toEqual(
+      expect.arrayContaining([
+        'Bloque del PIS BP',
+        '256 punteros → bloques 10–265',
+        'se leen los 256',
+      ]),
+    )
+  })
+
+  it('muchos BP: primero, "…" y último (ej-42, PID 1 con 1024)', () => {
+    const r = recorridoInodo({
+      titulo: 'ej-42',
+      bloque: 8192,
+      puntero: 8,
+      punteros: { directos: 12, simples: 1, dobles: 2 },
+      bytes: [6553600, 8631975936],
+    })
+    const h = renderRecorrido(r)
+    const f = h.split('data-el="paso-3"')[1].split('data-el="paso-')[0]
+    const t = textosDe(f)
+    expect(t).toEqual(
+      expect.arrayContaining([
+        '[0] → 1036–2059',
+        '… [1..1022]',
+        '[1023] → 1.048.588–1.049.611',
+        '… 1022 más, enteros',
+      ]),
+    )
+    expect(t.filter((x) => x.includes('2.º nivel #'))).toEqual([
+      'PID 1 · 2.º nivel #0 BP',
+      'PID 1 · 2.º nivel #1023 BP',
+    ])
+    expect(r.ancho).toBeGreaterThanOrEqual(760)
   })
 })

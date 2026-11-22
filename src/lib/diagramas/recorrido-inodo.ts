@@ -8,6 +8,7 @@ import {
   type Conformacion,
 } from './filesystem'
 import { grupo } from './svg'
+import { dibujoPuntero } from './recorrido-inodo-svg'
 
 export interface SpecInodo {
   titulo: string
@@ -156,11 +157,16 @@ export function recorridoInodo(spec: SpecInodo): Recorrido {
     ocultar: todos.map((_, i) => `paso-${i}`).filter((_, i) => i !== k),
   }))
 
+  const dibujos = [
+    { svg: '', alto: 0, ancho: 0 },
+    ...pasosPunteros.map((_, i) => dibujoPuntero(ps, i, ppb, primero)),
+    { svg: '', alto: 0, ancho: 0 },
+  ]
   return {
-    ancho: 760,
-    alto: 40,
+    ancho: Math.max(760, ...dibujos.map((d) => d.ancho + 20)),
+    alto: Math.max(...dibujos.map((d) => d.alto)) + 4,
     titulo: spec.titulo,
-    cuerpo: pasos.map((_, k) => grupo(`paso-${k}`, '', { oculto: true })),
+    cuerpo: dibujos.map((d, k) => grupo(`paso-${k}`, d.svg, { oculto: true, clase: 'in-paso' })),
     pasos,
   }
 }
