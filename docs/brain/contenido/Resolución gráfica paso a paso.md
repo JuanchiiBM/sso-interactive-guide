@@ -18,6 +18,8 @@ aliases:
     recorridoReemplazoEstado,
     traza paso a paso,
     Me rindo,
+    bloque traduccion,
+    recorridoTraduccion,
   ]
 tags: [contenido, recorrido, memoria, decision]
 actualizado: 2026-11-21
@@ -74,6 +76,26 @@ operaciones:
 - Empates de Best/Worst Fit: se toma el primero y el otro sale como "✓ también vale (empate)".
 - Usado en: memoria-real ej-07, 08, 10. Pendientes con el mismo bloque: fat-ufs ej-32, 34, 37;
   filesystem ej-07, 08.
+
+## Traducción inversa: bloque ` ```traduccion `
+
+Diseño "Común" del lienzo: por cada dirección, el **corte de bits** (segmento | offset), la cuenta
+**base = DF − offset** y el segmento ubicado en la barra con la DF marcada (lo desconocido, con "?").
+Al final, la tabla y los huecos.
+
+```yaml
+titulo: Tabla de segmentos de A desde sus traducciones
+total: 0x10000
+bitsSegmento: 2
+bitsOffset: 14
+proceso: A
+direcciones:
+  - { dl: 0x51FA, df: 0xE1FA, tam: 0x3000, texto: 'Está al final de la memoria: …' }
+```
+
+El `tam` lo pone el autor (dato, última dirección válida, fin de memoria) y lo justifica en `texto`.
+Ubicación: `recorrido-traduccion.ts` + `traduccion-bloque.ts`; estilos `tr-*`. Usado en
+memoria-real ej-10 a). Falta el sentido **directo** (DL → DF chequeando el límite, segfault).
 
 ## Traza: recorrido automático
 

@@ -83,7 +83,7 @@ calculos:
 Ver [[Patrón — Desafío antes de la Resolución]] (sección Cálculo).
 
 **Resolución gráfica de huecos** (Best/Worst/First Fit, compactar): bloque ` ```memoria ` con YAML en
-la `justificacion`. Ver [[Resolución gráfica paso a paso]].
+la `justificacion`. Reconstruir bases desde traducciones: ` ```traduccion `. Ver [[Resolución gráfica paso a paso]].
 
 **Traza de reemplazo** (páginas por frame, hits, U/M, puntero, PF): `traza` en lugar de `campos`,
 con las respuestas calculadas en build. Ver [[Traza de reemplazo a completar]].
