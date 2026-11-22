@@ -209,3 +209,100 @@ export function dibujoPuntero(ps: AccesosPuntero[], k: number, ppb: number, prim
   })
   return { svg, alto: Math.max(alto, y - 14), ancho: x3 + w3 }
 }
+
+const SUP = ['', '', ' × ', ' × ']
+/** Cuánto cubre un puntero: `PID → 256 × 256 = 65.536 (266–65.801)`. */
+function cubreTxt(p: AccesosPuntero, ppb: number) {
+  const total = p.fin - p.inicio + 1
+  const cuenta =
+    p.nivel <= 1
+      ? `${n(total)} bloques`
+      : `${Array(p.nivel).fill(n(ppb)).join(SUP[p.nivel])} = ${n(total)}`
+  return `${p.rotulo} → ${cuenta} (${r(p.inicio, p.fin)})`
+}
+
+/** Paso Ubicar: dónde empieza y termina la lectura, y qué cubre cada puntero. */
+export function dibujoUbicar(ps: AccesosPuntero[], primero: number, ultimo: number, ppb: number) {
+  const ultimoLeido = ps.findLastIndex((p) => p.leidos)
+  const ino = inodo(
+    ps,
+    ps.map((_, i) => (i > ultimoLeido ? 'nada' : 'normal')),
+  )
+  const iA = ps.findIndex((p) => p.inicio <= primero && primero <= p.fin)
+  const iB = ps.findIndex((p) => p.inicio <= ultimo && ultimo <= p.fin)
+  const marcas =
+    iA === iB
+      ? [
+          [
+            iA,
+            primero === ultimo
+              ? `← bloque ${n(primero)}`
+              : `← empieza y termina: bloques ${n(primero)} – ${n(ultimo)}`,
+          ],
+        ]
+      : [
+          [iA, `← empieza: bloque ${n(primero)}`],
+          [iB, `← termina: bloque ${n(ultimo)}`],
+        ]
+  const xM = X0 + ino.w + 24
+  const finMarcas = xM + Math.max(...marcas.map(([, t]) => ancho(t as string)))
+  const lineas = ps.map((p) => cubreTxt(p, ppb))
+  const w = Math.max(...lineas.map((l) => ancho(l))) + 20
+  const x = Math.max(finMarcas + 30, 760 - 20 - w)
+  const alto = 22 + 12 + lineas.length * 18
+  const svg =
+    ino.svg +
+    marcas
+      .map(([i, t]) => txt(xM, ino.centro(i as number), esc(t as string), 'in-marca'))
+      .join('') +
+    txt(x, 8, 'Qué cubre cada puntero', 'in-etq') +
+    `<g class="in-caja-bd">${rect(x, 22, w, alto - 22, 'in-caja', 6)}</g>` +
+    lineas.map((l, i) => txt(x + 10, 22 + 15 + i * 18, esc(l), 'in-gris')).join('')
+  return { svg, alto: Math.max(ino.alto, alto), ancho: x + w }
+}
+
+/** Corta una suma larga en renglones de a lo sumo `max` caracteres. */
+function renglones(cabeza: string, terminos: string[], cola: string, max = 72) {
+  const out: string[] = []
+  let actual = cabeza
+  terminos.forEach((t, i) => {
+    const pieza = (i ? ' + ' : '') + t
+    if (actual.length + pieza.length > max && i) {
+      out.push(actual)
+      actual = '  ' + pieza.trimStart()
+    } else actual += pieza
+  })
+  out.push(actual + cola)
+  return out
+}
+
+/** Paso Total: la suma de datos y punteros, con su desglose. */
+export function dibujoTotal(ps: AccesosPuntero[]) {
+  const ino = inodo(
+    ps,
+    ps.map((p) => (p.leidos ? 'hecho' : 'nada')),
+  )
+  const datos = ps.reduce((s, p) => s + p.datos, 0)
+  const bp = ps.reduce((s, p) => s + p.bp.reduce((x, y) => x + y, 0), 0)
+  const x = X0 + ino.w + 24
+  const bd = renglones(
+    'BD: ',
+    ps.filter((p) => p.datos).map((p) => `${n(p.datos)} (${p.rotulo})`),
+    ` = ${n(datos)}`,
+  )
+  const bps = renglones(
+    'BP: ',
+    ps.filter((p) => p.bp.some(Boolean)).map((p) => `${p.bp.map(n).join(' + ')} (${p.rotulo})`),
+    ` = ${n(bp)}`,
+  )
+  const desglose = [...bd, ...bps]
+  const svg =
+    ino.svg +
+    `<text class="rm-izq in-suma" x="${x}" y="40"><tspan class="in-ok">${n(datos)} BD</tspan> + <tspan class="in-bp-txt">${n(bp)} BP</tspan> = <tspan class="in-fuerte">${n(datos + bp)} accesos</tspan></text>` +
+    desglose.map((l, i) => txt(x, 70 + i * 18, esc(l), 'in-gris')).join('')
+  const ancho2 = Math.max(
+    ancho(`${datos} BD + ${bp} BP = ${datos + bp} accesos`, 20),
+    ...desglose.map((l) => ancho(l)),
+  )
+  return { svg, alto: Math.max(ino.alto, 70 + desglose.length * 18), ancho: x + ancho2 }
+}

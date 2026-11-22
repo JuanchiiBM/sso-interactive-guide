@@ -179,6 +179,33 @@ describe('recorridoInodo: dibujo de cada puntero (tablero inodo-A)', () => {
     )
   })
 
+  it('Ubicar (paso 1): dónde empieza y termina, y qué cubre cada puntero', () => {
+    expect(textosDe(frame(0))).toEqual(
+      expect.arrayContaining([
+        '← empieza: bloque 10',
+        '← termina: bloque 531',
+        'Qué cubre cada puntero',
+        '10 PD → 10 bloques (0–9)',
+        'PIS → 256 bloques (10–265)',
+        'PID → 256 × 256 = 65.536 (266–65.801)',
+      ]),
+    )
+    expect(frame(0)).not.toContain('in-ptr-actual')
+  })
+
+  it('Total (paso 5): la suma con su desglose y los punteros leídos en ✓', () => {
+    const f = frame(4)
+    expect(textosDe(f)).toEqual(
+      expect.arrayContaining([
+        '522 BD + 4 BP = 526 accesos',
+        'BD: 256 (PIS) + 266 (PID) = 522',
+        'BP: 1 (PIS) + 1 + 2 (PID) = 4',
+        'PIS · 10–265 ✓',
+        'PID · 266–65.801 ✓',
+      ]),
+    )
+  })
+
   it('muchos BP: primero, "…" y último (ej-42, PID 1 con 1024)', () => {
     const r = recorridoInodo({
       titulo: 'ej-42',

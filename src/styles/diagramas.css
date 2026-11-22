@@ -1526,3 +1526,15 @@ rect.t3p-ref {
 .in-barra-ok {
   fill: var(--ok);
 }
+.diagrama .in-paso .in-marca {
+  fill: var(--accent);
+}
+.diagrama .in-paso .in-suma {
+  font-size: 20px;
+}
+.diagrama .in-paso .in-bp-txt {
+  fill: var(--warn);
+}
+.diagrama .in-paso .in-fuerte {
+  font-weight: 700;
+}
