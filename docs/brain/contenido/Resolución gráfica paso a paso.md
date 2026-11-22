@@ -291,6 +291,10 @@ procesos:                # en el orden de Ready
   `locks-bloque.ts`; estilos `ck-*`. Usado en filesystem ej-09 y ej-10.
 - **Fuera:** ej-02, 03, 05 y 06 (MC teóricos sin línea de tiempo: P1 tiene el lock y P2 pide).
 
+## TLB y deducir el algoritmo: bloques ` ```tlb ` y ` ```deducir `
+
+Camino de cada referencia por la TLB, y víctima real contra cada algoritmo. Ver [[Resolución gráfica de la TLB]].
+
 ## Traza: recorrido automático
 
 `TrazaDesafio` dibuja `recorridoTraza(traza, alg)` arriba de la justificación, para **todas** las
