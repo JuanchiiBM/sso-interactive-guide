@@ -148,7 +148,7 @@ export function dibujoPuntero(ps: AccesosPuntero[], k: number, ppb: number, prim
     return { svg, alto: Math.max(alto, yCaja + c.h), ancho: x2 + c.w }
   }
 
-  // Indirecto doble: entradas del BP de 1.er nivel y los BP de 2.º nivel que se leen
+  // Doble o triple: entradas usadas del BP de 1.er nivel
   const alc = ppb ** (p.nivel - 1)
   const e0 = Math.floor((a - p.inicio) / alc)
   const e1 = Math.floor((b - p.inicio) / alc)
@@ -181,43 +181,117 @@ export function dibujoPuntero(ps: AccesosPuntero[], k: number, ppb: number, prim
       .join('')
   alto = Math.max(alto, yCaja + altoLista)
 
-  // Columna de los BP de 2.º nivel: primero, "… N más, enteros" y último
+  type Caja = Parameters<typeof caja>[3]
+  // Columna de BP: primero, "… N más, enteros" y último, cada uno con su flecha de origen
+  const columna = (
+    x: number,
+    etq: string | null,
+    ids: number[],
+    cuantos: number,
+    opts: (id: number, j: number) => Caja,
+    desde: (id: number) => number,
+  ) => {
+    const cajas = ids.map((id, j) => opts(id, j))
+    const w = Math.max(...cajas.map((o) => caja(0, 0, 170, o).w))
+    if (etq) svg += txt(x, 8, etq + insignia('BP', 'in-bp'), 'in-etq')
+    let y = yCaja
+    const centros: Record<number, number> = {}
+    ids.forEach((id, j) => {
+      if (j === 1 && cuantos > 3) {
+        svg += txt(x + 8, y + 8, `… ${n(cuantos - 2)} más, enteros`, 'in-gris')
+        y += 26
+      }
+      const c = caja(x, y, w, cajas[j])
+      svg += curva(x - 60, desde(id), x, y + 20) + c.svg
+      centros[id] = y + 20
+      y += c.h + 14
+    })
+    alto = Math.max(alto, y - 14)
+    return { w, centros }
+  }
+  const usadas = filas.filter((f) => f.usada != null)
+  const ids = usadas.map((f) => f.usada!)
+  const desdeEntrada = (id: number) => yFila(filas.findIndex((f) => f.usada === id)) + FILA / 2
+  const leer = (c0: number, c1: number) => [Math.max(a, c0), Math.min(b, c1)] as const
   const x3 = x2 + w2 + 60
-  const usadas = filas.map((f, i) => ({ ...f, i })).filter((f) => f.usada != null)
-  const cajas = usadas.map((f, j) => {
-    const [c0, c1] = cubre(f.usada!)
-    const [l0, l1] = [Math.max(a, c0), Math.min(b, c1)]
-    return {
-      titulo: `${p.rotulo} · ${ORD[2]} nivel #${n(f.usada!)}`,
-      linea: `${j === 0 ? `${n(ppb)} punteros → ` : ''}bloques ${r(c0, c1)}`,
-      total: c1 - c0 + 1,
-      desde: l0 - c0,
-      hasta: l1 - c0,
-      pie: pie(c1 - c0 + 1, l0, l1, ''),
-    }
-  })
-  const w3 = Math.max(...cajas.map((o) => caja(0, 0, 170, o).w))
-  let y = yCaja
-  usadas.forEach((f, j) => {
-    if (j === 1 && e1 - e0 + 1 > 3) {
-      svg += txt(x3 + 8, y + 8, `… ${n(e1 - e0 - 1)} más, enteros`, 'in-gris')
-      y += 26
-    }
-    const c = caja(x3, y, w3, cajas[j])
-    svg += curva(x2 + w2, yFila(f.i) + FILA / 2, x3, y + 20) + c.svg
-    y += c.h + 14
-  })
-  return { svg, alto: Math.max(alto, y - 14), ancho: x3 + w3 }
+
+  if (p.nivel === 2) {
+    const col = columna(
+      x3,
+      null,
+      ids,
+      e1 - e0 + 1,
+      (id, j) => {
+        const [c0, c1] = cubre(id)
+        const [l0, l1] = leer(c0, c1)
+        return {
+          titulo: `${p.rotulo} · ${ORD[2]} nivel #${n(id)}`,
+          linea: `${j === 0 ? `${n(ppb)} punteros → ` : ''}bloques ${r(c0, c1)}`,
+          total: c1 - c0 + 1,
+          desde: l0 - c0,
+          hasta: l1 - c0,
+          pie: pie(c1 - c0 + 1, l0, l1, ''),
+        }
+      },
+      desdeEntrada,
+    )
+    return { svg, alto, ancho: x3 + col.w }
+  }
+
+  // Indirecto triple: BP de 2.º nivel (cuántos de 3.er nivel apuntan) y BP de 3.er nivel
+  const t0 = Math.floor((a - p.inicio) / ppb)
+  const t1 = Math.floor((b - p.inicio) / ppb)
+  const col3 = columna(
+    x3,
+    `${ORD[2]} nivel`,
+    ids,
+    e1 - e0 + 1,
+    (id) => {
+      const [l0, l1] = [Math.max(t0, id * ppb), Math.min(t1, id * ppb + ppb - 1)]
+      const cuantos = l1 - l0 + 1
+      return {
+        titulo: `#${n(id)}`,
+        linea: `${n(ppb)} → BP de ${ORD[3]} nivel`,
+        total: ppb,
+        desde: l0 - id * ppb,
+        hasta: l1 - id * ppb,
+        pie: cuantos === ppb ? `se leen los ${n(ppb)}` : `se leen ${n(cuantos)}`,
+      }
+    },
+    desdeEntrada,
+  )
+  const idsHoja =
+    t1 - t0 + 1 <= 3 ? Array.from({ length: t1 - t0 + 1 }, (_, j) => t0 + j) : [t0, t1]
+  const x4 = x3 + col3.w + 60
+  const col4 = columna(
+    x4,
+    `${ORD[3]} nivel`,
+    idsHoja,
+    t1 - t0 + 1,
+    (id) => {
+      const [c0, c1] = [p.inicio + id * ppb, Math.min(p.inicio + id * ppb + ppb - 1, p.fin)]
+      const [l0, l1] = leer(c0, c1)
+      return {
+        titulo: `#${n(id)}`,
+        linea: `bloques ${r(c0, c1)}`,
+        total: c1 - c0 + 1,
+        desde: l0 - c0,
+        hasta: l1 - c0,
+        pie: pie(c1 - c0 + 1, l0, l1, ''),
+      }
+    },
+    (id) => col3.centros[Math.floor(id / ppb)] ?? col3.centros[ids.at(-1)!],
+  )
+  return { svg, alto, ancho: x4 + col4.w }
 }
 
-const SUP = ['', '', ' × ', ' × ']
 /** Cuánto cubre un puntero: `PID → 256 × 256 = 65.536 (266–65.801)`. */
 function cubreTxt(p: AccesosPuntero, ppb: number) {
   const total = p.fin - p.inicio + 1
   const cuenta =
     p.nivel <= 1
       ? `${n(total)} bloques`
-      : `${Array(p.nivel).fill(n(ppb)).join(SUP[p.nivel])} = ${n(total)}`
+      : `${Array(p.nivel).fill(n(ppb)).join(' × ')} = ${n(total)}`
   return `${p.rotulo} → ${cuenta} (${r(p.inicio, p.fin)})`
 }
 

@@ -256,4 +256,35 @@ describe('recorridoInodo: dibujo de cada puntero (tablero inodo-A)', () => {
     ])
     expect(r.ancho).toBeGreaterThanOrEqual(760)
   })
+
+  it('PIT (ej-38, tablero inodo-PIT): 2.º y 3.er nivel con primero, "…" y último', () => {
+    const h = renderRecorrido(recorridoInodo(ej38))
+    const t = textosDe(h.split('data-el="paso-7"')[1].split('data-el="paso-')[0])
+    expect(t).toEqual(
+      expect.arrayContaining([
+        'PIS 1 · 10–137 ✓',
+        'PID 2 · 16.778–33.161 ✓',
+        'PIT · 33.162–2.130.313',
+        'Bloque del PIT BP',
+        '[0] → 33.162–49.545',
+        '… [1..124]',
+        '[125] → 2.081.162–2.097.545',
+        '[126..127] sin usar',
+        '2.º nivel BP',
+        '#0 BP',
+        '128 → BP de 3.er nivel',
+        'se leen los 128',
+        '… 124 más, enteros',
+        '#125 BP',
+        'se leen 125',
+        '3.er nivel BP',
+        'bloques 33.162–33.289',
+        '… 16.123 más, enteros',
+        '#16.124 BP',
+        'bloques 2.097.034–2.097.161',
+        'se leen 118 (2.097.034–2.097.151)',
+      ]),
+    )
+    expect(t).toContain('1 + 126 + 16.125')
+  })
 })
