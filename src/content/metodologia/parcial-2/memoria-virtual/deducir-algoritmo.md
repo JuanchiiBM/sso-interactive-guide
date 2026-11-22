@@ -36,19 +36,18 @@ teoria:
 
 ### Ejemplo chico
 
-La página nueva entró en F1. Estado de antes:
+Páginas de 4 KiB. A pide su página 5 (DL 5123h) y entra en la DF 1123h. Estado de antes (TC = carga, TUR = última referencia):
 
-| Frame | Página | TC  | TUR | U   | M   |
-| ----- | ------ | --- | --- | --- | --- |
-| F0    | X      | 3   | 9   | 1   | 0   |
-| F1    | Y      | 5   | 6   | 0   | 1   |
-| F2    | Z      | 7   | 8   | 0   | 0   |
-
-La víctima es **Y**.
-
-| Algoritmo      | ¿Aplica?                            | Por qué                                                              |
-| -------------- | ----------------------------------- | -------------------------------------------------------------------- |
-| FIFO           | No                                  | La de menor TC es X (3).                                             |
-| LRU            | Sí                                  | La de menor TUR es Y (6).                                            |
-| Clock          | Sí, si el puntero estaba en F0 o F1 | Desde F0 baja la U de X y sigue; F1 tiene U = 0. Desde F2 saldría Z. |
-| Clock mejorado | No                                  | Z es (0,0) y Y es (0,1): tendría que haber salido Z.                 |
+```deducir
+titulo: ¿Qué algoritmo sacó a A1?
+bitsOffset: 12
+bitsDL: 16
+bitsDF: 14
+uso: TUR
+marcos:
+  - { frame: 0, proceso: A, pagina: 0, tc: 3, tur: 9, u: 1, m: 0 }
+  - { frame: 1, proceso: A, pagina: 1, tc: 5, tur: 6, u: 0, m: 1 }
+  - { frame: 2, proceso: A, pagina: 2, tc: 7, tur: 8, u: 0, m: 0 }
+referencias: [{ proceso: A, dl: 0x5123, df: 0x1123 }]
+algoritmos: [fifo, lru, clock, clock-mejorado]
+```

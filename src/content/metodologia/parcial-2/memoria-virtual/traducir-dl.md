@@ -31,9 +31,50 @@ teoria:
 
 ### Ejemplo chico
 
-Páginas de 4 KiB (4096 B). El proceso A tiene la página 2 en el frame 3 y la página 1 en disco.
+Páginas de 4 KiB (4096 B). El proceso A tiene la página 2 en el frame 3 y la página 1 en disco. Cambiá de pestaña para ver un hit y un page fault.
 
-| DL de A | Página, offset                       | ¿Está?           | DF                                                            |
-| ------- | ------------------------------------ | ---------------- | ------------------------------------------------------------- |
-| 9000    | 9000 div 4096 = 2; 9000 − 8192 = 808 | A2 en F3: hit    | 3 × 4096 + 808 = **13096**                                    |
-| 5000    | 5000 div 4096 = 1; 5000 − 4096 = 904 | A1 con P = 0: PF | el algoritmo elige la víctima en F0: 0 × 4096 + 904 = **904** |
+```pasos
+titulo: Traducir una DL de A
+variantes:
+  - nombre: Hit (DL 9000)
+    pasos:
+      - titulo: Página y offset
+        texto: '9000 div 4096 = **2**, y el resto es 9000 − 2 × 4096 = **808**.'
+        grande: '9000 = **2** × 4096 + **808**'
+        resultado: [página 2, offset 808]
+      - titulo: ¿Está?
+        texto: 'La página 2 de **A** tiene P = 1, en el frame 3: es un **hit**.'
+        tabla:
+          titulo: Tabla de páginas de A
+          columnas: [Pág, Frame, P]
+          filas: [[0, 5, 1], [1, '–', 0], [2, 3, 1]]
+          marca: 2
+          foco: 1
+        chequeo: { ok: true, texto: 'A2 en F3: hit' }
+        resultado: ✓ frame 3
+      - titulo: DF
+        texto: 'DF = frame × tamaño de página + offset = 3 × 4096 + 808 = **13096**.'
+        grande: '3 × 4096 + 808 = **13096**'
+  - nombre: Page fault (DL 5000)
+    pasos:
+      - titulo: Página y offset
+        texto: '5000 div 4096 = **1**, y el resto es 5000 − 4096 = **904**.'
+        grande: '5000 = **1** × 4096 + **904**'
+        resultado: [página 1, offset 904]
+      - titulo: ¿Está?
+        texto: 'La página 1 de A tiene **P = 0**: está en disco. Es un **page fault**; todavía no hay DF.'
+        tabla:
+          titulo: Tabla de páginas de A
+          columnas: [Pág, Frame, P]
+          filas: [[0, 5, 1], [1, '–', 0], [2, 3, 1]]
+          marca: 1
+          foco: 2
+        chequeo: { ok: false, texto: 'A1 con P = 0: PF' }
+      - titulo: Víctima
+        texto: 'Corre el algoritmo de reemplazo y elige la víctima del **frame 0**. A1 entra ahí y la tabla se actualiza.'
+        grande: 'A1 entra en **F0**'
+        resultado: frame 0
+      - titulo: DF
+        texto: 'Recién ahora hay frame: DF = 0 × 4096 + 904 = **904**.'
+        grande: '0 × 4096 + 904 = **904**'
+```

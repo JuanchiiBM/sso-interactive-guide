@@ -42,11 +42,19 @@ teoria:
 
 ### Ejemplo chico
 
-Clock mejorado con 3 frames, puntero en F0. Estado: F0 A0 (1,0) · F1 A1 (0,1) · F2 A2 (1,1).
+Clock mejorado con 3 frames, puntero en F0. Estado: F0 A0 (1,0) · F1 A1 (0,1) · F2 A2 (1,1). Se lee A3 y después se escribe A0.
 
-| Referencia | Qué pasa                                                                                   | Frames después (U,M)                    | Puntero | Disco                  |
-| ---------- | ------------------------------------------------------------------------------------------ | --------------------------------------- | ------- | ---------------------- |
-| A3 (L)     | PF. Vuelta 1 no encuentra (0,0). Vuelta 2: F0 (1,0) → U = 0 y sigue; F1 es (0,1): víctima. | F0 A0 (0,0) · F1 A3 (1,0) · F2 A2 (1,1) | F2      | 2 (escribe A1, lee A3) |
-| A0 (E)     | Hit: U = 1 y M = 1; el puntero no se mueve.                                                | F0 A0 (1,1) · F1 A3 (1,0) · F2 A2 (1,1) | F2      | 0                      |
+```traza
+titulo: Clock mejorado desde un estado dado
+algoritmo: clock-mejorado
+puntero: 0
+marcos:
+  - { marco: 0, pagina: A0, u: true }
+  - { marco: 1, pagina: A1, m: true }
+  - { marco: 2, pagina: A2, u: true, m: true }
+referencias:
+  - { pagina: A3 }
+  - { pagina: A0, acceso: E }
+```
 
-F2 queda igual en la primera referencia: la vuelta 2 encontró la víctima antes de llegar.
+En la primera referencia F2 queda igual: la vuelta 2 encontró la víctima antes de llegar. La víctima A1 tenía M = 1: **2 accesos a disco**.

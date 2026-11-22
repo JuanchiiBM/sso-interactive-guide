@@ -31,12 +31,28 @@ teoria:
 
 ### Ejemplo chico
 
-Un proceso arranca con 2 páginas en RAM. Hay frames libres todo el tiempo.
+Un proceso arranca con 2 páginas en RAM y hay frames libres todo el tiempo.
 
-| Evento            | Páginas en RAM | Qué dice                                                                |
-| ----------------- | -------------- | ----------------------------------------------------------------------- |
-| PF, sin reemplazo | 3              | todavía no llegó al tope                                                |
-| PF, sin reemplazo | 4              | todavía no llegó al tope                                                |
-| PF, **reemplaza** | 4              | hay frames libres y reemplaza: es **fija**, con cupo **4**, y **local** |
-
-Si ese proceso recorre en ciclo **5** páginas, falla en todas las referencias.
+```pasos
+titulo: ¿Fija o variable? ¿Local o global?
+pasos:
+  - titulo: Arranque
+    texto: 'El proceso tiene 2 páginas en RAM.'
+    tabla: { titulo: Frames del proceso, columnas: [Frame, Página], filas: [[F4, P0], [F7, P1]] }
+  - titulo: PF sin reemplazo
+    texto: 'Page fault y entra en un frame libre: todavía no llegó a su tope.'
+    tabla: { titulo: Frames del proceso, columnas: [Frame, Página], filas: [[F4, P0], [F7, P1], [F2, P2]], marca: 2 }
+    resultado: 3 frames
+  - titulo: PF sin reemplazo
+    texto: 'Otro page fault, otro frame libre: ya tiene **4**.'
+    tabla: { titulo: Frames del proceso, columnas: [Frame, Página], filas: [[F4, P0], [F7, P1], [F2, P2], [F9, P3]], marca: 3 }
+    resultado: 4 frames
+  - titulo: PF que reemplaza
+    texto: 'El siguiente PF **reemplaza aunque hay frames libres**: solo se explica con un tope. Es **fija**, con cupo **4**, y por lo tanto **local**.'
+    tabla: { titulo: Frames del proceso, columnas: [Frame, Página], filas: [[F4, P4], [F7, P1], [F2, P2], [F9, P3]], marca: 0, foco: 1 }
+    chequeo: { ok: false, texto: 'reemplaza con frames libres' }
+    grande: 'fija · cupo **4** · local'
+  - titulo: Peor caso
+    texto: 'Si recorre en ciclo **5** páginas (cupo + 1), siempre hay una afuera y es la próxima que pide: falla en todas las referencias. Es un problema de localidad.'
+    grande: 'ciclo de **5** páginas → PF siempre'
+```
