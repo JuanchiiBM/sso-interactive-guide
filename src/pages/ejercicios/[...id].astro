@@ -7,7 +7,14 @@ import CalculoDesafio from '@components/CalculoDesafio.astro'
 import TrazaDesafio from '@components/TrazaDesafio.astro'
 import ParteResolucion from '@components/ParteResolucion.astro'
 import { getEntry, render } from 'astro:content'
-import { getEjercicios, ejercicioHref, temaHref, rotuloEjercicio } from '@lib/catalogo'
+import {
+  getEjercicios,
+  getMetodologias,
+  ejercicioHref,
+  temaHref,
+  rotuloEjercicio,
+} from '@lib/catalogo'
+import { exigir, idTipo, metodologiaHref } from '@lib/metodologia/validar'
 import { algoritmoUI, dificultadUI, tipoUI } from '@lib/presentacion'
 import { markdownAHtml } from '@lib/markdown/marked'
 
@@ -36,6 +43,7 @@ const {
   calculos,
   nota,
   encadenado,
+  metodo,
 } = ejercicio.data
 // diagrama de colas: por ahora solo en los Gantt de la guía (no en parciales)
 const deGuia = fuente.guia.startsWith('Guía de Ejercicios')
@@ -46,6 +54,13 @@ const href = ejercicioHref(ejercicio.id)
 const bloqueada = (pos: number) => encadenado && pos > 0
 const tema = await getEntry(ejercicio.data.tema)
 const { Content } = await render(ejercicio)
+const tiposTema = (await getMetodologias()).get(tema!.id) ?? []
+exigir(
+  metodo,
+  tiposTema.map((t) => idTipo(t.id)),
+  `ejercicio ${ejercicio.id}, metodo`,
+)
+const tipos = metodo.map((m) => tiposTema.find((t) => idTipo(t.id) === m)!)
 const dif = dificultadUI[dificultad]
 const ayuda = [
   simulaciones.some((s) => s.kind === 'planificacion') &&
@@ -95,6 +110,11 @@ const etiquetaSim = (sim: (typeof simulaciones)[number]) =>
       </span>
       {tags.map((t) => (
         <span class="font-mono text-muted">#{t}</span>
+      ))}
+      {tipos.map((t) => (
+        <a href={metodologiaHref(tema!.id, idTipo(t.id))} class="text-accent hover:underline">
+          Tipo: {t.data.titulo} →
+        </a>
       ))}
     </div>
 
