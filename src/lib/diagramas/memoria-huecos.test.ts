@@ -152,3 +152,111 @@ describe('empates y otros algoritmos', () => {
     expect(p.nuevo?.inicio).toBe(43008)
   })
 })
+
+// FAT/UFS ej-37: particiones dinámicas de 16 MiB (en KiB); P2 crece 1538 KiB
+const ej37: SpecMemoria = {
+  total: 16384,
+  algoritmo: 'primer',
+  inicial: [
+    { nombre: 'P1', inicio: 0, tam: 8192 },
+    { nombre: 'P2', inicio: 9216, tam: 4096 },
+    { nombre: 'P3', inicio: 14336, tam: 2048 },
+  ],
+  operaciones: [{ agranda: 'P2', tam: 1538, compactar: [{ mover: 'P2', a: 8192 }] }],
+}
+
+describe('simularHuecos: agrandar', () => {
+  it('crece en su lugar si el hueco de atrás alcanza', () => {
+    const [, p] = simularHuecos({ ...ej37, operaciones: [{ agranda: 'P2', tam: 1000 }] })
+    expect(p.despues.find((b) => b.nombre === 'P2')).toMatchObject({ inicio: 9216, tam: 5096 })
+    expect(p.crece).toEqual({ nombre: 'P2', inicio: 13312, tam: 1000 })
+    expect(p.candidatos.map((c) => c.estado)).toEqual(['no-al-lado', 'elegido'])
+  })
+
+  it('si no alcanza, compacta con los movimientos del autor y crece', () => {
+    const [, p] = simularHuecos(ej37)
+    expect(p.candidatos.map((c) => c.estado)).toEqual(['no-al-lado', 'no-entra'])
+    expect(p.movidos).toEqual([{ nombre: 'P2', de: 9216, a: 8192 }])
+    expect(p.despues.find((b) => b.nombre === 'P2')).toMatchObject({ inicio: 8192, tam: 5634 })
+    expect(p.crece).toEqual({ nombre: 'P2', inicio: 12288, tam: 1538 })
+    expect(huecosDe(16384, p.despues)).toEqual([{ inicio: 13826, tam: 510 }])
+  })
+
+  it('rompe sin compactación, si no alcanza después de compactar o si no existe', () => {
+    expect(() => simularHuecos({ ...ej37, operaciones: [{ agranda: 'P2', tam: 1538 }] })).toThrow(
+      'no hay compactación',
+    )
+    expect(() =>
+      simularHuecos({
+        ...ej37,
+        operaciones: [{ agranda: 'P2', tam: 1538, compactar: [{ mover: 'P3', a: 14336 }] }],
+      }),
+    ).toThrow('ni después de compactar')
+    expect(() => simularHuecos({ ...ej37, operaciones: [{ agranda: 'P9', tam: 1 }] })).toThrow('P9')
+  })
+})
+
+// FAT/UFS ej-32: segmentación pura de 1 MiB (en KiB); C carga dos segmentos juntos
+const ej32: SpecMemoria = {
+  total: 1024,
+  algoritmo: 'primer',
+  inicial: [
+    { nombre: 'PA.S0', inicio: 0, tam: 256 },
+    { nombre: 'PB.S0', inicio: 384, tam: 128 },
+    { nombre: 'PB.S1', inicio: 576, tam: 128 },
+    { nombre: 'PA.S1', inicio: 768, tam: 256 },
+  ],
+  operaciones: [
+    {
+      carga: 'PC',
+      segmentos: [
+        { nombre: 'PC.S0', tam: 100 },
+        { nombre: 'PC.S1', tam: 100 },
+      ],
+      compactar: [{ mover: 'PB.S1', a: 256 }],
+    },
+  ],
+}
+
+describe('simularHuecos: varios segmentos juntos', () => {
+  it('un hueco que admite uno solo no alcanza: compacta y los pone pegados', () => {
+    const [, p] = simularHuecos(ej32)
+    expect(p.candidatos.map((c) => c.estado)).toEqual(['entra-uno', 'no-entra', 'no-entra'])
+    expect(p.juntos?.map((b) => [b.nombre, b.proceso, b.inicio])).toEqual([
+      ['PC.S0', 'PC', 512],
+      ['PC.S1', 'PC', 612],
+    ])
+    expect(huecosDe(1024, p.despues)).toEqual([{ inicio: 712, tam: 56 }])
+  })
+
+  it('si entran juntos en un hueco, no compacta', () => {
+    const [, p] = simularHuecos({
+      ...ej32,
+      operaciones: [
+        {
+          carga: 'PC',
+          segmentos: [
+            { nombre: 'PC.S0', tam: 60 },
+            { nombre: 'PC.S1', tam: 60 },
+          ],
+        },
+      ],
+    })
+    expect(p.movidos).toEqual([])
+    expect(p.juntos?.map((b) => b.inicio)).toEqual([256, 316])
+  })
+})
+
+describe('simularHuecos: marca', () => {
+  it('no cambia el estado y rompe si la DL no está en el bloque', () => {
+    const [, , p] = simularHuecos({
+      ...ej37,
+      operaciones: [...ej37.operaciones, { marca: 'P2', dl: 4096, titulo: 't', texto: 'x' }],
+    })
+    expect(p.despues).toEqual(p.antes)
+    const mal = (op: object) => () =>
+      simularHuecos({ ...ej37, operaciones: [{ titulo: 't', texto: 'x', ...op } as never] })
+    expect(mal({ marca: 'P2', dl: 4097 })).toThrow('fuera de P2')
+    expect(mal({ marca: 'P9', dl: 0 })).toThrow('P9')
+  })
+})

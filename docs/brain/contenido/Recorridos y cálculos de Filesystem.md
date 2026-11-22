@@ -68,6 +68,8 @@ el inodo no cuenta) están en [[Convenciones de la Cátedra FRBA]].
 La **resolución** de los ejercicios que siguen una cadena de la FAT (con su tabla) usa el bloque
 ` ```fat ` (generado de datos, no es el recorrido de teoría); la de los locks con RR (ej-09, 10), el
 bloque ` ```locks `: ver [[Resolución gráfica paso a paso]].
+Huecos, particiones dinámicas y asignación contigua en disco (fat-ufs ej-32, 34, 37; filesystem
+ej-07, 08) usan la barra ` ```memoria ` con `unidad: KiB | MiB | bloques`, `agranda` y `marca`.
 
 ## Gotchas
 

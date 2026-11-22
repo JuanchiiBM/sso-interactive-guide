@@ -1952,3 +1952,61 @@ rect.t3p-ref {
 .diagrama .ded-resp .ded-tit {
   fill: var(--fg);
 }
+.rm-rejilla {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+/* ```memoria con `marca`: línea de la DF, regla de DL bajo el bloque y filas en verde */
+.rm-seg.rm-marcado > rect:first-child {
+  stroke: var(--ok);
+  stroke-width: 2.4;
+}
+.diagrama .rm-fila-ok text {
+  fill: var(--ok);
+}
+.rm-pin {
+  stroke: var(--ok);
+  stroke-width: 2;
+}
+.diagrama .rm-pin-etq {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--ok);
+}
+.rm-regla {
+  stroke: var(--p5);
+  stroke-width: 1.4;
+}
+.rm-regla.rm-regla-sel {
+  stroke: var(--ok);
+  stroke-width: 2;
+}
+.diagrama .rm-regla-etq {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--p5);
+}
+.diagrama .rm-regla-etq.rm-regla-dl {
+  font-weight: 600;
+  fill: var(--ok);
+}
+.diagrama .rm-regla-tit {
+  font-size: 11px;
+  fill: var(--muted);
+}
+.diagrama .rm-caja-tit {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+.diagrama .rm-caja-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+.diagrama .rm-caja-lee {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ok);
+}
