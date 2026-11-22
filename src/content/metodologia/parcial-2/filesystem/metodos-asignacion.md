@@ -32,6 +32,12 @@ teoria:
 
 ### Ejemplo chico
 
+Los tres métodos guardando el mismo archivo:
+
+```recorrido metodos-asignacion
+
+```
+
 Un disco guarda videos grandes que no cambian y se ven salteando partes.
 
 - **Contigua:** el bloque k está en inicial + k, así que saltar es una cuenta; como los videos no crecen, la fragmentación externa casi no aparece. **Conviene.**

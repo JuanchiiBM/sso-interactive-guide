@@ -32,8 +32,39 @@ teoria:
 
 `drwxr-x--- ana sistemas /tp` y `-rw-rw-r-- ana sistemas /tp/notas.txt`. Luis está en el grupo `sistemas`; Eva, no.
 
-| Pregunta               | Terna                                    | Respuesta                                                           |
-| ---------------------- | ---------------------------------------- | ------------------------------------------------------------------- |
-| ¿Luis lee notas.txt?   | grupo: `r-x` en /tp, `rw-` en el archivo | **Sí**: tiene x en /tp y r en el archivo                            |
-| ¿Luis borra notas.txt? | grupo en /tp: `r-x`                      | **No**: le falta w en /tp                                           |
-| ¿Eva lee notas.txt?    | otros en /tp: `---`                      | **No**: no puede entrar a /tp, aunque el archivo tenga r para otros |
+```pasos
+titulo: Permisos de Luis y Eva sobre /tp/notas.txt
+pasos:
+  - titulo: ¿Quién sos?
+    texto: 'Luis entra por el **grupo** del archivo (sistemas); Eva, por **otros**. Cada uno mira solo su terna.'
+    tabla:
+      titulo: Ternas
+      columnas: [Usuario, Terna, /tp, notas.txt]
+      filas: [[Luis, grupo, r-x, rw-], [Eva, otros, '---', r--]]
+  - titulo: ¿Luis lee?
+    texto: 'Para llegar al archivo necesita **x** en /tp (la tiene) y para leerlo, **r** en notas.txt (la tiene). **Sí** puede.'
+    tabla:
+      titulo: Camino de Luis (grupo)
+      columnas: [Paso, Pide, Tiene]
+      filas: [['entrar a /tp', x, r-x], ['leer notas.txt', r, rw-]]
+      marca: [0, 1]
+    chequeo: { ok: true, texto: 'x en /tp y r en el archivo' }
+  - titulo: ¿Luis borra?
+    texto: 'Borrar es sacar la entrada del directorio: pide **w en /tp**, no en el archivo. El grupo tiene r-x: **no** puede.'
+    tabla:
+      titulo: Camino de Luis (grupo)
+      columnas: [Paso, Pide, Tiene]
+      filas: [['borrar en /tp', 'w y x', r-x]]
+      marca: 0
+      foco: 2
+    chequeo: { ok: false, texto: 'falta w en /tp' }
+  - titulo: ¿Eva lee?
+    texto: 'Para otros, /tp es ---: ni siquiera puede entrar. **No** lee, aunque notas.txt tenga r para otros.'
+    tabla:
+      titulo: Camino de Eva (otros)
+      columnas: [Paso, Pide, Tiene]
+      filas: [['entrar a /tp', x, '---'], ['leer notas.txt', r, r--]]
+      marca: 0
+      foco: 2
+    chequeo: { ok: false, texto: 'sin x en /tp no llega' }
+```
