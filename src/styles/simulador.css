@@ -491,6 +491,31 @@
   width: 4.5rem;
   text-align: center;
 }
+/* select propio: flecha con gradientes (tokens, sin svg con color fijo) */
+.calc-input:is(select),
+.calc-celda .calc-input:is(select) {
+  width: auto;
+  appearance: none;
+  padding-right: 1.75em;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 0.95em) 55%,
+    calc(100% - 0.6em) 55%;
+  background-size: 0.35em 0.35em;
+  background-repeat: no-repeat;
+}
+.calc-input:is(select):hover {
+  border-color: var(--accent);
+}
+.calc-input option {
+  color: var(--fg);
+  background: var(--surface);
+}
 .calc-celda .calc-solucion {
   display: block;
 }

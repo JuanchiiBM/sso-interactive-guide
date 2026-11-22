@@ -3,6 +3,7 @@
 import { markdownAHtml, markdownInlineAHtml } from '@lib/markdown/marked'
 import { esperado, FAULT, type CampoCalculo } from '@lib/calculos/verificar'
 import { camposDe, esCampo, type TablaCalculo } from '@lib/calculos/tabla'
+import CalculoEntrada from './CalculoEntrada.astro'
 
 interface Props {
   calculo: {
@@ -49,9 +50,6 @@ const tabla = calculo.tabla && {
     ),
   ),
 }
-const modoInput = (c: CampoCalculo) =>
-  c.base === 16 || c.texto || String(c.respuesta).includes('^') ? 'text' : 'decimal'
-const placeholder = (c: CampoCalculo) => (c.base === 16 ? 'hexa' : c.texto ? 'texto' : '?')
 ---
 
 <section
@@ -81,14 +79,9 @@ const placeholder = (c: CampoCalculo) => (c.base === 16 ? 'hexa' : c.texto ? 'te
                   <td set:html={celda.fijo} />
                 ) : (
                   <td class="calc-celda" data-calc-campo={celda.campo}>
-                    <input
-                      type="text"
-                      class="calc-input"
-                      aria-label={campos[celda.campo].etiqueta}
-                      inputmode={modoInput(campos[celda.campo])}
-                      autocomplete="off"
-                      spellcheck="false"
-                      placeholder={placeholder(campos[celda.campo])}
+                    <CalculoEntrada
+                      campo={campos[celda.campo]}
+                      ariaLabel={campos[celda.campo].etiqueta}
                     />
                     {calculo.fault && (
                       <button type="button" class="calc-fault" aria-pressed="false" data-calc-fault>
@@ -118,15 +111,7 @@ const placeholder = (c: CampoCalculo) => (c.base === 16 ? 'hexa' : c.texto ? 'te
             set:html={c.etiquetaHtml}
           />
           <span class="flex items-center gap-1.5">
-            <input
-              id={`calc-${clave}-${i}`}
-              type="text"
-              class="calc-input"
-              inputmode={modoInput(c)}
-              autocomplete="off"
-              spellcheck="false"
-              placeholder={placeholder(c)}
-            />
+            <CalculoEntrada campo={c} id={`calc-${clave}-${i}`} />
             {c.unidad && <span class="text-xs text-muted">{c.unidad}</span>}
             {calculo.fault && (
               <button type="button" class="calc-fault" aria-pressed="false" data-calc-fault>
