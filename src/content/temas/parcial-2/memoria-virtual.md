@@ -49,7 +49,7 @@ Para que exista hacen falta dos cosas que ya aparecieron en memoria real:
 
 Las direcciones lógicas pasan a referirse al **espacio virtual** (son más largas) y las físicas a la memoria real. La MMU sigue traduciendo, ahora con un dato más: si la página está o no en RAM.
 
-Los bits se calculan igual que en [memoria real](/teoria/parcial-2/memoria-real/#cuántos-bits-tiene-cada-dirección), con una diferencia: la RAM **ya no limita** a la DL. La DL sale de lo que el proceso tiene que poder direccionar (`log₂` de ese tamaño) y la DF sigue saliendo del tamaño de la RAM.
+Los bits se calculan igual que en [memoria real](/teoria/parcial-2/memoria-real/#cuántos-bits-tiene-cada-dirección), con una diferencia: la RAM **ya no limita** a la DL. La DL sale de lo que el proceso tiene que poder direccionar (`2^DL` = ese tamaño) y la DF sigue saliendo del tamaño de la RAM.
 
 **¿Cuántas páginas puede tener como máximo un programa?** Con memoria virtual, lo que no entra en RAM queda en disco, así que el tamaño de la RAM **no** pone el límite. El límite es cuántas direcciones distintas puede escribir el programa:
 
@@ -99,11 +99,13 @@ pág 2 →  0   –    ← en disco
 
 - **El número de página no se guarda**: es la posición de la entrada en la tabla, como el número de renglón de un cuaderno.
 - **El bit P hace falta** porque el frame 0 es un frame válido: no se puede usar "frame = 0" para decir "no está".
-- **Bits del campo frame:** `log₂(cantidad de frames)`, con `frames = RAM / tamaño de página`.
+- **Bits del campo frame:** `2^bits = cantidad de frames`, con `frames = RAM / tamaño de página`.
 - **Tamaño del bitmap:** 1 bit por frame, así que `frames / 8` bytes. Con 128 frames: 128 bits = 16 bytes. Una alternativa es una **lista de frames libres**, que ocupa menos cuando quedan pocos libres pero cambia de tamaño todo el tiempo.
 - **El formato de una entrada se arma con el enunciado:** P y frame siempre; U si el algoritmo es clock; U y M si es clock mejorado; el instante de referencia si es LRU; R/W/X si habla de permisos. Cada requisito del enunciado es un campo.
 
 **Del mapa de la memoria a la tabla de páginas.** Muchos enunciados dan qué hay en cada frame (`A1` en el frame 3 = la página 1 de A está en el frame 3). La tabla de páginas es ese mapa **dado vuelta**: ordenada por página en lugar de por frame. Una página que no aparece en el mapa no está en RAM: P = 0, y referenciarla es page fault. Las páginas de un proceso no tienen que estar en orden: la página 5 puede estar en un frame anterior a la página 1.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-virtual/#mapa-frames">Armar el mapa de frames</a></p>
 
 ### Los tres casos de una referencia
 
@@ -119,6 +121,8 @@ pág 2 →  0   –    ← en disco
 | Page fault, víctima con M = 1 | 2: escribir la víctima y leer la página |
 
 > **No todo fallo es un page fault.** Si la dirección cae en una página que **no existe** en el proceso (un proceso de 20 páginas que referencia la 21), no hay nada que traer del disco: es una **dirección inválida**, que el SO trata como un segmentation fault. No carga nada en memoria ni cuenta como PF.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-virtual/#traducir-dl">Traducir una DL</a></p>
 
 ### El bit M: escribir en RAM no es escribir en disco
 
@@ -294,6 +298,8 @@ No reduce los page faults: lo que ahorra es **escrituras a disco**, porque evita
 
 ```
 
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-virtual/#traza">Completar una traza de reemplazo</a> · <a href="/metodologia/parcial-2/memoria-virtual/#deducir-algoritmo">Deducir qué algoritmo eligió la víctima</a></p>
+
 #### Anomalía de Belady
 
 Uno esperaría que con más frames haya menos fallos. Con **FIFO** no siempre: hay secuencias que fallan **más** con más frames. Con `1 2 3 4 1 2 5 1 2 3 4 5`:
@@ -318,6 +324,8 @@ El **conjunto residente** son las páginas del proceso que están en RAM. Hay do
 | **Asignación variable** (los frames pueden cambiar)         | La víctima es del mismo proceso. | La víctima puede ser de cualquiera: cada reemplazo puede afectar a otro proceso. |
 
 Con asignación fija se saca una página cuando no hay frames libres **o** cuando el proceso ya llegó a su máximo, aunque la RAM tenga lugar. Con asignación variable se busca darle a cada proceso los frames que minimicen sus fallos.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-virtual/#asignacion">Asignación y sustitución</a></p>
 
 ### Limpieza
 

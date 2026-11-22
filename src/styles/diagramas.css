@@ -1354,6 +1354,12 @@ rect.t3p-ref {
 .diagrama .rm-chip-mal.tr-chip-pasado text {
   fill: color-mix(in srgb, var(--bad) 70%, var(--fg));
 }
+/* recorrido-traduccion-pasos.ts: el resultado grande de cada paso */
+.diagrama .tr-grande {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  fill: var(--fg);
+}
 .tr-chip-pendiente rect {
   stroke-dasharray: 4 3;
 }

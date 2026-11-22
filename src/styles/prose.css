@@ -144,3 +144,69 @@
 .prose .codigo-columnas > pre {
   margin-top: 0;
 }
+
+/* Metodología: tablas con solo líneas horizontales y el checklist (diseño A, issue #57) */
+.prose.metodologia :where(th, td) {
+  border-width: 0 0 1px;
+  padding: 0.6em 0.65em;
+  vertical-align: top;
+}
+.prose.metodologia th {
+  background: none;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-color: var(--line-strong);
+}
+/* tabla sin encabezados ("De dónde sale cada valor"): no se muestra la fila vacía */
+.prose.metodologia thead:not(:has(th:not(:empty))) {
+  display: none;
+}
+@media (max-width: 640px) {
+  .prose.metodologia :is(.mapa-tipos, table:has(thead th:empty)) {
+    display: block;
+  }
+  .prose.metodologia :is(.mapa-tipos, table:has(thead th:empty)) :is(thead) {
+    display: none;
+  }
+  .prose.metodologia :is(.mapa-tipos, table:has(thead th:empty)) :is(tbody, tr, td) {
+    display: block;
+  }
+  .prose.metodologia :is(.mapa-tipos, table:has(thead th:empty)) td {
+    border: 0;
+    padding: 0;
+  }
+  .prose.metodologia :is(.mapa-tipos, table:has(thead th:empty)) tr {
+    padding: 0.6em 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .prose.metodologia .mapa-tipos td + td::before {
+    content: '→ ';
+    color: var(--accent);
+  }
+}
+.prose .checklist-entrega {
+  list-style: none;
+  padding-left: 0;
+}
+.prose .checklist-entrega label {
+  display: flex;
+  gap: 0.6em;
+  align-items: baseline;
+  min-height: 2.75rem;
+}
+@media (min-width: 768px) {
+  .prose .checklist-entrega label {
+    min-height: 0;
+  }
+}
+.prose .checklist-entrega input {
+  accent-color: var(--accent);
+}
+/* "↳ En ejercicios: …" al final de una sección de teoría (links a la Metodología) */
+.prose .en-ejercicios {
+  font-size: 0.82rem;
+  color: var(--muted);
+}

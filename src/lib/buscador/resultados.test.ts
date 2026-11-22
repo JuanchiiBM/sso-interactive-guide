@@ -71,6 +71,13 @@ describe('agrupar', () => {
       ['Ejercicios', ['Ej. 19', 'Ej. 33', 'Ej. 16']],
     ])
   })
+  it('la metodología va en el grupo de teoría', () => {
+    const metodo = { url: '/m/', excerpt: '', meta: { title: 'Metodología', tipo: 'Metodología' } }
+    expect(agrupar([ej(1), metodo]).map((g) => [g.nombre, g.resultados.length])).toEqual([
+      ['Teoría', 1],
+      ['Ejercicios', 1],
+    ])
+  })
   it('un grupo vacío no aparece', () => {
     expect(agrupar([ej(1)]).map((g) => g.nombre)).toEqual(['Ejercicios'])
   })

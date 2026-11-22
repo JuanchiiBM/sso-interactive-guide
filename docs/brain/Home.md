@@ -3,7 +3,7 @@ tipo: home
 aliases: [home, índice, indice, brain, cerebro, vault]
 tags: [moc, home]
 alcance: sso-interactive-guide/**
-actualizado: 2026-10-08
+actualizado: 2026-11-22
 ---
 
 # Brain — SO Interactivo (UTN FRBA)
@@ -19,6 +19,7 @@ resoluciones paso a paso. Sitio estático, sin backend.
 - [[Arquitectura]] — cómo fluye el contenido desde markdown hasta el simulador en el navegador.
 - [[Simuladores]] — resolvedores paso a paso (lógica pura + visualizador).
 - [[Contenido]] — teoría y ejercicios: formato, schema, fuentes.
+  - [[Metodología de resolución]] — la sección hermana de Teoría y Ejercicios en el 2do parcial.
 - [[Simulacros]] — los parciales reales como examen con reloj, nota y mejor resultado.
 - [[Dominio SO]] — convenciones de la cátedra que el código tiene que respetar.
 

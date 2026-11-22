@@ -87,6 +87,8 @@ Es **asignación encadenada**, pero con los punteros sacados de los bloques y ju
 
 Con la tabla del ejemplo: lala.txt es `7 → 6`, tp.c es `5 → 4 → 9` y utnso es solo el `3`. Los tamaños cierran con clusters de 1 KiB: 2000 B ocupan 2 clusters y 3000 B ocupan 3.
 
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/fat-ufs/#fat-cadena">Seguir la cadena en la FAT</a></p>
+
 ### Versiones: bits por entrada
 
 FAT12, FAT16 y FAT32 usan entradas (punteros a cluster) de 12, 16 y 32 bits. **FAT32 usa solo 28 de sus 32 bits** para direccionar: los 4 más significativos quedan reservados.
@@ -109,6 +111,8 @@ FAT12, FAT16 y FAT32 usan entradas (punteros a cluster) de 12, 16 y 32 bits. **F
 - Teórico del filesystem: `2^28 × 2^11 B = 2^39 B = 512 GiB`.
 - Real con un disco de 500 GiB: 512 GiB > 500 GiB, así que **500 GiB**. Con un disco de 1000 GiB: **512 GiB**, y el resto del disco no se puede direccionar.
 - Tamaño de la FAT: `2^28 entradas × 2^2 B = 2^30 B = 1 GiB`, y cada copia ocupa lo mismo.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/fat-ufs/#fat-cuentas">Cuentas en FAT</a></p>
 
 ### Lo que FAT no tiene
 
@@ -182,6 +186,8 @@ La configuración típica es de **15 punteros: 12 PD + 1 IS + 1 ID + 1 IT**. Es 
 
 UFS es asignación **indexada**: el índice está en el inodo y crece con los niveles de indirección.
 
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/fat-ufs/#ext2-base">Punteros por bloque y FS en ext2</a> · <a href="/metodologia/parcial-2/fat-ufs/#disenar-inodo">Diseñar un inodo con requisitos</a></p>
+
 ### Cuentas en UFS
 
 - **Tamaño máximo teórico del filesystem** = `2^(bits del puntero) × tamaño de bloque`. Acá no importa cómo está armado el inodo: solo cuántos bloques distintos puede nombrar un puntero.
@@ -195,6 +201,8 @@ UFS es asignación **indexada**: el índice está en el inodo y crece con los ni
 - Archivo: `(4 + 256 + 256² + 256³) × 1 KiB ≈ 256³ KiB = 2^24 KiB = 16 GiB`. El término del IT domina: los otros suman apenas unos 64 MiB más. Con un disco de 8 GiB el real es **8 GiB**; con uno de 30 GiB, **16 GiB**.
 
 Con la configuración estándar (12 PD) el resultado casi no cambia: ocho bloques directos más son 8 KiB.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/fat-ufs/#archivo-maximo">Archivo máximo en ext2</a> · <a href="/metodologia/parcial-2/fat-ufs/#leer-completo">Leer el archivo completo en ext2</a></p>
 
 ### Leer el byte N de un archivo
 
@@ -218,6 +226,8 @@ Criterio de las resoluciones de parciales: el **inodo no se cuenta**, porque el 
 ```
 
 Dentro de la zona de un puntero indirecto, la entrada de cada nivel sale de dividir. Para el ID, si `r` es la posición dentro de su zona, la entrada del primer nivel es `r div 256` y la del segundo es `r mod 256`.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/fat-ufs/#leer-byte">Leer un byte en ext2</a> · <a href="/metodologia/parcial-2/fat-ufs/#leer-rango">Leer un rango de bytes en ext2</a></p>
 
 ### Crear y agrandar un archivo
 
@@ -250,6 +260,8 @@ Con un hard link ya no hay "entrada original": las dos entradas valen lo mismo. 
 | Si se borra el original       | El link queda **colgado**: la ruta no lleva a nada       | El archivo sigue mientras el contador sea mayor que 0             |
 | Otro volumen                  | **Sí**: la ruta es una referencia de alto nivel          | **No**: los números de inodo son únicos solo dentro de un volumen |
 | Directorios                   | Sí                                                       | No, por diseño                                                    |
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/fat-ufs/#links">Hard links y soft links</a></p>
 
 ## FAT vs UFS
 

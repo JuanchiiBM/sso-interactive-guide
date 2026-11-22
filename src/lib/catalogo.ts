@@ -49,6 +49,16 @@ export async function getCatalogoPorParcial() {
   })).filter((p) => p.temas.length > 0)
 }
 
+export type TipoMetodo = CollectionEntry<'metodologia'>
+
+/** Tipos de la Metodología agrupados por id de tema, en su `orden`. */
+export async function getMetodologias(): Promise<Map<string, TipoMetodo[]>> {
+  const tipos = (await getCollection('metodologia')).sort((a, b) => a.data.orden - b.data.orden)
+  const porTema = new Map<string, TipoMetodo[]>()
+  for (const t of tipos) porTema.set(t.data.tema.id, [...(porTema.get(t.data.tema.id) ?? []), t])
+  return porTema
+}
+
 export const temaHref = (id: string) => `/teoria/${id}/`
 export const simulacroHref = (id: string) => `/simulacros/${id}/`
 export const ejercicioHref = (id: string) => `/ejercicios/${id}/`

@@ -88,10 +88,11 @@ export function armarResultado(d: DatoPagefind, consulta = ''): Resultado {
   }
 }
 
-/** Teoría primero y ejercicios después, cada grupo en el orden de Pagefind (por puntaje). */
+/** Teoría (y Metodología) primero y ejercicios después, cada grupo en el orden de Pagefind. */
 export function agrupar(datos: DatoPagefind[], consulta = ''): Grupo[] {
-  const teoria = datos.filter((d) => d.meta.tipo === 'Teoría').slice(0, MAX_TEORIA)
-  const resto = datos.filter((d) => d.meta.tipo !== 'Teoría').slice(0, MAX_EJERCICIOS)
+  const esTeoria = (d: DatoPagefind) => d.meta.tipo === 'Teoría' || d.meta.tipo === 'Metodología'
+  const teoria = datos.filter(esTeoria).slice(0, MAX_TEORIA)
+  const resto = datos.filter((d) => !esTeoria(d)).slice(0, MAX_EJERCICIOS)
   return [
     { nombre: 'Teoría', resultados: teoria.map((d) => armarResultado(d, consulta)) },
     { nombre: 'Ejercicios', resultados: resto.map((d) => armarResultado(d, consulta)) },

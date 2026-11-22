@@ -17,6 +17,7 @@ fuente: { guia: Guía de Ejercicios – Planificación (v.2C2026), numero: 5 }
 tipo: practico # teorico | practico | codigo | verdadero-falso | multiple-choice
 dificultad: media # facil | media | dificil
 tags: [prioridades, gantt]
+metodo: [dl-df-hexa] # tipos de la Metodología del tema, ver [[Metodología de resolución]]
 simulaciones: [] # ver [[Simulador de Planificación]]
 ---
 ```

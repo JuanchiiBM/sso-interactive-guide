@@ -18,6 +18,7 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 - [[Resolución gráfica del inodo]] — bloque ```inodo: lectura por los punteros del inodo (fat-ufs).
 - [[Resolución gráfica de la TLB]] — bloques ```tlb y ```deducir: camino por la TLB y comparar algoritmos (memoria virtual).
 - [[Celdas a calcular en enunciados]] — celdas `(a calcular)` de tablas → campo para anotar.
+- [[Metodología de resolución]] — por tema: tipos de ejercicio, recetas, de dónde sale cada número y trampas (`/metodologia/`).
 - [[Fuentes y Derechos del Material]] — de dónde sale cada cosa y qué no se sube.
 - [[Content Collections Temas y Ejercicios]] — cómo se cargan y rutean.
 - [[Recorridos de Memoria]] — algoritmos y generadores de los diagramas de memoria.

@@ -56,6 +56,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href
       document.documentElement.dataset.theme = theme
       document.documentElement.style.colorScheme = theme
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors[theme])
+      // barra lateral escondida en pantalla grande (src/lib/sidebar.ts)
+      try {
+        if (localStorage.getItem('so:sidebar-oculto') === '1')
+          document.documentElement.setAttribute('data-sidebar-oculto', '')
+      } catch {}
     </script>
   </head>
   <body class="bg-surface text-fg font-sans antialiased min-h-dvh">
@@ -77,7 +82,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href
       try {
         for (const el of document.querySelectorAll('[data-claves]')) {
           const claves = el.dataset.claves.split('|').filter(Boolean)
-          const ok = claves.length > 0 && claves.every((k) => localStorage.getItem('so:resuelto:' + k) === '1')
+          const ok =
+            claves.length > 0 &&
+            claves.every((k) => localStorage.getItem('so:resuelto:' + k) === '1')
           el.toggleAttribute('data-resuelto', ok)
         }
       } catch {}

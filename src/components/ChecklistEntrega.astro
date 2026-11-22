@@ -1,0 +1,23 @@
+---
+/** "Antes de entregar": el mismo checklist en todas las metodologías. Los tildes no se guardan. */
+const items = [
+  'Releí los datos de <strong>este</strong> ejercicio (bloque, puntero, página, bits).',
+  'Unidades en potencias de 2: GiB, no GB.',
+  'Bits → bytes antes de dividir.',
+  'Rangos con +1 y redondeo para arriba.',
+  'V/F: primero VERDADERO o FALSO, después la justificación.',
+  'Si el enunciado aclara un criterio, pisa cualquier receta.',
+]
+---
+
+<h2 id="antes-de-entregar">Antes de entregar</h2>
+<ul class="checklist-entrega">
+  {items.map((t) => (
+    <li>
+      <label>
+        <input type="checkbox" />
+        <span set:html={t} />
+      </label>
+    </li>
+  ))}
+</ul>

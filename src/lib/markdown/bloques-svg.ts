@@ -1,4 +1,4 @@
-/** Bloques de código que se convierten en SVG en build: ```grafo, ```diagrama <id>, ```recorrido <id>, ```gantt, ```memoria, ```traduccion, ```fat, ```inodo, ```links, ```locks, ```tlb y ```deducir. */
+/** Bloques de código que se convierten en SVG en build: ```grafo, ```diagrama <id>, ```recorrido <id>, ```gantt, ```memoria, ```traduccion, ```fat, ```inodo, ```links, ```locks, ```tlb, ```deducir, ```pasos y ```traza. */
 import { renderGrafo } from '../grafos/asignacion'
 import { renderDiagrama } from '../diagramas/index'
 import { renderGanttEstatico } from '../diagramas/gantt-estatico'
@@ -11,6 +11,8 @@ import { renderLinks } from '../diagramas/links-bloque'
 import { renderLocks } from '../diagramas/locks-bloque'
 import { renderTlb } from '../diagramas/tlb-bloque'
 import { renderDeducir } from '../diagramas/deducir-bloque'
+import { renderPasos } from '../diagramas/pasos-bloque'
+import { renderTraza } from '../diagramas/traza-bloque'
 
 /** Devuelve el SVG del bloque, o null si el lenguaje no es uno de los nuestros. */
 export function bloqueSVG(lang: string | null | undefined, codigo: string): string | null {
@@ -27,6 +29,8 @@ export function bloqueSVG(lang: string | null | undefined, codigo: string): stri
   if (tipo === 'locks') return renderLocks(codigo)
   if (tipo === 'tlb') return renderTlb(codigo)
   if (tipo === 'deducir') return renderDeducir(codigo)
+  if (tipo === 'pasos') return renderPasos(codigo)
+  if (tipo === 'traza') return renderTraza(codigo)
   return null
 }
 
