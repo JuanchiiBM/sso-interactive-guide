@@ -1895,3 +1895,60 @@ rect.t3p-ref {
 .diagrama .tlb-neutro .tlb-num {
   fill: var(--fg-soft);
 }
+
+/* recorrido-deducir: comparar algoritmos (tableros tlb-D, tlb-11, tlb-16) */
+.diagrama .ded-si text,
+.diagrama .ded-si .ded-tit {
+  fill: var(--ok);
+}
+.diagrama .ded-no text,
+.diagrama .ded-no .ded-tit {
+  fill: var(--bad);
+}
+.diagrama .ded-si text,
+.diagrama .ded-no text,
+.diagrama .ded-fuerte text,
+.diagrama .ded-tit {
+  font-weight: 600;
+}
+.diagrama .ded-gris text,
+.diagrama .ded-pregunta text {
+  fill: var(--muted);
+}
+.diagrama .ded-pregunta text,
+.diagrama .ded-txt,
+.diagrama .ded-resp {
+  font-family: var(--font-sans);
+}
+.diagrama .ded-der {
+  text-anchor: end;
+}
+.diagrama .ded-marca text {
+  font-size: 14px;
+}
+.ded-real .tlb-celda {
+  fill: color-mix(in srgb, var(--ok) 6%, transparent);
+}
+.ded-tarjeta rect {
+  fill: none;
+}
+.ded-tarjeta.ded-si rect {
+  stroke: color-mix(in srgb, var(--ok) 45%, transparent);
+}
+.ded-tarjeta.ded-no rect {
+  stroke: color-mix(in srgb, var(--bad) 45%, transparent);
+}
+.diagrama .ded-tarjeta text {
+  font-weight: 400;
+  fill: var(--fg);
+}
+.diagrama .tlb-paso .ded-txt,
+.diagrama .tlb-paso .ded-resp {
+  font-size: 13px;
+}
+.diagrama .ded-resp {
+  fill: var(--fg-soft);
+}
+.diagrama .ded-resp .ded-tit {
+  fill: var(--fg);
+}

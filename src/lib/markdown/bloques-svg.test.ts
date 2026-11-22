@@ -218,3 +218,28 @@ referencias:
     expect(() => bloqueSVG('tlb', yamlT.replace('bitsFrame: 4', ''))).toThrow(/bitsFrame/)
   })
 })
+
+describe('bloque ```deducir', () => {
+  const yamlD = `titulo: Qué algoritmo sacó a la 6
+bitsOffset: 14
+bitsDL: 16
+bitsDF: 18
+uso: REF
+marcos:
+  - { frame: 2, pagina: 0, tur: 101, u: 1, m: 1 }
+  - { frame: 6, pagina: 2, tur: 77, u: 1, m: 1 }
+  - { frame: 11, pagina: 6, tur: 200, u: 1, m: 0 }
+referencias: [{ dl: 0xC0FF, df: 0x2C0FF }]
+algoritmos: [lru, clock-mejorado]
+`
+  it('arma decodificar + comparar', () => {
+    const html = bloqueSVG('deducir', yamlD)!
+    expect(html).toContain('data-recorrido')
+    expect(html).toContain('sale (única M = 0)')
+  })
+
+  it('rompe el build con un algoritmo que no existe o un dato faltante', () => {
+    expect(() => bloqueSVG('deducir', yamlD.replace('lru,', 'lfu,'))).toThrow(/algoritmo "lfu"/)
+    expect(() => bloqueSVG('deducir', yamlD.replace('bitsDF: 18', ''))).toThrow(/falta `bitsDF`/)
+  })
+})
