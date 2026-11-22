@@ -1359,3 +1359,86 @@ rect.t3p-ref {
 }
 
 /* fin memoria real y virtual */
+
+/* recorrido-cadena-fat.ts (```fat): directorio → cajas de la cadena → EOF, rangos y cuenta */
+.fat-dir rect {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+}
+.diagrama .fat-dir-tit {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--fg-soft);
+}
+.diagrama .fat-inicio {
+  font-weight: 700;
+  fill: var(--accent);
+}
+.fat-caja rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.4;
+}
+.fat-visto rect {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.fat-actual rect {
+  fill: color-mix(in srgb, var(--ok) 16%, var(--surface));
+  stroke: var(--ok);
+  stroke-width: 2;
+}
+.fat-resto rect {
+  stroke-dasharray: 4 3;
+}
+.diagrama .fat-caja-etq {
+  font-size: 10px;
+  opacity: 0.8;
+}
+.diagrama .fat-caja-n {
+  font-size: 18px;
+  font-weight: 600;
+}
+.diagrama .fat-resto .fat-caja-etq,
+.diagrama .fat-resto .fat-caja-n,
+.diagrama .fat-resto .fat-rango,
+.diagrama .fat-logico,
+.diagrama .fat-eof {
+  fill: var(--muted);
+}
+.diagrama .fat-logico,
+.diagrama .fat-rango {
+  font-size: 10px;
+}
+.diagrama .fat-visto .fat-rango {
+  fill: var(--fg-soft);
+}
+.diagrama .fat-actual .fat-rango {
+  fill: var(--ok);
+}
+.diagrama .fat-eof {
+  font-size: 11px;
+}
+.diagrama .fat-flecha {
+  fill: var(--muted);
+}
+.diagrama .fat-flecha-on {
+  fill: var(--accent);
+}
+.diagrama .fat-marca text {
+  font-size: 11px;
+  fill: var(--ok);
+}
+.diagrama .fat-linea-pasada {
+  fill: var(--fg-soft);
+}
+.diagrama .fat-linea-ok,
+.diagrama .fat-comp-ok text:last-child {
+  fill: var(--ok);
+}
+.diagrama .fat-comp text {
+  font-size: 12px;
+}
+.diagrama .fat-comp-falta text {
+  fill: var(--muted);
+}
