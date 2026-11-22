@@ -3,14 +3,14 @@ import type { Etapa } from './recorrido-tlb'
 import { esc } from './svg'
 import { rotuloProceso, type EntradaTlb, type PasoTlb, type SpecTlb } from './tlb'
 
-const X0 = 20
-const W = 760
+export const X0 = 20
+export const W = 760
 const BX = X0 + 34 + 12 + 180 + 12
 const FILA = 24
 /** Mono a 12 px ≈ 7,2 px por carácter: las celdas miden su ancho por sus textos. */
 const anchoMono = (t: string) => t.length * 7.2
 
-const txt = (x: number, y: number, t: string, clase = '') =>
+export const txt = (x: number, y: number, t: string, clase = '') =>
   `<text class="rm-izq ${clase}" x="${x}" y="${y}">${esc(t)}</text>`
 
 /** Corta en renglones de hasta `max` caracteres, por palabras. */
@@ -25,7 +25,7 @@ export function renglones(t: string, max: number): string[] {
 }
 
 /** Caja con el dato en mono y el porqué debajo; devuelve su alto. */
-function caja(x: number, y: number, w: number, dato: string, porque: string, tono: string) {
+export function caja(x: number, y: number, w: number, dato: string, porque: string, tono: string) {
   const lineas = renglones(porque, Math.floor((w - 24) / 6.4))
   const h = 32 + lineas.length * 15
   const svg =
@@ -36,7 +36,7 @@ function caja(x: number, y: number, w: number, dato: string, porque: string, ton
   return { svg, h }
 }
 
-function camino(etapas: Etapa[], y0: number) {
+export function camino(etapas: Etapa[], y0: number) {
   let y = y0
   let svg = ''
   etapas.forEach((e, i) => {
@@ -57,7 +57,7 @@ function camino(etapas: Etapa[], y0: number) {
 }
 
 /** Tabla con bordes; `nueva` pinta esa fila en --ok. */
-function tabla(x: number, y: number, cols: string[], filas: string[][], nueva?: number) {
+export function tabla(x: number, y: number, cols: string[], filas: string[][], nueva?: number) {
   const anchos = cols.map(
     (c, j) => Math.max(anchoMono(c), ...filas.map((f) => anchoMono(f[j] ?? ''))) + 20,
   )
@@ -78,6 +78,32 @@ function tabla(x: number, y: number, cols: string[], filas: string[][], nueva?: 
       .map((f, i) => fila(y + FILA * (i + 1), f, i === nueva ? 'tlb-fila tlb-nueva' : 'tlb-fila'))
       .join('')
   return { svg, w: anchos.reduce((s, a) => s + a, 0), h: FILA * (filas.length + 1) }
+}
+
+export interface BloqueTabla {
+  rotulo: string
+  cols: string[]
+  filas: string[][]
+}
+
+/** Tablas con su rótulo, una al lado de la otra; si no entran en el ancho, bajan. */
+export function tablasEnFila(bloques: BloqueTabla[], y0: number) {
+  let svg = ''
+  let y = y0
+  let x = X0
+  let altoFila = 0
+  for (const b of bloques) {
+    const t = tabla(x, y + 20, b.cols, b.filas)
+    if (x > X0 && x + t.w > W) {
+      y += altoFila + 16
+      x = X0
+      altoFila = 0
+    }
+    svg += txt(x, y + 8, b.rotulo, 'tlb-etq') + tabla(x, y + 20, b.cols, b.filas).svg
+    altoFila = Math.max(altoFila, 20 + t.h)
+    x += t.w + 24
+  }
+  return { svg, y: y + altoFila + 16 }
 }
 
 const colsTlb = (spec: SpecTlb) =>
@@ -144,8 +170,7 @@ export function dibujoInicial(spec: SpecTlb, hasta: string) {
     svg += c.svg
     y += c.h + 16
   }
-  // tablas en fila; si no entran en el ancho, bajan
-  const bloques: { rotulo: string; cols: string[]; filas: string[][] }[] = [
+  const bloques: BloqueTabla[] = [
     {
       rotulo: `TLB (FIFO, ${spec.entradas} entradas)`,
       cols: colsTlb(spec),
@@ -166,20 +191,9 @@ export function dibujoInicial(spec: SpecTlb, hasta: string) {
       ]),
     })),
   ]
-  let x = X0
-  let altoFila = 0
-  for (const b of bloques) {
-    const t = tabla(0, 0, b.cols, b.filas)
-    if (x > X0 && x + t.w > W) {
-      y += altoFila + 16
-      x = X0
-      altoFila = 0
-    }
-    svg += txt(x, y + 8, b.rotulo, 'tlb-etq') + tabla(x, y + 20, b.cols, b.filas).svg
-    altoFila = Math.max(altoFila, 20 + t.h)
-    x += t.w + 24
-  }
-  y += altoFila + 16
+  const fila = tablasEnFila(bloques, y)
+  svg += fila.svg
+  y = fila.y
   const refs = spec.referencias
     .map((r) =>
       typeof r === 'number'
