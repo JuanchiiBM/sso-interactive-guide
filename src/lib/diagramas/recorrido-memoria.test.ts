@@ -205,7 +205,7 @@ describe('recorridoMemoria: agrandar', () => {
     const p = r37.pasos![1]
     expect(p.titulo).toBe('P2 crece 1538 KiB')
     expect(p.texto).toBe(
-      '**P2 crece 1538 KiB** (4096 → 5634 KiB). El hueco de al lado mide 1 MiB: no alcanza. Libres hay 2 MiB en 2 huecos: fragmentación externa → hay que **compactar**. Se mueve P2 (9216 → 8192) y crece ahí. Sobran **510 KiB**.',
+      'Pasa de 4096 a 5634 KiB. El hueco de al lado mide 1 MiB: no alcanza. Libres hay 2 MiB en 2 huecos: fragmentación externa → hay que **compactar**. Se mueve P2 (9216 → 8192) y crece ahí. Sobran **510 KiB**.',
     )
     expect(r07.pasos![1].titulo).toBe('extender notas 8 bloques')
     expect(r07.pasos![1].texto).toContain('Se mueve Z (21 → 26) y crece ahí. Encaja justo.')

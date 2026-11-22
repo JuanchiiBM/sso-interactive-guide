@@ -556,11 +556,11 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       const lugar = p.candidatos.find((c) => c.estado !== 'no-al-lado')
       const libres = huecosDe(spec.total, p.despues)
       const sobra = libres.find((h) => h.inicio === p.crece!.inicio + t)?.tam ?? 0
-      const cuenta = `(${hexa ? tam(b.tam) : b.tam} → ${tam(b.tam + t)})`
+      const cuenta = `${hexa ? tam(b.tam) : b.tam} a ${tam(b.tam + t)}`
       const alLado = lugar
         ? `El hueco de al lado mide ${tam(lugar.hueco.tam)}`
         : 'Atrás no tiene hueco'
-      let txt = `**${agranda} crece ${tam(t)}** ${cuenta}. `
+      let txt = `Pasa de ${cuenta}. `
       if (p.movidos.length) {
         const movs = lista(p.movidos.map((m) => `${m.nombre} (${dir(m.de)} → ${dir(m.a)})`))
         txt += `${alLado}: no alcanza. Libres hay ${tam(libreDe(p))} en ${p.huecosAntes.length} huecos: fragmentación externa → hay que **compactar**. Se ${p.movidos.length > 1 ? 'mueven' : 'mueve'} ${movs} y crece ahí.`
