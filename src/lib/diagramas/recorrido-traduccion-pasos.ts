@@ -15,7 +15,8 @@ export interface EsquemaPasos {
   paginas?: Record<number, number>
 }
 
-export interface SpecTraduccionPasos {
+/** DL → DF: la misma DL en cada esquema (una pestaña por esquema). */
+export interface SpecDirectaPasos {
   sentido: 'pasos'
   titulo: string
   dl: number
@@ -23,6 +24,31 @@ export interface SpecTraduccionPasos {
   acceso?: 'lectura' | 'escritura' | 'ejecucion'
   esquemas: EsquemaPasos[]
 }
+
+/** DF → DL: cortar la DF, buscar el frame en todas las tablas y armar la DL. */
+export interface SpecBusquedaPasos {
+  sentido: 'pasos'
+  titulo: string
+  df: number
+  bitsSegmento: number
+  bitsPagina: number
+  bitsOffset: number
+  bitsFrame: number
+  procesos: { pid: string; segmentos: { seg: number; paginas: Record<number, number> }[] }[]
+}
+
+/** Reconstruir un segmento: base desde "DL → DF" y tamaño desde "última válida" o "al final". */
+export interface SpecReconstruirPasos {
+  sentido: 'pasos'
+  titulo: string
+  bitsSegmento: number
+  bitsOffset: number
+  /** Tamaño de la memoria; hace falta para `alFinal`. */
+  total?: number
+  pistas: ({ dl: number; df: number } | { ultima: number } | { alFinal: true })[]
+}
+
+export type SpecTraduccionPasos = SpecDirectaPasos | SpecBusquedaPasos | SpecReconstruirPasos
 
 const X0 = 20
 const ANCHO = 760
@@ -39,12 +65,17 @@ interface Slide {
 }
 
 export function recorridoTraduccionPasos(spec: SpecTraduccionPasos): Recorrido {
-  if (!spec.esquemas?.length) throw new Error('traduccion pasos: falta `esquemas`')
-  const variantes = spec.esquemas.map((e, i) => ({
-    nombre: e.nombre,
-    slides: slidesEsquema(spec, e),
-    id: `e${i}`,
-  }))
+  const grupos: { nombre: string; slides: Slide[] }[] =
+    'esquemas' in spec && spec.esquemas?.length
+      ? spec.esquemas.map((e) => ({ nombre: e.nombre, slides: slidesEsquema(spec, e) }))
+      : 'df' in spec
+        ? [{ nombre: '', slides: slidesBusqueda(spec) }]
+        : 'pistas' in spec
+          ? [{ nombre: '', slides: slidesReconstruir(spec) }]
+          : []
+  if (!grupos.length)
+    throw new Error('traduccion pasos: lleva `dl` y `esquemas`, `df` y `procesos`, o `pistas`')
+  const variantes = grupos.map((g, i) => ({ ...g, id: `e${i}` }))
   const ids = variantes.flatMap((v) => v.slides.map((_, k) => `${v.id}-p${k}`))
   const alto = Math.max(...variantes.flatMap((v) => v.slides.map((s) => s.alto))) + 8
   const pasos = (v: (typeof variantes)[number]): Paso[] =>
@@ -66,32 +97,8 @@ export function recorridoTraduccionPasos(spec: SpecTraduccionPasos): Recorrido {
       }
 }
 
-function slidesEsquema(spec: SpecTraduccionPasos, e: EsquemaPasos): Slide[] {
-  const bs = e.bitsSegmento ?? 0
-  const bp = e.bitsPagina ?? 0
-  const bo = e.bitsOffset
-  const dec = spec.unidad === 'decimal'
-  const total = bs + bp + bo
-  const hx = (n: number, w: number) =>
-    dec ? String(n) : `${n.toString(16).toUpperCase().padStart(w, '0')}h`
-  const d = (n: number) => hx(n, Math.ceil(total / 4))
-  const od = (n: number) => hx(n, Math.ceil((bp + bo) / 4))
-  const o = (n: number) => hx(n, Math.ceil(bo / 4))
-  const f1 = (n: number) => (dec ? String(n) : n.toString(16).toUpperCase())
-  if (spec.dl < 0 || spec.dl >= 2 ** total)
-    throw new Error(`traduccion pasos (${e.nombre}): ${d(spec.dl)} no entra en ${total} bits`)
-
-  const seg = Math.floor(spec.dl / 2 ** (bp + bo))
-  const desp = spec.dl % 2 ** (bp + bo)
-  const pagina = Math.floor(desp / 2 ** bo)
-  const off = desp % 2 ** bo
-  const fila = bs ? e.segmentos?.find((s) => s.seg === seg) : undefined
-  if (bs && !fila) throw new Error(`traduccion pasos (${e.nombre}): falta el segmento ${seg}`)
-  if (bs && !bp && fila!.base == null)
-    throw new Error(`traduccion pasos (${e.nombre}): al segmento ${seg} le falta \`base\``)
-  const paginas = bp ? (bs ? fila!.paginas : e.paginas) : undefined
-  if (bp && !paginas) throw new Error(`traduccion pasos (${e.nombre}): faltan las páginas`)
-
+/** Piezas de una slide: chips de lo ya resuelto arriba, y tablas, chequeos y resultados abajo. */
+function armador() {
   const slides: Slide[] = []
   const hechos: { t: string; ok?: boolean }[] = []
   const chips = () => {
@@ -159,6 +166,37 @@ function slidesEsquema(spec: SpecTraduccionPasos, e: EsquemaPasos): Slide[] {
     '</g>'
   const grande = (x: number, y: number, html: string) =>
     `<text class="rm-izq tr-grande" x="${x}" y="${y}">${html}</text>`
+
+  return { slides, hechos, agregar, tit, tabla, chequeo, grande }
+}
+
+function slidesEsquema(spec: SpecDirectaPasos, e: EsquemaPasos): Slide[] {
+  const bs = e.bitsSegmento ?? 0
+  const bp = e.bitsPagina ?? 0
+  const bo = e.bitsOffset
+  const dec = spec.unidad === 'decimal'
+  const total = bs + bp + bo
+  const hx = (n: number, w: number) =>
+    dec ? String(n) : `${n.toString(16).toUpperCase().padStart(w, '0')}h`
+  const d = (n: number) => hx(n, Math.ceil(total / 4))
+  const od = (n: number) => hx(n, Math.ceil((bp + bo) / 4))
+  const o = (n: number) => hx(n, Math.ceil(bo / 4))
+  const f1 = (n: number) => (dec ? String(n) : n.toString(16).toUpperCase())
+  if (spec.dl < 0 || spec.dl >= 2 ** total)
+    throw new Error(`traduccion pasos (${e.nombre}): ${d(spec.dl)} no entra en ${total} bits`)
+
+  const seg = Math.floor(spec.dl / 2 ** (bp + bo))
+  const desp = spec.dl % 2 ** (bp + bo)
+  const pagina = Math.floor(desp / 2 ** bo)
+  const off = desp % 2 ** bo
+  const fila = bs ? e.segmentos?.find((s) => s.seg === seg) : undefined
+  if (bs && !fila) throw new Error(`traduccion pasos (${e.nombre}): falta el segmento ${seg}`)
+  if (bs && !bp && fila!.base == null)
+    throw new Error(`traduccion pasos (${e.nombre}): al segmento ${seg} le falta \`base\``)
+  const paginas = bp ? (bs ? fila!.paginas : e.paginas) : undefined
+  if (bp && !paginas) throw new Error(`traduccion pasos (${e.nombre}): faltan las páginas`)
+
+  const { slides, hechos, agregar, tit, tabla, chequeo, grande } = armador()
 
   // tabla de segmentos: base (pura), límite y permisos, con la fila del segmento marcada
   const tope = fila?.limite ?? fila?.largo
@@ -391,6 +429,214 @@ function slidesEsquema(spec: SpecTraduccionPasos, e: EsquemaPasos): Slide[] {
       texto(xDF + (chipRes.length * 6.8 + 16) / 2, Y + 73, chipRes) +
       '</g>',
     Math.max(tSeg?.alto ?? 0, 88),
+  )
+  return slides
+}
+
+/** Bits en casillas; deja un hueco donde cambia de campo. `clases`: seg, pag, off o frame. */
+function filaBits(b: string, clases: string[], y: number): string {
+  let x = X0
+  return [...b]
+    .map((v, i) => {
+      if (i > 0 && clases[i] !== clases[i - 1]) x += 8
+      const g =
+        `<g class="tr-bit tr-bit-${clases[i]}"><rect x="${x}" y="${y}" width="24" height="30" rx="4"/>` +
+        texto(x + 12, y + 15, v) +
+        '</g>'
+      x += 27
+      return g
+    })
+    .join('')
+}
+
+const hexa = (n: number, b: number) =>
+  `${n
+    .toString(16)
+    .toUpperCase()
+    .padStart(Math.ceil(b / 4), '0')}h`
+
+function slidesBusqueda(spec: SpecBusquedaPasos): Slide[] {
+  const { bitsSegmento: bs, bitsPagina: bp, bitsOffset: bo, bitsFrame: bf } = spec
+  const { slides, hechos, agregar, tit, tabla, grande } = armador()
+  if (spec.df < 0 || spec.df >= 2 ** (bf + bo))
+    throw new Error(`traduccion pasos: ${hexa(spec.df, bf + bo)} no entra en ${bf + bo} bits`)
+  const frame = Math.floor(spec.df / 2 ** bo)
+  const off = spec.df % 2 ** bo
+  const F = frame.toString(16).toUpperCase()
+  const b = bits(spec.df, bf + bo)
+  agregar(
+    'Corte de la DF',
+    `La DF es | frame | offset |: ${bf} bits de frame y ${bo} de offset. ${hexa(spec.df, bf + bo)} → frame **${F}${frame > 9 ? ` = ${frame}` : ''}** y offset **${hexa(off, bo)}**, que se copia a la DL.`,
+    tit(Y, `Cortar ${hexa(spec.df, bf + bo)}: ${bf} de frame | ${bo} de offset`) +
+      filaBits(
+        b,
+        [...b].map((_, i) => (i < bf ? 'frame' : 'off')),
+        Y + 14,
+      ) +
+      `<text class="rm-izq tr-corte" x="${X0}" y="${Y + 66}"><tspan class="tr-acento">frame ${F}</tspan>   <tspan class="tr-val">offset ${hexa(off, bo)}</tspan></text>`,
+    72,
+  )
+  hechos.push({ t: `frame ${F}` }, { t: `offset ${hexa(off, bo)}` })
+
+  const tablas = spec.procesos.flatMap((p) => p.segmentos.map((sg) => ({ pid: p.pid, ...sg })))
+  const duenos = tablas.filter((t) => Object.values(t.paginas).includes(frame))
+  if (duenos.length > 1)
+    throw new Error(`traduccion pasos: el frame ${F} está en dos tablas; la DL no es única`)
+  const dueno = duenos[0]
+  const pagina = dueno ? +Object.entries(dueno.paginas).find(([, f]) => f === frame)![0] : -1
+  let x = X0
+  let alto = 0
+  const svgTablas = tablas
+    .map((t) => {
+      const tb = tabla(
+        x,
+        Y,
+        `${t.pid} · seg ${t.seg}`,
+        ['Pág', 'Frame'],
+        Object.entries(t.paginas).map(([pg, f]) => ({
+          celdas: [pg, f.toString(16).toUpperCase()],
+          sel: t === dueno && +pg === pagina,
+          foco: 1,
+        })),
+      )
+      x += tb.ancho + 24
+      alto = Math.max(alto, tb.alto)
+      return t === dueno ? tb.svg : `<g class="tr-caja-otra">${tb.svg}</g>`
+    })
+    .join('')
+  agregar(
+    'Buscar el frame',
+    dueno
+      ? `La tabla va de página a frame: para ir al revés se busca el ${F} en **todas** las tablas. Está en la de **${dueno.pid}**, segmento ${dueno.seg}, fila **${pagina}**.`
+      : `El frame ${F} no está en ninguna tabla: está **libre**, no corresponde a ninguna DL.`,
+    svgTablas,
+    alto,
+  )
+  if (!dueno) return slides
+  hechos.length = 0
+  hechos.push(
+    { t: dueno.pid },
+    { t: `seg ${dueno.seg}` },
+    { t: `pág ${pagina}` },
+    { t: `offset ${hexa(off, bo)}` },
+  )
+
+  const total = bs + bp + bo
+  const dl = (dueno.seg * 2 ** bp + pagina) * 2 ** bo + off
+  const bl = bits(dl, total)
+  agregar(
+    'Armar la DL',
+    `Se pegan segmento, página y offset: ${bits(dueno.seg, bs)} | ${bits(pagina, bp)} | ${hexa(off, bo)} → DL = **${hexa(dl, total)} del ${dueno.pid}**.`,
+    tit(Y, `DL = ${bs} de segmento | ${bp} de página | ${bo} de offset`) +
+      filaBits(
+        bl,
+        [...bl].map((_, i) => (i < bs ? 'seg' : i < bs + bp ? 'pag' : 'off')),
+        Y + 14,
+      ) +
+      grande(
+        X0,
+        Y + 82,
+        `DL = <tspan class="tr-acento">${hexa(dl, total)}</tspan> del ${dueno.pid}`,
+      ),
+    90,
+  )
+  return slides
+}
+
+function slidesReconstruir(spec: SpecReconstruirPasos): Slide[] {
+  const { bitsSegmento: bs, bitsOffset: bo } = spec
+  const { slides, hechos, agregar, tit, tabla, grande } = armador()
+  const total = bs + bo
+  const h = (n: number) => hexa(n, total)
+  const corte = (dl: number) => {
+    const b = bits(dl, total)
+    return {
+      seg: Math.floor(dl / 2 ** bo),
+      off: dl % 2 ** bo,
+      svg: filaBits(
+        b,
+        [...b].map((_, i) => (i < bs ? 'seg' : 'off')),
+        Y + 14,
+      ),
+    }
+  }
+  let seg: number | undefined
+  let base: number | undefined
+  let tam: number | undefined
+  const mismo = (n: number) => {
+    if (seg != null && n !== seg)
+      throw new Error(`traduccion pasos: las pistas hablan de los segmentos ${seg} y ${n}`)
+    seg = n
+  }
+  for (const p of spec.pistas) {
+    if ('df' in p) {
+      const c = corte(p.dl)
+      mismo(c.seg)
+      agregar(
+        'Corte',
+        `La pista dice que ${h(p.dl)} → ${h(p.df)}. En segmentación pura la DL es | segmento | desplazamiento |: ${bs} y ${bo} bits. Segmento **${c.seg}**, desplazamiento **${h(c.off)}**.`,
+        tit(Y, `Cortar ${h(p.dl)}: ${bs} de segmento | ${bo} de desplazamiento`) + c.svg,
+        48,
+      )
+      hechos.push({ t: `seg ${c.seg}` }, { t: `desp ${h(c.off)}` })
+      base = p.df - c.off
+      agregar(
+        'Base',
+        `La MMU hace DF = base + desplazamiento; se despeja: base = ${h(p.df)} − ${h(c.off)} = **${h(base)}**.`,
+        tit(Y, 'base = DF − desplazamiento') +
+          grande(
+            X0,
+            Y + 40,
+            `${h(p.df)} − ${h(c.off)} = <tspan class="tr-acento">${h(base)}</tspan>`,
+          ),
+        56,
+      )
+      hechos.length = 0
+      hechos.push({ t: `seg ${c.seg}` }, { t: `base ${h(base)}` })
+    } else if ('ultima' in p) {
+      const c = corte(p.ultima)
+      mismo(c.seg)
+      tam = c.off + 1
+      agregar(
+        'Tamaño',
+        `${h(p.ultima)} es la **última** dirección válida del segmento ${c.seg}: su desplazamiento ${h(c.off)} es el último byte. Como cuenta desde 0, tamaño = ${h(c.off)} + 1 = **${h(tam)}**.`,
+        tit(Y, `Cortar ${h(p.ultima)} y sumar 1`) +
+          c.svg +
+          grande(X0, Y + 82, `${h(c.off)} + 1 = <tspan class="tr-acento">${h(tam)}</tspan>`),
+        90,
+      )
+    } else {
+      if (base == null || spec.total == null)
+        throw new Error('traduccion pasos: `alFinal` necesita `total` y una pista de base antes')
+      tam = spec.total - base
+      agregar(
+        'Tamaño',
+        `Termina justo al final de la memoria (${h(spec.total)}): tamaño = ${h(spec.total)} − ${h(base)} = **${h(tam)}**.`,
+        tit(Y, 'tamaño = fin de la memoria − base') +
+          grande(
+            X0,
+            Y + 40,
+            `${h(spec.total)} − ${h(base)} = <tspan class="tr-acento">${h(tam)}</tspan>`,
+          ),
+        56,
+      )
+    }
+  }
+  if (seg == null || base == null || tam == null)
+    throw new Error('traduccion pasos: hacen falta una pista de base y una de tamaño')
+  hechos.length = 0
+  const t = tabla(
+    X0,
+    Y,
+    'Tabla de segmentos',
+    ['Seg', 'Base', 'Tamaño', 'Fin'],
+    [{ celdas: [String(seg), h(base), h(tam), h(base + tam)], sel: true, foco: 2 }],
+  )
+  agregar(
+    'Fila de la tabla',
+    `Queda la fila del segmento ${seg}: base **${h(base)}** y tamaño **${h(tam)}**. El fin (${h(base + tam)}) es base + tamaño: no confundirlo con el tamaño.`,
+    t.svg,
+    t.alto,
   )
   return slides
 }

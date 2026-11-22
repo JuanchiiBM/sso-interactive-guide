@@ -107,4 +107,53 @@ describe('traducción en pasos cortos (Metodología)', () => {
     )
     expect(html).toContain('e0-p2')
   })
+
+  it('DF → DL: corte, búsqueda en todas las tablas y DL armada', () => {
+    const r = recorridoTraduccionPasos({
+      sentido: 'pasos',
+      titulo: 'De B4A0h a la DL',
+      df: 0xb4a0,
+      bitsSegmento: 1,
+      bitsPagina: 3,
+      bitsOffset: 12,
+      bitsFrame: 4,
+      procesos: [
+        { pid: 'PID1', segmentos: [{ seg: 0, paginas: { 0: 3, 1: 8 } }] },
+        { pid: 'PID2', segmentos: [{ seg: 0, paginas: { 0: 2, 1: 11 } }] },
+      ],
+    })
+    expect(r.pasos!.map((p) => p.titulo)).toEqual([
+      'Corte de la DF',
+      'Buscar el frame',
+      'Armar la DL',
+    ])
+    expect(plano(r.pasos![1].texto)).toContain('PID2, segmento 0, fila 1')
+    expect(plano(r.pasos![2].texto)).toContain('DL = 14A0h del PID2')
+  })
+
+  it('reconstruir: base desde DL → DF y tamaño desde la última válida', () => {
+    const r = recorridoTraduccionPasos({
+      sentido: 'pasos',
+      titulo: 'Segmento 1',
+      bitsSegmento: 2,
+      bitsOffset: 14,
+      pistas: [{ dl: 0x4a00, df: 0xc200 }, { ultima: 0x6fff }],
+    })
+    expect(r.pasos!.map((p) => p.titulo)).toEqual(['Corte', 'Base', 'Tamaño', 'Fila de la tabla'])
+    expect(plano(r.pasos![1].texto)).toContain('C200h − 0A00h = B800h')
+    expect(plano(r.pasos![2].texto)).toContain('2FFFh + 1 = 3000h')
+    expect(plano(r.pasos![3].texto)).toContain('El fin (E800h)')
+  })
+
+  it('reconstruir: "al final de la memoria" necesita el total', () => {
+    const r = recorridoTraduccionPasos({
+      sentido: 'pasos',
+      titulo: 'x',
+      bitsSegmento: 2,
+      bitsOffset: 14,
+      total: 0x10000,
+      pistas: [{ dl: 0xc000, df: 0xd000 }, { alFinal: true }],
+    })
+    expect(plano(r.pasos!.at(-2)!.texto)).toContain('10000h − D000h = 3000h')
+  })
 })

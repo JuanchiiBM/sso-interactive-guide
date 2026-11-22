@@ -24,7 +24,7 @@ const CAMPOS = {
     'procesos',
     'direcciones',
   ],
-  pasos: ['titulo', 'dl', 'esquemas'],
+  pasos: ['titulo'],
 } as const
 
 export function renderTraduccion(codigo: string): string {

@@ -33,8 +33,9 @@ teoria:
 16 bits: 1 de segmento, 3 de página, 12 de offset; memoria de 64 KiB (16 frames). ¿Qué DL corresponde a la DF `B4A0h`?
 
 ```traduccion
-sentido: busqueda
+sentido: pasos
 titulo: De B4A0h a la dirección lógica
+df: 0xB4A0
 bitsSegmento: 1
 bitsPagina: 3
 bitsOffset: 12
@@ -47,6 +48,4 @@ procesos:
   - pid: PID2
     segmentos:
       - { seg: 0, paginas: { 0: 2, 1: 11 } }
-direcciones:
-  - { df: 0xB4A0 }
 ```

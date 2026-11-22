@@ -37,14 +37,11 @@ teoria:
 16 bits: 2 de segmento y 14 de offset; memoria de 64 KiB. La DL `4A00h` da la DF `C200h`, y la última dirección válida del mismo segmento es `6FFFh`.
 
 ```traduccion
+sentido: pasos
 titulo: Base y tamaño del segmento 1
-total: 0x10000
 bitsSegmento: 2
 bitsOffset: 14
-proceso: A
-direcciones:
-  - dl: 0x4A00
-    df: 0xC200
-    tam: 0x3000
-    texto: 'La última dirección válida es 6FFFh: offset 2FFFh, así que mide 2FFFh + 1 = **3000h**.'
+pistas:
+  - { dl: 0x4A00, df: 0xC200 }
+  - { ultima: 0x6FFF }
 ```
