@@ -209,6 +209,10 @@ contenido: { 3: SIST, 8: EMAS }   # opcional (ej-30): bajo cada caja, y se arma 
 - **Fuera:** ej-34 b-ii) (no da la FAT: dibujar bloques sería inventar), ej-48, 35 y 50 (directorios
   o inodo). El recorrido de teoría `cadena-fat` (PPT, con pestañas y "agrandar") sigue aparte.
 
+## Punteros del inodo: bloque ` ```inodo `
+
+Byte → bloque → accesos, un paso por puntero (PD, PIS, PID, PIT). Ver [[Resolución gráfica del inodo]].
+
 ## Traza: recorrido automático
 
 `TrazaDesafio` dibuja `recorridoTraza(traza, alg)` arriba de la justificación, para **todas** las

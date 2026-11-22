@@ -19,6 +19,7 @@ aliases:
     maxArchivoExt2,
     ubicarByte,
     recorridoCadenaFat,
+    accesosPorPuntero,
   ]
 tags: [componente, contenido, svg, interactivo, filesystem]
 actualizado: 2026-11-22
@@ -39,6 +40,7 @@ espacioFat(32, 4 * KiB, 8 * GiB) // { teorico, real, entradas, tamanoTabla }
 maxArchivoExt2({ directos: 12, simples: 1, dobles: 1, triples: 1 }, 1 * KiB, 4)
 accesosByte(conf, 4 * KiB, 8, 16777227) // punteros + datos, sin el inodo
 accesosBloque(conf, 1 * KiB, 4, 260) // igual, por bloque lógico
+accesosPorPuntero(conf, KiB, 4, 10, 531) // por puntero: rango, datos y BP por profundidad
 clusterPorTabla(32, 256 * MiB, 384 * GiB) // menor cluster 2^k con entradas × cluster ≥ volumen
 ```
 
@@ -78,4 +80,4 @@ La **resolución** de los ejercicios que siguen una cadena de la FAT (con su tab
   recorrido tiene IT y esos ejercicios no: la justificación lo aclara.
 
 **Depende de:** [[Recorridos paso a paso]]
-**Conectado con:** [[Contenido]], [[Recorridos de Memoria]], [[Convenciones de la Cátedra FRBA]]
+**Conectado con:** [[Resolución gráfica del inodo]], [[Contenido]], [[Recorridos de Memoria]], [[Convenciones de la Cátedra FRBA]]

@@ -15,6 +15,7 @@ Teoría (`src/content/temas/`) y enunciados (`src/content/ejercicios/`), todo en
 - [[Recorridos paso a paso]] — diagramas de teoría interactivos (```recorrido <id>).
 - [[Traza de reemplazo a completar]] — grilla de reemplazo (páginas, H/U/M/P, PF, disco) que completa el alumno.
 - [[Resolución gráfica paso a paso]] — resoluciones del 2do parcial: ```memoria (huecos) y recorrido automático de trazas.
+- [[Resolución gráfica del inodo]] — bloque ```inodo: lectura por los punteros del inodo (fat-ufs).
 - [[Celdas a calcular en enunciados]] — celdas `(a calcular)` de tablas → campo para anotar.
 - [[Fuentes y Derechos del Material]] — de dónde sale cada cosa y qué no se sube.
 - [[Content Collections Temas y Ejercicios]] — cómo se cargan y rutean.
