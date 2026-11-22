@@ -205,3 +205,8 @@
 .prose .checklist-entrega input {
   accent-color: var(--accent);
 }
+/* "↳ En ejercicios: …" al final de una sección de teoría (links a la Metodología) */
+.prose .en-ejercicios {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
