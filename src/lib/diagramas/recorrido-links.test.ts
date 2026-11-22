@@ -114,3 +114,38 @@ describe('recorridoLinks con varios directorios', () => {
     expect(f3).toContain('6 apunta por ruta')
   })
 })
+
+// fat-ufs ej-20: un soft link en otro volumen, columnas lado a lado
+describe('recorridoLinks con dos volúmenes', () => {
+  const r20 = recorridoLinks({
+    titulo: 'Links en dos volúmenes',
+    volumenes: [
+      { nombre: 'A', directorios: ['/datos'] },
+      { nombre: 'B', directorios: ['/backup'] },
+    ],
+    inicial: [{ ruta: '/datos/informe.txt', inodo: 'I' }],
+    operaciones: [
+      { ln: '/datos/informe.txt', a: '/datos/copia.txt' },
+      { lns: '/datos/informe.txt', a: '/datos/acceso.txt', inodo: 'S' },
+      { lns: '/datos/informe.txt', a: '/backup/informe_link.txt', inodo: 'S2' },
+      { rm: '/datos/informe.txt' },
+    ],
+  })
+  const h = renderRecorrido(r20)
+  const f4 = h.split('data-el="paso-4"')[1].split('data-el="paso-')[0]
+
+  it('una columna por volumen, con su título', () => {
+    expect(f4).toContain('Volumen A')
+    expect(f4).toContain('Volumen B')
+    const x = (d: string) =>
+      Number(f4.match(new RegExp(String.raw`x="(\d+)"[^>]*>directorio ${d}<`))![1])
+    expect(x('/backup')).toBeGreaterThan(x('/datos') + 400)
+    expect(r20.ancho).toBeGreaterThan(820)
+  })
+
+  it('el soft link de B llega a la entrada de A por el carril de arriba', () => {
+    expect(f4).toContain('S2 apunta por ruta')
+    expect(f4).toMatch(/lk-flecha-soft"><path d="M [\d.]+ [\d.]+ L [\d.]+ [\d.]+ L [\d.]+ 42 /)
+    expect(r20.pasos![4].texto).toContain('**/backup/informe_link.txt** guarda la ruta')
+  })
+})

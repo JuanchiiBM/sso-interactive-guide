@@ -9,11 +9,11 @@ export interface SpecLinks extends SpecLinksSim {
 
 const ANCHO = 820
 const DX = 10
-const DW = 262
 const CAB = 28
 const FILA = 38
-const CX = 490
-const CW = 300
+// directorio | hueco de las flechas | tarjeta (con dos volúmenes, más angostos)
+const GEO_UNO = { dw: 262, gap: 218, cw: 300 }
+const GEO_VOLS = { dw: 190, gap: 90, cw: 294 }
 
 const altoInodo = (i: InodoLinks) => (i.tipo === 'soft' ? 112 : 86)
 
@@ -88,37 +88,50 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
   const pasos = simularLinks(spec)
   const ultimo = pasos.at(-1)!
 
-  // Cajas de directorio: en el orden declarado o en el que aparecen; las filas no cambian entre pasos.
-  const dirs = spec.volumenes
-    ? spec.volumenes.flatMap((v) => v.directorios)
-    : [...new Set(ultimo.entradas.map((e) => e.dir))]
-  const filas = new Map<string, number>()
-  let yd = 20
-  const cajas = dirs.map((d) => {
-    const es = ultimo.entradas.filter((e) => e.dir === d)
-    const y0 = yd
-    es.forEach((e, k) => filas.set(e.ruta, y0 + CAB + k * FILA + FILA / 2))
-    yd += CAB + Math.max(1, es.length) * FILA + 18
-    return { d, y0, alto: CAB + Math.max(1, es.length) * FILA }
-  })
+  // Una columna por volumen (directorios apilados | tarjetas de inodo); las filas no cambian entre pasos.
+  const vols = spec.volumenes ?? [
+    { nombre: '', directorios: [...new Set(ultimo.entradas.map((e) => e.dir))] },
+  ]
+  const g = vols.length > 1 ? GEO_VOLS : GEO_UNO
+  const col = g.dw + g.gap + g.cw
+  const y0Vol = vols.length > 1 ? 54 : 20
+  const ancho = vols.length > 1 ? vols.length * col + (vols.length - 1) * 40 + 20 : ANCHO
+  const xs0 = new Map(vols.map((v, k) => [v.nombre, DX + k * (col + 40)]))
+  const dx = (vol: string) => xs0.get(vol)!
+  const cx = (vol: string) => dx(vol) + g.dw + g.gap
 
-  // Tarjetas de inodo: a la altura de sus entradas, empujadas para no pisarse.
+  const filas = new Map<string, number>()
+  const cajas: { d: string; vol: string; y0: number; alto: number }[] = []
   const yIno = new Map<string, number>()
-  let piso = 20
-  for (const i of [...ultimo.inodos]
-    .map((i) => {
-      const rs = ultimo.entradas.filter((e) => e.inodo === i.id).map((e) => filas.get(e.ruta)!)
-      return { i, ideal: rs.reduce((a, b) => a + b, 0) / rs.length - altoInodo(i) / 2 }
-    })
-    .sort((a, b) => a.ideal - b.ideal)) {
-    const y0 = Math.max(piso, i.ideal)
-    yIno.set(i.i.id, y0)
-    piso = y0 + altoInodo(i.i) + 24
+  let alto = 0
+  for (const v of vols) {
+    let yd = y0Vol
+    for (const d of v.directorios) {
+      const es = ultimo.entradas.filter((e) => e.dir === d)
+      es.forEach((e, k) => filas.set(e.ruta, yd + CAB + k * FILA + FILA / 2))
+      cajas.push({ d, vol: v.nombre, y0: yd, alto: CAB + Math.max(1, es.length) * FILA })
+      yd += CAB + Math.max(1, es.length) * FILA + 18
+    }
+    // Tarjetas de inodo: a la altura de sus entradas, empujadas para no pisarse.
+    let piso = y0Vol
+    for (const i of ultimo.inodos
+      .filter((i) => i.volumen === v.nombre)
+      .map((i) => {
+        const rs = ultimo.entradas.filter((e) => e.inodo === i.id).map((e) => filas.get(e.ruta)!)
+        return { i, ideal: rs.reduce((a, b) => a + b, 0) / rs.length - altoInodo(i) / 2 }
+      })
+      .sort((a, b) => a.ideal - b.ideal)) {
+      const y0 = Math.max(piso, i.ideal)
+      yIno.set(i.i.id, y0)
+      piso = y0 + altoInodo(i.i) + 24
+    }
+    alto = Math.max(alto, yd - 18, piso - 24)
   }
-  const altoDibujo = Math.max(yd - 18, piso - 24) + 16
+  const altoDibujo = alto + 16
+  const media = g.gap / 2
 
   const flecha = (x1: number, y1: number, x2: number, y2: number, clase: string, punta = true) =>
-    `<g class="${clase}"><path d="M ${x1} ${y1} C ${x1 + 100} ${y1}, ${x2 - 100} ${y2}, ${x2} ${y2}"/>` +
+    `<g class="${clase}"><path d="M ${x1} ${y1} C ${x1 + media} ${y1}, ${x2 - media} ${y2}, ${x2} ${y2}"/>` +
     (punta
       ? `<path class="lk-punta" d="M ${x2 - 9} ${y2 - 6} L ${x2} ${y2} L ${x2 - 9} ${y2 + 6}"/>`
       : '') +
@@ -126,19 +139,28 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
 
   const dibujo = (p: PasoLinks) => {
     const vive = (r: string) => p.entradas.some((e) => e.ruta === r && !e.borrada)
-    let svg = cajas
-      .map(
-        (c) =>
-          `<g class="lk-dir"><rect x="${DX}" y="${c.y0}" width="${DW}" height="${c.alto}" rx="8"/>` +
-          `<line x1="${DX}" y1="${c.y0 + CAB}" x2="${DX + DW}" y2="${c.y0 + CAB}"/>` +
-          texto(DX + 12, c.y0 + CAB / 2, `directorio ${c.d}`, { clase: 'rm-izq lk-dir-tit' }) +
-          '</g>',
-      )
+    let svg =
+      vols.length > 1
+        ? vols
+            .map((v) => texto(dx(v.nombre), 16, `Volumen ${v.nombre}`, { clase: 'rm-izq lk-vol' }))
+            .join('')
+        : ''
+    svg += cajas
+      .map((c) => {
+        const x = dx(c.vol)
+        return (
+          `<g class="lk-dir"><rect x="${x}" y="${c.y0}" width="${g.dw}" height="${c.alto}" rx="8"/>` +
+          `<line x1="${x}" y1="${c.y0 + CAB}" x2="${x + g.dw}" y2="${c.y0 + CAB}"/>` +
+          texto(x + 12, c.y0 + CAB / 2, `directorio ${c.d}`, { clase: 'rm-izq lk-dir-tit' }) +
+          '</g>'
+        )
+      })
       .join('')
     const entrantes = new Map<string, number>()
     const flechas: [string, string, number, boolean][] = []
     for (const e of p.entradas) {
       const y = filas.get(e.ruta)!
+      const x = dx(e.volumen)
       const clase =
         e.borrada === 'ahora'
           ? 'lk-fila lk-fila-borrada'
@@ -148,10 +170,10 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
       svg +=
         `<g class="${clase}">` +
         (e.borrada === 'ahora'
-          ? `<rect x="${DX + 1}" y="${y - FILA / 2}" width="${DW - 2}" height="${FILA}"/>`
+          ? `<rect x="${x + 1}" y="${y - FILA / 2}" width="${g.dw - 2}" height="${FILA}"/>`
           : '') +
-        texto(DX + 12, y, e.nombre, { clase: 'rm-izq' }) +
-        texto(DX + DW - 12, y, `→ ${e.inodo}`, { clase: 'rm-der' }) +
+        texto(x + 12, y, e.nombre, { clase: 'rm-izq' }) +
+        texto(x + g.dw - 12, y, `→ ${e.inodo}`, { clase: 'rm-der' }) +
         '</g>'
       if (e.borrada === 'antes') continue
       const k = entrantes.get(e.inodo) ?? 0
@@ -164,9 +186,9 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
       const y0 = yIno.get(id)!
       const ty = i.tipo === 'soft' ? y0 + 22 + k * 14 : y0 + (altoInodo(i) * (k + 1)) / (n + 1)
       svg += flecha(
-        DX + DW,
+        dx(i.volumen) + g.dw,
         filas.get(ruta)!,
-        CX,
+        cx(i.volumen),
         ty,
         borrada ? 'lk-flecha lk-flecha-borrada' : 'lk-flecha',
         !borrada,
@@ -175,20 +197,19 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
 
     for (const i of p.inodos) {
       const y0 = yIno.get(i.id)!
+      const x = cx(i.volumen)
       const h = altoInodo(i)
       const sel = p.afectado === i.id
       const cambio = i.antes !== i.contador && p.op != null
       const clase = `lk-inodo${sel ? ' lk-inodo-sel' : ''}${i.liberado ? ' lk-inodo-libre' : ''}`
       const cont = cambio && i.antes > 0 ? `${i.antes} → ${i.contador}` : String(i.contador)
       svg +=
-        `<g class="${clase}"><rect x="${CX}" y="${y0}" width="${CW}" height="${h}" rx="8"/>` +
+        `<g class="${clase}"><rect x="${x}" y="${y0}" width="${g.cw}" height="${h}" rx="8"/>` +
         texto(
-          CX + 12,
+          x + 12,
           y0 + 20,
           `Inodo ${i.id} · ${i.tipo === 'soft' ? 'soft link' : 'archivo regular'}`,
-          {
-            clase: 'rm-izq lk-ino-tit',
-          },
+          { clase: 'rm-izq lk-ino-tit' },
         )
       if (i.tipo === 'regular') {
         const bloques = i.liberado
@@ -199,24 +220,31 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
               ? 'Bloques de datos: los mismos (no se copia nada)'
               : 'Bloques de datos: el contenido del archivo'
         svg +=
-          `<text class="rm-izq" x="${CX + 12}" y="${y0 + 44}">contador de hard links: <tspan class="${cambio ? 'lk-cambio' : ''}">${cont}</tspan></text>` +
-          texto(CX + 12, y0 + 66, bloques, { clase: 'rm-izq lk-sub' })
+          `<text class="rm-izq" x="${x + 12}" y="${y0 + 44}">contador de hard links: <tspan class="${cambio ? 'lk-cambio' : ''}">${cont}</tspan></text>` +
+          texto(x + 12, y0 + 66, bloques, { clase: 'rm-izq lk-sub' })
       } else {
         const nota = !cambio ? ' (no cambia)' : i.antes === 0 ? ' (su propia entrada)' : ''
         const ok = vive(i.destino!)
         svg +=
-          `<text class="rm-izq" x="${CX + 12}" y="${y0 + 44}">contador: <tspan class="${cambio && i.antes > 0 ? 'lk-cambio' : ''}">${cont}</tspan>${nota}</text>` +
-          `<g class="${ok ? 'lk-bloque' : 'lk-bloque lk-bloque-mal'}"><rect x="${CX + 12}" y="${y0 + 58}" width="${CW - 24}" height="42" rx="4"/>` +
-          texto(CX + 20, y0 + 70, `bloque: "${i.destino}"`, { clase: 'rm-izq' }) +
-          texto(CX + 20, y0 + 88, ok ? '✓ existe' : '✗ ya no existe', { clase: 'rm-izq' }) +
+          `<text class="rm-izq" x="${x + 12}" y="${y0 + 44}">contador: <tspan class="${cambio && i.antes > 0 ? 'lk-cambio' : ''}">${cont}</tspan>${nota}</text>` +
+          `<g class="${ok ? 'lk-bloque' : 'lk-bloque lk-bloque-mal'}"><rect x="${x + 12}" y="${y0 + 58}" width="${g.cw - 24}" height="42" rx="4"/>` +
+          texto(x + 20, y0 + 70, `bloque: "${i.destino}"`, { clase: 'rm-izq' }) +
+          texto(x + 20, y0 + 88, ok ? '✓ existe' : '✗ ya no existe', { clase: 'rm-izq' }) +
           '</g>'
-        const yr = filas.get(i.destino!)
-        if (yr != null && !i.liberado) {
+        const dest = ultimo.entradas.find((e) => e.ruta === i.destino)
+        if (dest && !i.liberado) {
           const sy = y0 + 79
+          const yr = filas.get(dest.ruta)! + 9
+          const xe = dx(dest.volumen) + g.dw + 4
+          // de otro volumen: sube al carril de arriba y baja junto a la entrada
+          const d =
+            dest.volumen === i.volumen
+              ? `M ${x - 2} ${sy} C ${x - 90} ${sy}, ${xe + 90} ${yr}, ${xe} ${yr}`
+              : `M ${x - 2} ${sy} L ${x - 26} ${sy} L ${x - 26} ${y0Vol - 12} L ${xe + 26} ${y0Vol - 12} L ${xe + 26} ${yr} L ${xe} ${yr}`
           svg +=
-            `<g class="lk-flecha-soft"><path d="M ${CX - 2} ${sy} C ${CX - 90} ${sy}, ${DX + DW + 90} ${yr + 9}, ${DX + DW + 4} ${yr + 9}"/>` +
-            `<path class="lk-punta" d="M ${DX + DW + 13} ${yr + 3} L ${DX + DW + 4} ${yr + 9} L ${DX + DW + 13} ${yr + 15}"/>` +
-            texto(CX - 6, sy + 20, `${i.id} apunta por ruta`, { clase: 'rm-der lk-soft-etq' }) +
+            `<g class="lk-flecha-soft"><path d="${d}"/>` +
+            `<path class="lk-punta" d="M ${xe + 9} ${yr - 6} L ${xe} ${yr} L ${xe + 9} ${yr + 6}"/>` +
+            texto(x - 6, sy + 20, `${i.id} apunta por ruta`, { clase: 'rm-der lk-soft-etq' }) +
             '</g>'
         }
       }
@@ -258,7 +286,7 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
     )
   }
   const yPasos = yT + 24 + ultimo.entradas.length * 24 + 26
-  const resumen = texto(ANCHO - 10, yPasos, `Pasos: ${pasos.map(nombreOp).join(' · ')}`, {
+  const resumen = texto(ancho - 10, yPasos, `Pasos: ${pasos.map(nombreOp).join(' · ')}`, {
     clase: 'rm-der lk-pasos',
   })
 
@@ -271,7 +299,7 @@ export function recorridoLinks(spec: SpecLinks): Recorrido {
   }))
 
   return {
-    ancho: ANCHO,
+    ancho,
     alto: yPasos + 14,
     titulo: spec.titulo,
     cuerpo: [

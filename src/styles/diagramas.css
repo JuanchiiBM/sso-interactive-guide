@@ -1575,6 +1575,12 @@ rect.t3p-ref {
 .lk-linea {
   stroke: var(--line);
 }
+.diagrama .lk-vol {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--fg-soft);
+}
 .diagrama .lk-dir-tit {
   font-size: 12px;
   fill: var(--fg-soft);
