@@ -105,6 +105,8 @@ pág 2 →  0   –    ← en disco
 
 **Del mapa de la memoria a la tabla de páginas.** Muchos enunciados dan qué hay en cada frame (`A1` en el frame 3 = la página 1 de A está en el frame 3). La tabla de páginas es ese mapa **dado vuelta**: ordenada por página en lugar de por frame. Una página que no aparece en el mapa no está en RAM: P = 0, y referenciarla es page fault. Las páginas de un proceso no tienen que estar en orden: la página 5 puede estar en un frame anterior a la página 1.
 
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-virtual/#mapa-frames">Armar el mapa de frames</a></p>
+
 ### Los tres casos de una referencia
 
 ```recorrido casos-tabla-paginas
@@ -119,6 +121,8 @@ pág 2 →  0   –    ← en disco
 | Page fault, víctima con M = 1 | 2: escribir la víctima y leer la página |
 
 > **No todo fallo es un page fault.** Si la dirección cae en una página que **no existe** en el proceso (un proceso de 20 páginas que referencia la 21), no hay nada que traer del disco: es una **dirección inválida**, que el SO trata como un segmentation fault. No carga nada en memoria ni cuenta como PF.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-virtual/#traducir-dl">Traducir una DL</a></p>
 
 ### El bit M: escribir en RAM no es escribir en disco
 
@@ -294,6 +298,8 @@ No reduce los page faults: lo que ahorra es **escrituras a disco**, porque evita
 
 ```
 
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-virtual/#traza">Completar una traza de reemplazo</a> · <a href="/metodologia/parcial-2/memoria-virtual/#deducir-algoritmo">Deducir qué algoritmo eligió la víctima</a></p>
+
 #### Anomalía de Belady
 
 Uno esperaría que con más frames haya menos fallos. Con **FIFO** no siempre: hay secuencias que fallan **más** con más frames. Con `1 2 3 4 1 2 5 1 2 3 4 5`:
@@ -318,6 +324,8 @@ El **conjunto residente** son las páginas del proceso que están en RAM. Hay do
 | **Asignación variable** (los frames pueden cambiar)         | La víctima es del mismo proceso. | La víctima puede ser de cualquiera: cada reemplazo puede afectar a otro proceso. |
 
 Con asignación fija se saca una página cuando no hay frames libres **o** cuando el proceso ya llegó a su máximo, aunque la RAM tenga lugar. Con asignación variable se busca darle a cada proceso los frames que minimicen sus fallos.
+
+<p class="en-ejercicios">↳ En ejercicios: <a href="/metodologia/parcial-2/memoria-virtual/#asignacion">Asignación y sustitución</a></p>
 
 ### Limpieza
 
