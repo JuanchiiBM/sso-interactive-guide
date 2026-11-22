@@ -129,6 +129,8 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         if (estado === 'elegido') return [`después de ${agranda}: ${r} ✓ alcanza`, 'ok']
         return [`después de ${agranda}: ${r} ✗ faltan ${tam(t - hueco.tam)}`, 'mal']
       })
+      // primero el hueco de atrás, que es el que decide
+      chips.sort((a, b) => Number(b[0].startsWith('después')) - Number(a[0].startsWith('después')))
       if (!p.candidatos.some((c) => c.estado !== 'no-al-lado'))
         chips.unshift([`después de ${agranda}: sin hueco ✗`, 'mal'])
       if (p.movidos.length) chips.push(compactarChip(p, t))
@@ -169,7 +171,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const marcaDe = (p: PasoMem) => (p.op && 'marca' in p.op ? p.op : undefined)
   // las marcas y la tabla bajan solo en los pasos que dibujan algo más (regla de DL, cajas)
   const conCajas = (p: PasoMem) => !p.op && !!lect
-  const yMarcasDe = (p: PasoMem) => yDespues + BARRA + 14 + (marcaDe(p) ? 44 : 0)
+  const yMarcasDe = (p: PasoMem) => yDespues + BARRA + 14 + (marcaDe(p) ? 56 : 0)
   const yTablaDe = (p: PasoMem) => yMarcasDe(p) + 26 + (conCajas(p) ? 76 : 0)
 
   type Fila = [string[], string]
@@ -277,9 +279,9 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     const parte = (x0: number, w: number, clase: string, l1: string, l2: string) => {
       const chica = w < 46 ? ' rm-chica' : ''
       const textos =
-        w < 22
+        w < 30
           ? ''
-          : w < (enBloques ? 38 : 60)
+          : w < (hexa || unidad === 'decimal' ? 60 : 38)
             ? texto(x0 + w / 2, y + BARRA / 2, l1, { clase: `rm-etq${chica}` })
             : texto(x0 + w / 2, y + BARRA / 2 - 7, l1, { clase: 'rm-etq' }) +
               texto(x0 + w / 2, y + BARRA / 2 + 9, l2, { clase: 'rm-etq rm-chica rm-sub' })

@@ -196,6 +196,8 @@ describe('recorridoMemoria: agrandar', () => {
     expect(html37).toContain('después de P2: [13312, 14336) 1 MiB ✗ faltan 514 KiB')
     expect(html37).toContain('[8192, 9216) 1 MiB ✗ no está al lado')
     expect(html37).toContain('total libre 2 MiB ≥ 1538 KiB → compactar')
+    expect(html37.indexOf('después de P2')).toBeLessThan(html37.indexOf('no está al lado'))
+    expect(html37).toMatch(/>libre<[^<]*<text[^>]*>1 MiB</)
     expect(html07).toContain('después de notas: [18, 21) 3 bloques ✗ faltan 5 bloques')
   })
 
