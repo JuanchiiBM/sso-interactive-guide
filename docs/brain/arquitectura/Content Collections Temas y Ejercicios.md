@@ -2,7 +2,7 @@
 tipo: componente
 aliases: [content collections, colecciones, catalogo, getCatalogo, temas, ejercicios, rutas, ids, astro content]
 tags: [componente, contenido, rutas]
-actualizado: 2026-10-14
+actualizado: 2026-11-22
 ---
 
 # Content Collections Temas y Ejercicios
@@ -14,6 +14,7 @@ actualizado: 2026-10-14
 | ------------ | -------------------------------- | ------------------------- | ---------------------------------- |
 | `temas`      | `src/content/temas/parcial-N/`   | `parcial-1/planificacion` | `/teoria/parcial-1/planificacion/` |
 | `ejercicios` | `src/content/ejercicios/<tema>/` | `planificacion/ej-05`     | `/ejercicios/planificacion/ej-05/` |
+| `metodologia` | `src/content/metodologia/parcial-N/<tema>/` | `parcial-2/memoria-real/huecos` | `/metodologia/parcial-2/memoria-real/#huecos` |
 
 **Uso:**
 
@@ -35,4 +36,4 @@ temas sin ejercicios, y los filtros ocultan el título de un parcial si no queda
   renderizar el ejercicio (no al validar).
 - Orden de ejercicios: `fuente.numero` con comparación numérica (`'10'` va después de `'9'`).
 
-**Conectado con:** [[Arquitectura]], [[Formato de un Ejercicio]]
+**Conectado con:** [[Arquitectura]], [[Formato de un Ejercicio]], [[Metodología de resolución]]
