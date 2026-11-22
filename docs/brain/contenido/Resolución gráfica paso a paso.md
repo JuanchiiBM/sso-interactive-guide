@@ -29,6 +29,10 @@ aliases:
     tabla de páginas,
     inversa con búsqueda,
     recorridoTraduccionBusqueda,
+    cadena FAT,
+    bloque fat,
+    recorridoCadenaFat,
+    seguir la cadena,
   ]
 tags: [contenido, recorrido, memoria, decision]
 actualizado: 2026-11-22
@@ -173,6 +177,37 @@ direcciones:
 Frame en ninguna tabla → "libre". Frame en dos tablas (compartido) **rompe el build**: la DL no
 sería única. Ubicación: `recorrido-traduccion-busqueda.ts` (+ test); estilos `tr-caja-*`,
 `tr-bit-frame`. Usado en memoria-real ej-11 a).
+
+## Cadena FAT: bloque ` ```fat `
+
+Diseño **B · Cadena de cajas con rangos** (issue #62, tablero
+https://claude.ai/artifact/NsqCw5ihjtsM2XFgVb5h9P#artboard-fat-B). Entrada de directorio → cajas
+en el orden de la cadena → EOF; bajo cada caja, "lógico k" y su rango de bytes. El bloque del paso
+va en `--ok`, los ya pasados en `--accent`, los que faltan atenuados (borde punteado).
+
+```yaml
+titulo: c) Seguir la cadena hasta el byte 12000
+tabla: { 2: 4, 3: Fin de Archivo, 5: 10, 6: 8, 8: 3, 10: 6 }   # EOF / FIN / Fin de Archivo
+inicio: 5
+bloque: 8192
+byte: 12000            # opcional
+desde: 1               # opcional: lógicos desde 1 (ej-46)
+completar: fat         # opcional, sin byte: completa FAT[N] en vez de "k.º bloque" (ej-41)
+contenido: { 3: SIST, 8: EMAS }   # opcional (ej-30): bajo cada caja, y se arma el del archivo
+```
+
+- **Con `byte`:** un paso por bloque hasta el que lo tiene ("bloque 5 (lógico 0): 0–8191 · 12000 >
+  8191 → seguir", "FAT[5] = 10 … ✓ está acá") y uno final "leer el bloque N → 1 bloque leído" (la
+  FAT se supone en memoria). La marca "byte X · offset Y" va desde el paso 1 bajo la caja donde cae.
+  Completa "Bloque del FS" y "Bloques leídos".
+- **Sin `byte`:** un paso por bloque, "FAT[N] = M → seguir", y el último "FAT[N] = EOF → fin" con
+  `n bloques × tamaño = asignado`.
+- Rompe el build: una entrada que no está en la tabla, un ciclo, una cadena que pasa por un 0 (libre),
+  un byte después del último bloque, un cluster de la cadena sin `contenido`.
+- Ubicación: `recorrido-cadena-fat.ts` (+ test), `fat-bloque.ts`; estilos `fat-*`. Usado en fat-ufs
+  ej-02, 24 a) c) d), 30 a), 41 b), 46.
+- **Fuera:** ej-34 b-ii) (no da la FAT: dibujar bloques sería inventar), ej-48, 35 y 50 (directorios
+  o inodo). El recorrido de teoría `cadena-fat` (PPT, con pestañas y "agrandar") sigue aparte.
 
 ## Traza: recorrido automático
 

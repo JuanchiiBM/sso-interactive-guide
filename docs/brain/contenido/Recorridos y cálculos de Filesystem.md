@@ -18,9 +18,10 @@ aliases:
     espacioFat,
     maxArchivoExt2,
     ubicarByte,
+    recorridoCadenaFat,
   ]
 tags: [componente, contenido, svg, interactivo, filesystem]
-actualizado: 2026-11-04
+actualizado: 2026-11-22
 ---
 
 # Recorridos y cálculos de Filesystem
@@ -61,6 +62,9 @@ el inodo no cuenta) están en [[Convenciones de la Cátedra FRBA]].
 - `cadena-fat` asume clusters de 1 KiB (la PPT no lo dice; 2000 B en 2 clusters y 3000 B en 3
   cierran). En "agrandar tp.c" dice "supongamos la 2": la PPT marca libres la 0 y la 1, que en una
   FAT real están reservadas.
+
+La **resolución** de los ejercicios que siguen una cadena de la FAT (con su tabla) usa el bloque
+` ```fat ` (generado de datos, no es el recorrido de teoría): ver [[Resolución gráfica paso a paso]].
 
 ## Gotchas
 
