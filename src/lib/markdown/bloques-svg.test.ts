@@ -50,4 +50,28 @@ direcciones:
       /bitsOffset/,
     )
   })
+
+  const yamlD = `
+sentido: directo
+titulo: Escrituras
+bitsSegmento: 2
+bitsOffset: 16
+acceso: escritura
+segmentos:
+  - { seg: 0, base: 0x00000, largo: 0x0ABCD, permisos: r }
+direcciones:
+  - { dl: 0x0BEEF }
+`
+  it('con sentido directo dibuja los chequeos de la MMU', () => {
+    const html = bloqueSVG('traduccion', yamlD)!
+    expect(html).toContain('data-recorrido')
+    expect(html).toContain('BEEFh ≥ ABCDh → segmentation fault')
+  })
+
+  it('en el directo, la tabla o un sentido desconocido rompen el build', () => {
+    expect(() => bloqueSVG('traduccion', yamlD.replace(/segmentos:\n.*\n/, ''))).toThrow(
+      /segmentos/,
+    )
+    expect(() => bloqueSVG('traduccion', yamlD.replace('directo', 'directa'))).toThrow(/sentido/)
+  })
 })
