@@ -8,7 +8,7 @@ import {
   type Conformacion,
 } from './filesystem'
 import { grupo } from './svg'
-import { dibujoPuntero, dibujoTotal, dibujoUbicar } from './recorrido-inodo-svg'
+import { dibujoPuntero, dibujoTotal, dibujoUbicar, tabla } from './recorrido-inodo-svg'
 
 export interface SpecInodo {
   titulo: string
@@ -162,11 +162,17 @@ export function recorridoInodo(spec: SpecInodo): Recorrido {
     ...pasosPunteros.map((_, i) => dibujoPuntero(ps, i, ppb, primero)),
     dibujoTotal(ps),
   ]
+  const yTabla = Math.max(...dibujos.map((d) => d.alto)) + 24
+  const tablas = dibujos.map((_, k) =>
+    tabla(ps, k === dibujos.length - 1 ? ps.length : k - 1, yTabla, pasos.length),
+  )
   return {
     ancho: Math.max(760, ...dibujos.map((d) => d.ancho + 20)),
-    alto: Math.max(...dibujos.map((d) => d.alto)) + 4,
+    alto: yTabla + Math.max(...tablas.map((t) => t.alto)) + 4,
     titulo: spec.titulo,
-    cuerpo: dibujos.map((d, k) => grupo(`paso-${k}`, d.svg, { oculto: true, clase: 'in-paso' })),
+    cuerpo: dibujos.map((d, k) =>
+      grupo(`paso-${k}`, d.svg + tablas[k].svg, { oculto: true, clase: 'in-paso' }),
+    ),
     pasos,
   }
 }

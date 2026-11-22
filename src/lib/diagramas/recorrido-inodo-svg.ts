@@ -306,3 +306,70 @@ export function dibujoTotal(ps: AccesosPuntero[]) {
   )
   return { svg, alto: Math.max(ino.alto, 70 + desglose.length * 18), ancho: x + ancho2 }
 }
+
+const COLS = [0, 110, 300, 390]
+const ALTO_FILA = 24
+const LEYENDA =
+  'PD = puntero directo · PIS / PID / PIT = puntero indirecto simple / doble / triple · BP = bloque de punteros · BD = bloque de datos'
+
+/**
+ * Tabla "lo que tenías que completar" hasta el puntero `k` (-1: Ubicar; ps.length: Total),
+ * con la fila acumulada y la leyenda.
+ */
+export function tabla(ps: AccesosPuntero[], k: number, y0: number, pasoFinal: number) {
+  const total = k >= ps.length
+  const hasta = total ? ps : ps.slice(0, k + 1)
+  const fila = (y: number, celdas: string[], clase: string, clases: string[] = []) =>
+    `<g class="in-fila ${clase}">` +
+    celdas
+      .map((c, i) => txt(X0 + 10 + COLS[i], y + ALTO_FILA / 2, esc(c), clases[i] ?? ''))
+      .join('') +
+    `<line class="in-linea" x1="${X0}" x2="${X0 + 500}" y1="${y + ALTO_FILA}" y2="${y + ALTO_FILA}"/></g>`
+  let y = y0
+  let svg =
+    txt(
+      X0 + 10,
+      y + 10,
+      total
+        ? 'Accesos (lo que tenías que completar)'
+        : 'Accesos en este paso (lo que tenías que completar)',
+      'in-etq',
+    ) + `<line class="in-linea" x1="${X0}" x2="${X0 + 500}" y1="${y + 22}" y2="${y + 22}"/>`
+  y += 22
+  svg += fila(y, ['Puntero', 'Bloques lógicos leídos', 'Datos', 'Punteros'], 'in-fila-enc')
+  y += ALTO_FILA
+  if (k < 0) {
+    svg += fila(
+      y,
+      [`Se completa puntero por puntero en los pasos 2 a ${pasoFinal - 1}.`],
+      'in-fila-vacia',
+    )
+    y += ALTO_FILA
+  } else {
+    for (const [i, p] of hasta.entries()) {
+      const clase = !total && i === k ? 'in-fila-actual' : p.leidos ? '' : 'in-fila-nada'
+      const bp = p.bp.some(Boolean) ? p.bp.map(n).join(' + ') : '0'
+      svg += fila(
+        y,
+        [p.rotulo, p.leidos ? `${n(p.leidos[0])} – ${n(p.leidos[1])}` : '—', n(p.datos), bp],
+        clase,
+      )
+      y += ALTO_FILA
+    }
+    const leidos = hasta.filter((p) => p.leidos)
+    const datos = hasta.reduce((s, p) => s + p.datos, 0)
+    const bps = hasta.reduce((s, p) => s + p.bp.reduce((a, b) => a + b, 0), 0)
+    const rango = leidos.length
+      ? `${n(leidos[0].leidos![0])} – ${n(leidos.at(-1)!.leidos![1])}`
+      : '—'
+    svg += fila(y, [total ? 'Total' : 'Acumulado', rango, n(datos), n(bps)], 'in-fila-acum', [
+      '',
+      '',
+      'in-ok',
+      'in-bp-txt',
+    ])
+    y += ALTO_FILA
+  }
+  svg += txt(X0, y + 16, LEYENDA, 'in-leyenda')
+  return { svg, alto: y + 24 - y0 }
+}

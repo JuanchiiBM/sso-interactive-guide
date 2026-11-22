@@ -1538,3 +1538,27 @@ rect.t3p-ref {
 .diagrama .in-paso .in-fuerte {
   font-weight: 700;
 }
+.in-linea {
+  stroke: var(--line);
+}
+.diagrama .in-fila-enc text {
+  fill: var(--muted);
+}
+.diagrama .in-fila-vacia text,
+.diagrama .in-fila-nada text {
+  fill: var(--muted);
+}
+.diagrama .in-fila-vacia text {
+  font-family: var(--font-sans);
+}
+.diagrama .in-fila-actual text {
+  fill: var(--accent);
+}
+.diagrama .in-fila-acum text {
+  font-weight: 600;
+}
+.diagrama .in-paso .in-leyenda {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--muted);
+}

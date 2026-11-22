@@ -206,6 +206,31 @@ describe('recorridoInodo: dibujo de cada puntero (tablero inodo-A)', () => {
     )
   })
 
+  it('tabla "Accesos en este paso": filas hasta el puntero del paso y el acumulado', () => {
+    const filas = (f: string) =>
+      [...f.matchAll(/<g class="in-fila ([^"]*)">(.*?)<\/g>/g)].map((m) => [
+        m[1].trim(),
+        ...textosDe(m[2]),
+      ])
+    expect(filas(frame(3))).toEqual([
+      ['in-fila-enc', 'Puntero', 'Bloques lógicos leídos', 'Datos', 'Punteros'],
+      ['in-fila-nada', '10 PD', '—', '0', '0'],
+      ['', 'PIS', '10 – 265', '256', '1'],
+      ['in-fila-actual', 'PID', '266 – 531', '266', '1 + 2'],
+      ['in-fila-acum', 'Acumulado', '10 – 531', '522', '4'],
+    ])
+    expect(textosDe(frame(3))).toContain('Accesos en este paso (lo que tenías que completar)')
+    expect(filas(frame(0))[1]).toEqual([
+      'in-fila-vacia',
+      'Se completa puntero por puntero en los pasos 2 a 4.',
+    ])
+    expect(filas(frame(4)).at(-1)).toEqual(['in-fila-acum', 'Total', '10 – 531', '522', '4'])
+    expect(textosDe(frame(4))).toContain('Accesos (lo que tenías que completar)')
+    expect(textosDe(frame(2)).at(-1)).toBe(
+      'PD = puntero directo · PIS / PID / PIT = puntero indirecto simple / doble / triple · BP = bloque de punteros · BD = bloque de datos',
+    )
+  })
+
   it('muchos BP: primero, "…" y último (ej-42, PID 1 con 1024)', () => {
     const r = recorridoInodo({
       titulo: 'ej-42',
