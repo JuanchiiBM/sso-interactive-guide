@@ -2,7 +2,7 @@
 tipo: dominio
 aliases: [convenciones, cátedra, catedra, desempate, tie-break, simultaneidad, reglas de oro, semáforos, utn, frba, parciales, resoluciones]
 tags: [dominio, catedra]
-actualizado: 2026-11-16
+actualizado: 2026-11-22
 ---
 
 # Convenciones de la Cátedra FRBA
@@ -77,6 +77,8 @@ Flexibilidad: prevención baja, **evasión media** (solo exige declarar máximos
   Secuencia de clase `2 3 2 1 5 2 4 5 3 2 5 2` con 3 marcos: Óptimo 6, LRU 7, Clock 8, FIFO 9.
 - **Clock:** entra con U = 1, el puntero va al marco siguiente, un acierto no lo mueve. Se anota
   "2 U". **Clock mejorado:** pasada 1 busca (0,0) sin tocar bits; pasada 2 busca (0,1) bajando U.
+- **Bits de un campo: `2^bits = N`, nunca `log₂(N)`** (pedido del dueño, 2026-11-22: así lo anota la
+  cátedra y confunde menos). 64 frames = 2<sup>6</sup> → 6 bits.
 - **Segmentación:** la columna "límite" es la **dirección final** del segmento, no el tamaño;
   `DF > límite` ⇒ segmentation fault. Direcciones en **hexa**.
 - **Accesos a memoria:** 2 en todos los esquemas, 3 en segmentación paginada; jerárquica = niveles + 1.
