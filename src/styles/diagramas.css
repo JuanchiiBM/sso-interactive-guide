@@ -1681,3 +1681,128 @@ rect.t3p-ref {
   font-size: 12px;
   fill: var(--muted);
 }
+
+/* recorrido-locks.ts (```locks): código por proceso, cerrojo, archivo, pantalla y tabla */
+.ck-p1 {
+  --lk-c: var(--p1);
+}
+.ck-p2 {
+  --lk-c: var(--p2);
+}
+.ck-p3 {
+  --lk-c: var(--p3);
+}
+.ck-p4 {
+  --lk-c: var(--p4);
+}
+.ck-p5 {
+  --lk-c: var(--p5);
+}
+.ck-p6 {
+  --lk-c: var(--p6);
+}
+.ck-p7 {
+  --lk-c: var(--p7);
+}
+.ck-p8 {
+  --lk-c: var(--p8);
+}
+.ck-marco {
+  fill: var(--surface);
+  stroke: var(--line);
+}
+.ck-activo .ck-marco {
+  stroke: var(--lk-c);
+  stroke-width: 2;
+}
+.ck-sep {
+  stroke: var(--line);
+}
+.diagrama .ck-nombre {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  fill: var(--lk-c);
+}
+.diagrama .ck-quien {
+  font-weight: 700;
+  fill: var(--lk-c);
+}
+.diagrama .ck-est {
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+.diagrama .ck-est-lock {
+  fill: var(--ok);
+}
+.diagrama .ck-est-bloq {
+  fill: var(--bad);
+}
+.diagrama .ck-est-ejecuta {
+  fill: var(--accent);
+}
+.diagrama .ck-est-fin {
+  fill: var(--muted);
+}
+.diagrama .ck-l text {
+  font-size: 11.5px;
+  white-space: pre;
+}
+.diagrama .ck-l-hecha text {
+  fill: var(--muted);
+}
+.diagrama .ck-l-pend text {
+  fill: var(--fg-soft);
+}
+.ck-l-aqui {
+  --lk-l: var(--accent);
+}
+.ck-l-mal {
+  --lk-l: var(--warn);
+}
+.ck-l-bloq {
+  --lk-l: var(--bad);
+}
+.ck-l-fondo {
+  fill: color-mix(in srgb, var(--lk-l) 15%, transparent);
+}
+.ck-l-barra {
+  fill: var(--lk-l);
+}
+.diagrama .ck-l-mal text,
+.diagrama .ck-l-bloq text {
+  fill: var(--lk-l);
+}
+.ck-caja {
+  fill: none;
+  stroke: var(--line);
+}
+.ck-caja-cerrojo {
+  stroke: var(--ok);
+}
+.diagrama .ck-caja-tit,
+.diagrama .ck-nota,
+.diagrama .ck-tabla {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--muted);
+}
+.diagrama .ck-sans {
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+.diagrama .ck-b {
+  font-weight: 700;
+}
+.diagrama .ck-archivo {
+  font-size: 18px;
+}
+.diagrama .ck-nuevo {
+  fill: var(--warn);
+  white-space: pre;
+}
+.diagrama .ck-tabla {
+  white-space: pre;
+}
+.diagrama .ck-tabla-nueva {
+  fill: var(--ok);
+}
