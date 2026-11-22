@@ -285,3 +285,47 @@ describe('recorridoMemoria: otras tablas', () => {
     expect(h).toContain('>Libres<')
   })
 })
+
+describe('recorridoMemoria: varios segmentos juntos', () => {
+  const r = recorridoMemoria({
+    titulo: 'C',
+    unidad: 'KiB',
+    tabla: 'todos',
+    total: 1024,
+    algoritmo: 'primer',
+    inicial: [
+      { nombre: 'PA.S0', inicio: 0, tam: 256 },
+      { nombre: 'PB.S0', inicio: 384, tam: 128 },
+      { nombre: 'PB.S1', inicio: 576, tam: 128 },
+      { nombre: 'PA.S1', inicio: 768, tam: 256 },
+    ],
+    operaciones: [
+      {
+        carga: 'PC',
+        segmentos: [
+          { nombre: 'PC.S0', tam: 100 },
+          { nombre: 'PC.S1', tam: 100 },
+        ],
+        compactar: [{ mover: 'PB.S1', a: 256 }],
+      },
+    ],
+  })
+  const html = renderRecorrido(r)
+
+  it('chips: el hueco que admite uno solo en ámbar y el total del grupo', () => {
+    expect(html).toContain('[256, 384) 128 KiB · entra uno solo')
+    expect(html).toContain('[512, 576) 64 KiB ✗ no entra')
+    expect(html).toContain('total libre 256 KiB ≥ 200 KiB → compactar')
+  })
+
+  it('título, texto y los dos segmentos nuevos en barra y tabla', () => {
+    expect(r.pasos![1].titulo).toBe('PC (2 × 100 KiB)')
+    expect(r.pasos![1].texto).toBe(
+      '**PC pide dos segmentos de 100 KiB.** El hueco de 128 KiB admite uno solo y el otro no entra en ninguno (64 KiB y 64 KiB), aunque hay 256 KiB libres: fragmentación externa. Se compacta moviendo **un solo segmento**: PB.S1 pasa a 256 y los huecos se juntan en uno de 256 KiB, donde van PC.S0 en **512** y PC.S1 en **612**.',
+    )
+    expect(html).toContain('>512 (nuevo)<')
+    expect(html).toContain('>612 (nuevo)<')
+    expect(html).toContain('PB.S1: base 576 → 256')
+    expect(html.match(/rm-p\d rm-nuevo/g)?.length).toBe(2)
+  })
+})

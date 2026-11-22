@@ -4,6 +4,7 @@ import {
   simularHuecos,
   huecosDe,
   type BloqueMem,
+  type OpMem,
   type PasoMem,
   type SpecMemoria,
 } from './memoria-huecos'
@@ -69,6 +70,10 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   ]
   const color = (b: BloqueMem) => `rm-p${(procesos.indexOf(b.proceso) % 8) + 1}`
 
+  const tamDe = (op: OpMem) =>
+    'segmentos' in op ? op.segmentos.reduce((s, x) => s + x.tam, 0) : 'tam' in op ? op.tam : 0
+  const esNuevo = (p: PasoMem, b: BloqueMem) =>
+    p.nuevo?.nombre === b.nombre || !!p.juntos?.some((x) => x.nombre === b.nombre)
   const libreDe = (p: PasoMem) => p.huecosAntes.reduce((s, h) => s + h.tam, 0)
   const compactarChip = (p: PasoMem, t: number): [string, string] => [
     `total libre ${tam(libreDe(p))} ≥ ${tam(t)} → compactar`,
@@ -94,11 +99,12 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     const chips: [string, string][] = p.candidatos.map(({ hueco, estado }) => {
       const t = `${rango(hueco)} ${tam(hueco.tam)}`
       if (estado === 'no-entra') return [`${t} ✗ no entra`, 'mal']
+      if (estado === 'entra-uno') return [`${t} · entra uno solo`, 'aviso']
       if (estado === 'elegido') return [`${t} ✓ elegido`, 'ok']
       if (estado === 'empate') return [`${t} ✓ también vale (empate)`, 'ok']
       return [`${t} · entra, pero ${alg} no lo elige`, 'aviso']
     })
-    if (p.movidos.length) chips.push(compactarChip(p, p.op.tam))
+    if (p.movidos.length) chips.push(compactarChip(p, tamDe(p.op)))
     return chips
   }
 
@@ -152,11 +158,11 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     const c = p.crece?.nombre === b.nombre ? p.crece : undefined
     const base = m
       ? `${dir(m.a)} ← ${dir(m.de)}`
-      : p.nuevo?.nombre === b.nombre
+      : esNuevo(p, b)
         ? `${dir(b.inicio)} (nuevo)`
         : dir(b.inicio)
     const t = c ? `${tamCol(b.tam)} ← ${tamCol(b.tam - c.tam)}` : tamCol(b.tam)
-    const clase = m ? 'rm-fila-mov' : c || p.nuevo?.nombre === b.nombre ? 'rm-fila-nueva' : ''
+    const clase = m ? 'rm-fila-mov' : c || esNuevo(p, b) ? 'rm-fila-nueva' : ''
     return [[base, t], clase]
   }
   const hueco = (h: Hueco, etq: string): Fila => [
@@ -210,7 +216,9 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     const estadoHueco = (h: Hueco) => {
       if (!antes || !p.op || 'libera' in p.op) return ''
       const c = p.candidatos.find((x) => x.hueco.inicio === h.inicio)
-      return c ? ` rm-${c.estado === 'no-al-lado' ? 'no-entra' : c.estado}` : ''
+      return c
+        ? ` rm-${{ 'no-al-lado': 'no-entra', 'entra-uno': 'no-elegido' }[c.estado as string] ?? c.estado}`
+        : ''
     }
     const parte = (x0: number, w: number, clase: string, l1: string, l2: string) => {
       const chica = w < 46 ? ' rm-chica' : ''
@@ -246,7 +254,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         )
       }
       const extra =
-        !antes && p.nuevo?.nombre === b.nombre
+        !antes && esNuevo(p, b)
           ? ' rm-nuevo'
           : p.movidos.some((m) => m.nombre === b.nombre)
             ? ' rm-mov'
@@ -334,6 +342,40 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     return grupo(`paso-${i}`, chips + antes + flechas(p) + despues + tabla(p), { oculto: true })
   }
 
+  const PALABRA = ['', 'un', 'dos', 'tres', 'cuatro']
+  const pasoJuntos = (p: PasoMem, op: Extract<OpMem, { segmentos: unknown }>) => {
+    const segs = op.segmentos
+    const iguales = segs.every((x) => x.tam === segs[0].tam)
+    const n = PALABRA[segs.length] ?? String(segs.length)
+    const juntos = p.juntos!
+    const fin = juntos.at(-1)!.inicio + juntos.at(-1)!.tam
+    const donde = lista(juntos.map((b) => `${b.nombre} en **${dir(b.inicio)}**`))
+    let txt = iguales
+      ? `**${op.carga} pide ${n} segmentos de ${tam(segs[0].tam)}.**`
+      : `**${op.carga} pide ${n} segmentos (${lista(segs.map((x) => tam(x.tam)))}).**`
+    if (p.movidos.length) {
+      const uno = p.candidatos.filter((c) => c.estado === 'entra-uno')
+      const resto = p.candidatos
+        .filter((c) => c.estado !== 'entra-uno')
+        .map((c) => tam(c.hueco.tam))
+      const libre = `aunque hay ${tam(libreDe(p))} libres: fragmentación externa.`
+      txt +=
+        segs.length === 2 && uno.length === 1
+          ? ` El hueco de ${tam(uno[0].hueco.tam)} admite uno solo y el otro no entra en ninguno (${lista(resto)}), ${libre}`
+          : ` Ningún hueco admite los ${n} juntos (${lista(p.huecosAntes.map((h) => tam(h.tam)))}), ${libre}`
+      const quien =
+        p.movidos.length === 1 ? '**un solo segmento**' : `${p.movidos.length} segmentos`
+      const movs = lista(p.movidos.map((m) => `${m.nombre} pasa a ${dir(m.a)}`))
+      const hueco =
+        fin -
+        juntos[0].inicio +
+        (huecosDe(spec.total, p.despues).find((h) => h.inicio === fin)?.tam ?? 0)
+      txt += ` Se compacta moviendo ${quien}: ${movs} y los huecos se juntan en uno de ${tam(hueco)}, donde van ${donde}.`
+    } else txt += ` Entran juntos: van ${donde}.`
+    const t = iguales ? `${segs.length} × ${tam(segs[0].tam)}` : lista(segs.map((x) => tam(x.tam)))
+    return { titulo: `${op.carga} (${t})`, texto: [txt, op.texto].filter(Boolean).join(' ') }
+  }
+
   const paso = (p: PasoMem): Omit<Paso, 'resaltar' | 'mostrar' | 'ocultar'> => {
     if (!p.op) {
       const hs = p.huecosAntes.map((h) => `${rango(h)} ${tam(h.tam)}`)
@@ -370,6 +412,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         texto: [txt, p.op.texto].filter(Boolean).join(' '),
       }
     }
+    if ('segmentos' in p.op) return pasoJuntos(p, p.op)
     const titulo = `${p.op.carga} (${tam(p.op.tam)})`
     const nuevo = p.nuevo!
     const sirven = p.candidatos.filter((c) => c.estado !== 'no-entra')

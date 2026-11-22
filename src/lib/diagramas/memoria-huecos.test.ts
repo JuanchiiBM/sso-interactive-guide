@@ -195,3 +195,54 @@ describe('simularHuecos: agrandar', () => {
     expect(() => simularHuecos({ ...ej37, operaciones: [{ agranda: 'P9', tam: 1 }] })).toThrow('P9')
   })
 })
+
+// FAT/UFS ej-32: segmentación pura de 1 MiB (en KiB); C carga dos segmentos juntos
+const ej32: SpecMemoria = {
+  total: 1024,
+  algoritmo: 'primer',
+  inicial: [
+    { nombre: 'PA.S0', inicio: 0, tam: 256 },
+    { nombre: 'PB.S0', inicio: 384, tam: 128 },
+    { nombre: 'PB.S1', inicio: 576, tam: 128 },
+    { nombre: 'PA.S1', inicio: 768, tam: 256 },
+  ],
+  operaciones: [
+    {
+      carga: 'PC',
+      segmentos: [
+        { nombre: 'PC.S0', tam: 100 },
+        { nombre: 'PC.S1', tam: 100 },
+      ],
+      compactar: [{ mover: 'PB.S1', a: 256 }],
+    },
+  ],
+}
+
+describe('simularHuecos: varios segmentos juntos', () => {
+  it('un hueco que admite uno solo no alcanza: compacta y los pone pegados', () => {
+    const [, p] = simularHuecos(ej32)
+    expect(p.candidatos.map((c) => c.estado)).toEqual(['entra-uno', 'no-entra', 'no-entra'])
+    expect(p.juntos?.map((b) => [b.nombre, b.proceso, b.inicio])).toEqual([
+      ['PC.S0', 'PC', 512],
+      ['PC.S1', 'PC', 612],
+    ])
+    expect(huecosDe(1024, p.despues)).toEqual([{ inicio: 712, tam: 56 }])
+  })
+
+  it('si entran juntos en un hueco, no compacta', () => {
+    const [, p] = simularHuecos({
+      ...ej32,
+      operaciones: [
+        {
+          carga: 'PC',
+          segmentos: [
+            { nombre: 'PC.S0', tam: 60 },
+            { nombre: 'PC.S1', tam: 60 },
+          ],
+        },
+      ],
+    })
+    expect(p.movidos).toEqual([])
+    expect(p.juntos?.map((b) => b.inicio)).toEqual([256, 316])
+  })
+})

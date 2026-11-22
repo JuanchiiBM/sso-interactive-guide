@@ -18,6 +18,13 @@ export type OpMem =
       compactar?: { mover: string; a: number }[]
       texto?: string
     }
+  | {
+      /** Proceso que carga varios segmentos pegados, en el orden dado. */
+      carga: string
+      segmentos: { nombre: string; tam: number }[]
+      compactar?: { mover: string; a: number }[]
+      texto?: string
+    }
   | { libera: string; texto?: string }
   | {
       /** El bloque crece al final; si atrás no alcanza, compacta (como `carga`). */
@@ -37,7 +44,8 @@ export interface SpecMemoria {
   operaciones: OpMem[]
 }
 
-export type EstadoCandidato = 'elegido' | 'empate' | 'no-elegido' | 'no-entra' | 'no-al-lado'
+export type EstadoCandidato =
+  'elegido' | 'empate' | 'no-elegido' | 'no-entra' | 'no-al-lado' | 'entra-uno'
 
 export interface PasoMem {
   /** null en el estado inicial. */
@@ -51,6 +59,8 @@ export interface PasoMem {
   liberados: BloqueMem[]
   /** Parte nueva de un bloque que crece. */
   crece?: { nombre: string; inicio: number; tam: number }
+  /** Segmentos cargados juntos (en vez de `nuevo`). */
+  juntos?: BloqueMem[]
 }
 
 const procesoDe = (nombre: string) => nombre.split('.')[0]
@@ -167,6 +177,43 @@ export function simularHuecos(spec: SpecMemoria): PasoMem[] {
         candidatos: cands,
         movidos,
         crece,
+      })
+      continue
+    }
+    if ('segmentos' in op) {
+      const total = op.segmentos.reduce((s, x) => s + x.tam, 0)
+      const menor = Math.min(...op.segmentos.map((x) => x.tam))
+      let i = ubicar(huecosAntes, total, spec.algoritmo, ultima)
+      const cands = candidatos(huecosAntes, total, i, spec.algoritmo).map((c) =>
+        c.estado === 'no-entra' && c.hueco.tam >= menor
+          ? { ...c, estado: 'entra-uno' as const }
+          : c,
+      )
+      let movidos: PasoMem['movidos'] = []
+      let huecos = huecosAntes
+      if (i < 0) {
+        if (!op.compactar) throw new Error(`memoria: ${op.carga} no entra y no hay compactación`)
+        ;({ movidos, bloques, huecos } = compactar(bloques, op.compactar, spec.total))
+        i = ubicar(huecos, total, spec.algoritmo, ultima)
+        if (i < 0) throw new Error(`memoria: ${op.carga} no entra ni después de compactar`)
+      }
+      let dir = huecos[i].inicio
+      const juntos = op.segmentos.map((x) => {
+        const b = { nombre: x.nombre, proceso: op.carga, inicio: dir, tam: x.tam }
+        dir += x.tam
+        return b
+      })
+      bloques = ordenar([...bloques, ...juntos])
+      ultima = dir
+      pasos.push({
+        op,
+        antes,
+        despues: bloques,
+        huecosAntes,
+        ...vacio,
+        candidatos: cands,
+        movidos,
+        juntos,
       })
       continue
     }
