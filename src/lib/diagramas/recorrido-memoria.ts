@@ -14,7 +14,7 @@ export interface SpecRecorridoMemoria extends SpecMemoria {
   titulo: string
   /** KiB, MiB y bloques: los números del enunciado, sin convertir. */
   unidad?: 'hexa' | 'decimal' | 'KiB' | 'MiB' | 'bloques'
-  /** Proceso cuya tabla de segmentos se muestra en cada paso. */
+  /** Proceso cuya tabla de segmentos se muestra en cada paso, o `todos` | `particiones` | `directorio`. */
   tabla?: string
   /** Texto extra del autor para el estado inicial. */
   textoInicial?: string
@@ -125,19 +125,85 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
   const yMarcas = yDespues + BARRA + 14
   const yTabla = yMarcas + 26
 
-  const segsTabla = spec.tabla
-    ? [
-        ...new Set(
-          pasos
-            .flatMap((p) => p.despues)
-            .filter((b) => b.proceso === spec.tabla)
-            .map((b) => b.nombre),
-        ),
-      ].sort()
-    : []
-  const filasTabla =
-    segsTabla.length + Math.max(...pasos.map((p) => huecosDe(spec.total, p.despues).length))
-  const alto = spec.tabla ? yTabla + 40 + filasTabla * 20 + 8 : yMarcas + 16
+  type Fila = [string[], string]
+  const sufijo = unidad === 'KiB' || unidad === 'MiB' ? ` (${unidad})` : ''
+  const modo = spec.tabla
+  const tablaDe =
+    modo === 'todos'
+      ? {
+          titulo: `Tablas de segmentos en este paso${sufijo}`,
+          columnas: ['Proceso', 'Seg', 'Base', 'Tamaño'],
+        }
+      : modo === 'particiones'
+        ? { titulo: `Particiones en este paso${sufijo}`, columnas: ['Partición', 'Base', 'Tamaño'] }
+        : modo === 'directorio'
+          ? {
+              titulo: 'Directorio (contigua) en este paso',
+              columnas: ['Archivo', 'Inicio', 'Bloques'],
+            }
+          : {
+              titulo: `Tabla de segmentos de ${modo} en este paso`,
+              columnas: ['Seg', 'Base', 'Tamaño'],
+            }
+  const segDe = (n: string) => n.split('.').slice(1).join('.').replace(/^S/, '')
+  // base y tamaño de un bloque en el paso: movido "26 ← 21", crecido "11 ← 3", recién cargado "(nuevo)"
+  const celdas = (p: PasoMem, b: BloqueMem): Fila => {
+    const m = p.movidos.find((x) => x.nombre === b.nombre)
+    const c = p.crece?.nombre === b.nombre ? p.crece : undefined
+    const base = m
+      ? `${dir(m.a)} ← ${dir(m.de)}`
+      : p.nuevo?.nombre === b.nombre
+        ? `${dir(b.inicio)} (nuevo)`
+        : dir(b.inicio)
+    const t = c ? `${tamCol(b.tam)} ← ${tamCol(b.tam - c.tam)}` : tamCol(b.tam)
+    const clase = m ? 'rm-fila-mov' : c || p.nuevo?.nombre === b.nombre ? 'rm-fila-nueva' : ''
+    return [[base, t], clase]
+  }
+  const hueco = (h: Hueco, etq: string): Fila => [
+    [
+      etq,
+      ...(modo === 'todos' ? [''] : []),
+      dir(h.inicio),
+      hexa ? `${tamCol(h.tam)} (${tam(h.tam)})` : tamCol(h.tam),
+    ],
+    'rm-fila-hueco',
+  ]
+  const procesoDe = new Map(pasos.flatMap((p) => p.despues).map((b) => [b.nombre, b.proceso]))
+  const todosLosSegs = [...procesoDe.keys()].sort()
+  const filasDe = (p: PasoMem): Fila[] => {
+    const huecos = huecosDe(spec.total, p.despues)
+    if (modo === 'particiones') {
+      const partes = [...p.despues, ...huecos.map((h) => ({ ...h, nombre: '' }))].sort(
+        (a, b) => a.inicio - b.inicio,
+      )
+      return partes.map((x) => {
+        if (!x.nombre) return hueco(x, 'Hueco')
+        const [cs, cl] = celdas(p, x as BloqueMem)
+        return [[x.nombre, ...cs], cl]
+      })
+    }
+    if (modo === 'directorio')
+      return [
+        ...p.despues.map((b): Fila => {
+          const [cs, cl] = celdas(p, b)
+          return [[b.nombre, ...cs], cl]
+        }),
+        ...huecos.map((h) => hueco(h, 'Libres')),
+      ]
+    const nombres =
+      modo === 'todos' ? todosLosSegs : todosLosSegs.filter((n) => procesoDe.get(n) === modo)
+    const filas = nombres.map((n): Fila => {
+      const b = p.despues.find((x) => x.nombre === n)
+      const pre = modo === 'todos' ? [procesoDe.get(n)!, segDe(n)] : [segDe(n)]
+      if (!b) return [[...pre, '—', '—'], 'rm-fila-vacia']
+      const [cs, cl] = celdas(p, b)
+      return [[...pre, ...cs], cl]
+    })
+    return [...filas, ...huecos.map((h) => hueco(h, 'Hueco'))]
+  }
+  const alto = spec.tabla
+    ? yTabla + 40 + Math.max(...pasos.map((p) => filasDe(p).length)) * 20 + 8
+    : yMarcas + 16
 
   const op = (p: PasoMem) => (p.op && 'agranda' in p.op ? p.op : undefined)
   const barra = (bloques: BloqueMem[], y: number, p: PasoMem, antes: boolean) => {
@@ -233,35 +299,19 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
 
   const tabla = (p: PasoMem) => {
     if (!spec.tabla) return ''
-    const col = [X0, X0 + 80, X0 + 260]
-    const fila = (i: number, celdas: string[], clase = '') =>
+    const { titulo, columnas } = tablaDe
+    const col = columnas.length === 4 ? [X0, X0 + 90, X0 + 150, X0 + 330] : [X0, X0 + 80, X0 + 260]
+    const fila = (i: number, [celdas, clase]: Fila) =>
       `<g class="rm-fila ${clase}">${celdas.map((c, j) => texto(col[j] + 8, yTabla + 40 + i * 20, c, { clase: 'rm-izq' })).join('')}</g>`
-    const segs = segsTabla.map((n, i) => {
-      const b = p.despues.find((x) => x.nombre === n)
-      const etq = n.replace(`${spec.tabla}.`, '').replace(/^S/, '')
-      if (!b) return fila(i, [etq, '—', '—'], 'rm-fila-vacia')
-      const m = p.movidos.find((x) => x.nombre === n)
-      if (m) return fila(i, [etq, `${dir(m.a)} ← ${dir(m.de)}`, tamCol(b.tam)], 'rm-fila-mov')
-      if (p.nuevo?.nombre === n)
-        return fila(i, [etq, `${dir(b.inicio)} (nuevo)`, tamCol(b.tam)], 'rm-fila-nueva')
-      return fila(i, [etq, dir(b.inicio), tamCol(b.tam)])
-    })
-    const huecos = huecosDe(spec.total, p.despues).map((h, k) =>
-      fila(
-        segsTabla.length + k,
-        ['Hueco', dir(h.inicio), hexa ? `${tamCol(h.tam)} (${tam(h.tam)})` : tamCol(h.tam)],
-        'rm-fila-hueco',
-      ),
-    )
     return (
-      texto(X0, yTabla, `Tabla de segmentos de ${spec.tabla} en este paso`, {
-        clase: 'rm-izq rm-tabla-tit',
-      }) +
-      ['Seg', 'Base', 'Tamaño']
+      texto(X0, yTabla, titulo, { clase: 'rm-izq rm-tabla-tit' }) +
+      columnas
         .map((t, j) => texto(col[j] + 8, yTabla + 20, t, { clase: 'rm-izq rm-enc' }))
         .join('') +
-      `<line class="rm-eje" x1="${X0}" y1="${yTabla + 29}" x2="${X0 + 440}" y2="${yTabla + 29}"/>` +
-      [...segs, ...huecos].join('')
+      `<line class="rm-eje" x1="${X0}" y1="${yTabla + 29}" x2="${X0 + (columnas.length === 4 ? 480 : 440)}" y2="${yTabla + 29}"/>` +
+      filasDe(p)
+        .map((f, i) => fila(i, f))
+        .join('')
     )
   }
 

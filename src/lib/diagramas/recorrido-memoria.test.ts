@@ -219,3 +219,69 @@ describe('recorridoMemoria: agrandar', () => {
     expect(html07).toContain('>26–31<')
   })
 })
+
+describe('recorridoMemoria: otras tablas', () => {
+  const base37 = {
+    titulo: 'P2 crece',
+    unidad: 'KiB' as const,
+    total: 16384,
+    algoritmo: 'primer' as const,
+    inicial: [
+      { nombre: 'P1', inicio: 0, tam: 8192 },
+      { nombre: 'P2', inicio: 9216, tam: 4096 },
+      { nombre: 'P3', inicio: 14336, tam: 2048 },
+    ],
+    operaciones: [{ agranda: 'P2', tam: 1538, compactar: [{ mover: 'P2', a: 8192 }] }],
+  }
+
+  it('particiones: en orden de dirección, con huecos intercalados', () => {
+    const h = renderRecorrido(recorridoMemoria({ ...base37, tabla: 'particiones' }))
+    expect(h).toContain('Particiones en este paso (KiB)')
+    expect(h).toMatch(/>Partición<.*>Base<.*>Tamaño</)
+    expect(h).toMatch(
+      />P2<[^]*>8192 ← 9216<[^]*>5634 ← 4096<[^]*>Hueco<[^]*>13826<[^]*>510<[^]*>P3</,
+    )
+  })
+
+  it('todos: los segmentos de cada proceso', () => {
+    const h = renderRecorrido(
+      recorridoMemoria({
+        titulo: 'C',
+        unidad: 'KiB',
+        tabla: 'todos',
+        total: 1024,
+        algoritmo: 'primer',
+        inicial: [
+          { nombre: 'PA.S0', inicio: 0, tam: 256 },
+          { nombre: 'PB.S0', inicio: 384, tam: 128 },
+        ],
+        operaciones: [{ carga: 'PC.S0', tam: 100 }],
+      }),
+    )
+    expect(h).toContain('Tablas de segmentos en este paso (KiB)')
+    expect(h).toMatch(/>Proceso<.*>Seg<.*>Base<.*>Tamaño</)
+    expect(h).toMatch(/>PC<[^<]*<[^]*?>0<[^]*?>256 \(nuevo\)</)
+  })
+
+  it('directorio: archivos con inicio y bloques, y los libres al final', () => {
+    const h = renderRecorrido(
+      recorridoMemoria({
+        titulo: 'notas',
+        unidad: 'bloques',
+        tabla: 'directorio',
+        total: 32,
+        algoritmo: 'primer',
+        inicial: [
+          { nombre: 'notas', inicio: 15, tam: 3 },
+          { nombre: 'Z', inicio: 21, tam: 6 },
+        ],
+        operaciones: [{ agranda: 'notas', tam: 8, compactar: [{ mover: 'Z', a: 26 }] }],
+      }),
+    )
+    expect(h).toContain('Directorio (contigua) en este paso')
+    expect(h).toMatch(/>Archivo<.*>Inicio<.*>Bloques</)
+    expect(h).toContain('>11 ← 3<')
+    expect(h).toContain('>26 ← 21<')
+    expect(h).toContain('>Libres<')
+  })
+})
