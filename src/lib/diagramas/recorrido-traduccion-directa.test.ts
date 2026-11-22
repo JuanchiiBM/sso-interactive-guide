@@ -110,3 +110,59 @@ describe('recorridoTraduccionDirecta (DL → DF con límite y permiso)', () => {
     expect(con({ segmentos: [{ seg: 0, base: 0, largo: 1, permisos: 'rz' }] })).toThrow(/permisos/)
   })
 })
+
+// Memoria Real ej-03: la dirección viene como (segmento, desplazamiento), en decimal y sin protección
+const ej03: SpecTraduccionDirecta = {
+  sentido: 'directo',
+  titulo: 'Direcciones físicas con tabla de segmentos',
+  unidad: 'decimal',
+  segmentos: [
+    { seg: 0, base: 219, largo: 600 },
+    { seg: 1, base: 2300, largo: 14 },
+    { seg: 2, base: 90, largo: 100 },
+    { seg: 3, base: 1327, largo: 580 },
+  ],
+  direcciones: [
+    { seg: 0, desp: 430 },
+    { seg: 1, desp: 10 },
+    { seg: 2, desp: 500 },
+  ],
+}
+
+describe('recorridoTraduccionDirecta (ya cortada, decimal, sin protección)', () => {
+  const r3 = recorridoTraduccionDirecta(ej03)
+  const html3 = renderRecorrido(r3)
+  const frame3 = (k: number) => html3.split(`data-el="paso-${k}"`)[1].split('data-el="paso-')[0]
+
+  it('títulos y chips con la dirección como par', () => {
+    expect(r3.pasos!.map((p) => p.titulo)).toEqual([
+      '(0, 430) → 649',
+      '(1, 10) → 2310',
+      '(2, 500) → Fault (límite)',
+    ])
+    expect(frame3(2)).toContain('(0, 430) → 649')
+  })
+
+  it('no corta bits: la dirección ya viene cortada', () => {
+    const f = frame3(2)
+    expect(f).toContain('1. La dirección lógica ya viene cortada: segmento 2 · desplazamiento 500')
+    expect(f).not.toContain('tr-bit')
+  })
+
+  it('sin acceso no hay columna de protección ni chequeo de permiso', () => {
+    const f = frame3(2)
+    expect(f).not.toContain('Protección')
+    expect(f).not.toContain('modo de acceso')
+    expect(f).toContain('500 ≥ 100 → segmentation fault')
+    expect(frame3(0)).toContain('219 + 430 = 649')
+    expect(r3.pasos![2].texto).toBe(
+      'El primer chequeo ya falla: el desplazamiento **500** no es menor que el largo **100**, así que la MMU corta con **segmentation fault**.',
+    )
+  })
+
+  it('una dirección sin dl ni (seg, desp) rompe el build', () => {
+    expect(() =>
+      recorridoTraduccionDirecta({ ...ej03, direcciones: [{ seg: 0 } as never] }),
+    ).toThrow(/dl/)
+  })
+})

@@ -74,4 +74,17 @@ direcciones:
     )
     expect(() => bloqueSVG('traduccion', yamlD.replace('directo', 'directa'))).toThrow(/sentido/)
   })
+
+  it('en el directo, sin bits la dirección viene como (seg, desp)', () => {
+    const yaml03 = `
+sentido: directo
+titulo: Ej. 3
+unidad: decimal
+segmentos:
+  - { seg: 2, base: 90, largo: 100 }
+direcciones:
+  - { seg: 2, desp: 500 }
+`
+    expect(bloqueSVG('traduccion', yaml03)).toContain('500 ≥ 100 → segmentation fault')
+  })
 })
