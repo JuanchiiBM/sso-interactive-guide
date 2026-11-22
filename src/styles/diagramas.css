@@ -1565,3 +1565,119 @@ rect.t3p-ref {
   font-size: 11px;
   fill: var(--muted);
 }
+/* recorrido-links.ts: directorio → inodos (diseño links-A + M1) */
+.lk-dir rect {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+  stroke-width: 1.4;
+}
+.lk-dir line,
+.lk-linea {
+  stroke: var(--line);
+}
+.diagrama .lk-vol {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--fg-soft);
+}
+.diagrama .lk-dir-tit {
+  font-size: 12px;
+  fill: var(--fg-soft);
+}
+.lk-fila-borrada rect {
+  fill: color-mix(in srgb, var(--bad) 8%, transparent);
+}
+.diagrama .lk-fila-borrada text {
+  fill: var(--bad);
+  text-decoration: line-through;
+}
+.diagrama .lk-fila-antes text,
+.diagrama .lk-tr-no text {
+  fill: var(--muted);
+}
+.diagrama .lk-fila-antes text,
+.diagrama .lk-tachado {
+  text-decoration: line-through;
+}
+.lk-inodo > rect {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+  stroke-width: 1.4;
+}
+.lk-inodo-sel > rect {
+  fill: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.lk-inodo-libre {
+  opacity: 0.55;
+}
+.diagrama .lk-ino-tit {
+  font-weight: 600;
+}
+.diagrama .lk-cambio {
+  fill: var(--warn);
+  font-weight: 700;
+}
+.diagrama .lk-sub {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--fg-soft);
+}
+.lk-bloque rect {
+  fill: none;
+  stroke: var(--line-strong);
+}
+.diagrama .lk-bloque text {
+  font-size: 12px;
+  fill: var(--fg-soft);
+}
+.lk-bloque-mal rect {
+  stroke: var(--warn);
+  stroke-dasharray: 4 3;
+}
+.diagrama .lk-bloque-mal text {
+  fill: var(--step);
+}
+.lk-flecha path {
+  fill: none;
+  stroke: var(--fg-soft);
+  stroke-width: 2;
+}
+.lk-flecha-borrada path {
+  stroke: var(--bad);
+  stroke-dasharray: 5 4;
+}
+.lk-flecha-soft path {
+  fill: none;
+  stroke: var(--warn);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 4;
+}
+.lk-flecha-soft .lk-punta {
+  stroke-dasharray: none;
+}
+.diagrama .lk-soft-etq {
+  font-size: 11px;
+  fill: var(--warn);
+}
+.diagrama .lk-th {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--muted);
+}
+.diagrama .lk-tr text {
+  font-size: 12px;
+}
+.diagrama .lk-si {
+  fill: var(--ok);
+}
+.diagrama .lk-no {
+  fill: var(--bad);
+}
+.diagrama .lk-pasos {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--muted);
+}

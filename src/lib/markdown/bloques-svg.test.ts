@@ -147,3 +147,23 @@ bytes: [10500, 544767]
     expect(bloqueSVG('inodo', pit)).toContain('class="diagrama recorrido in-ancho"')
   })
 })
+
+describe('bloque ```links', () => {
+  const yaml = `
+titulo: Links de /etc/fixture.txt
+inicial: [{ ruta: /etc/fixture.txt, inodo: 5 }]
+operaciones:
+  - { ln: /etc/fixture.txt, a: /var/h-fixture.txt }
+  - { lns: /etc/fixture.txt, a: /temp/s-fixture.txt, inodo: 6 }
+`
+  it('lee el YAML (inodos numéricos) y dibuja el recorrido', () => {
+    const html = bloqueSVG('links', yaml)!
+    expect(html).toContain('data-recorrido')
+    expect(html).toContain('Inodo 6 · soft link')
+  })
+
+  it('un campo faltante o una operación imposible rompen el build', () => {
+    expect(() => bloqueSVG('links', yaml.replace(/titulo:.*\n/, ''))).toThrow(/titulo/)
+    expect(() => bloqueSVG('links', yaml + '  - { rm: /etc/otro.txt }\n')).toThrow(/no existe/)
+  })
+})

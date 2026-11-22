@@ -74,10 +74,12 @@ La **resolución** de los ejercicios que siguen una cadena de la FAT (con su tab
   (`'nivel 1 · entrada 0'`).
 - Flechas que dependen de la pestaña: una por caso, ocultas (`a-p4-n1`, `a-pd2-dato`), porque el
   dibujo es el mismo para todas las variantes.
+- Las resoluciones de links (ej-19 a 22 y 49) se dibujan con el bloque ` ```links ` (ver
+  [[Resolución gráfica paso a paso]]); el recorrido `hard-soft-link` queda para la teoría.
 - Links (Ej. 19, 21, 22) van **todo en MC**, también el "cuántas entradas / archivos": la página ordena
   cálculos antes que MC y un cálculo del b) quedaría arriba del MC del a), delatándolo.
 - `byte-inodo` se embebe en las justificaciones de Ej. 10 y 11 (misma configuración), aunque el
   recorrido tiene IT y esos ejercicios no: la justificación lo aclara.
 
 **Depende de:** [[Recorridos paso a paso]]
-**Conectado con:** [[Resolución gráfica del inodo]], [[Contenido]], [[Recorridos de Memoria]], [[Convenciones de la Cátedra FRBA]]
+**Conectado con:** [[Resolución gráfica del inodo]], [[Resolución gráfica paso a paso]], [[Contenido]], [[Recorridos de Memoria]], [[Convenciones de la Cátedra FRBA]]
