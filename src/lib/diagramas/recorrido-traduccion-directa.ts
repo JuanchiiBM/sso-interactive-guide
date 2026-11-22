@@ -6,7 +6,9 @@ import { grupo, texto } from './svg'
 export interface SegmentoDirecto {
   seg: number
   base: number
-  largo: number
+  /** `largo` se compara con < y `limite` (última dirección válida) con ≤: uno de los dos. */
+  largo?: number
+  limite?: number
   /** Letras r, w, x: `r` → Read only, `x` → Exec only, `rw` → Read write. */
   permisos?: string
 }
@@ -51,6 +53,24 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
   for (const s of spec.segmentos)
     if (s.permisos != null && !/^[rwx]+$/.test(s.permisos))
       throw new Error(`traduccion: permisos "${s.permisos}" del segmento ${s.seg} (letras r, w, x)`)
+  for (const s of spec.segmentos)
+    if ((s.largo == null) === (s.limite == null))
+      throw new Error(
+        `traduccion: el segmento ${s.seg} lleva \`largo\` o \`limite\`, uno de los dos`,
+      )
+  const conLimite = spec.segmentos.some((s) => s.limite != null)
+  const tope = (s: SegmentoDirecto) => (s.limite ?? s.largo)!
+  // textos del chequeo según la cátedra dé el largo o la última dirección válida
+  const cmp = (s: SegmentoDirecto) =>
+    s.limite != null
+      ? { tit: 'desplazamiento ≤ límite', ok: '≤', mal: '>', dato: 'el límite', no: 'supera' }
+      : {
+          tit: 'desplazamiento < largo',
+          ok: '<',
+          mal: '≥',
+          dato: 'el largo',
+          no: 'no es menor que',
+        }
   const etiqueta = (s: SegmentoDirecto) =>
     s.permisos ? (ETIQUETA[s.permisos] ?? s.permisos.toUpperCase()) : '—'
 
@@ -67,7 +87,7 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
     const nombre = dl != null ? d(dl) : `(${seg}, ${o(desp)})`
     const fila = spec.segmentos.find((s) => s.seg === seg)
     if (!fila) throw new Error(`traduccion: falta el segmento ${seg} en la tabla (${nombre})`)
-    const limiteOk = desp < fila.largo
+    const limiteOk = fila.limite != null ? desp <= fila.limite : desp < fila.largo!
     const permisoOk = !acceso || (fila.permisos ?? '').includes(LETRA[acceso])
     const fault = !limiteOk ? 'límite' : !permisoOk ? 'permiso' : null
     const df = fila.base + desp
@@ -106,7 +126,8 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
   }
 
   const y2 = dirs.some((x) => x.dl != null) ? 100 : 40
-  const columnas = acceso ? ['Seg', 'Base', 'Largo', 'Protección'] : ['Seg', 'Base', 'Largo']
+  const tit = conLimite ? 'Límite' : 'Largo'
+  const columnas = acceso ? ['Seg', 'Base', tit, 'Protección'] : ['Seg', 'Base', tit]
   const anchos = [40, 76, 76, 100]
   const xs = anchos.map((_, j) => X0 + anchos.slice(0, j).reduce((a, b) => a + b, 0))
   const anchoTabla = xs[columnas.length - 1] + anchos[columnas.length - 1] - X0
@@ -117,7 +138,7 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
       .map((s, i) => {
         const y = y2 + 34 + i * 24
         const sel = s === x.fila
-        const celdas = [String(s.seg), d(s.base), d(s.largo), etiqueta(s)].slice(0, columnas.length)
+        const celdas = [String(s.seg), d(s.base), d(tope(s)), etiqueta(s)].slice(0, columnas.length)
         const mal = sel && x.fault === 'límite' ? 2 : sel && x.fault === 'permiso' ? 3 : -1
         return (
           `<g class="${sel ? 'tr-fila-sel' : 'tr-fila-otra'}">` +
@@ -149,16 +170,12 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
   }
   const nChequeos = acceso ? 3 : 2
   const chequeos = (x: Dir) => {
-    const l = x.fila.largo
+    const l = tope(x.fila)
+    const c = cmp(x.fila)
     const out = [
       x.limiteOk
-        ? chequeo(0, 'ok', 'desplazamiento < largo', `${o(x.desp)} < ${o(l)}`)
-        : chequeo(
-            0,
-            'mal',
-            'desplazamiento < largo',
-            `${o(x.desp)} ≥ ${o(l)} → segmentation fault`,
-          ),
+        ? chequeo(0, 'ok', c.tit, `${o(x.desp)} ${c.ok} ${o(l)}`)
+        : chequeo(0, 'mal', c.tit, `${o(x.desp)} ${c.mal} ${o(l)} → segmentation fault`),
     ]
     if (acceso) {
       const t = 'modo de acceso permitido'
@@ -224,16 +241,17 @@ export function recorridoTraduccionDirecta(spec: SpecTraduccionDirecta): Recorri
   const filasChips = Math.max(...chipsPorPaso.map((c) => c.at(-1)!.fila + 1))
 
   const pasos: Paso[] = dirs.map((x, k) => {
-    const l = x.fila.largo
+    const l = tope(x.fila)
+    const c = cmp(x.fila)
     const et = etiqueta(x.fila)
     const porque =
       x.fault === 'límite'
-        ? `El primer chequeo ya falla: el desplazamiento **${o(x.desp)}** no es menor que el largo **${o(l)}**, así que la MMU corta con **segmentation fault**${acceso ? ' sin mirar el permiso' : ''}.`
+        ? `El primer chequeo ya falla: el desplazamiento **${o(x.desp)}** ${c.no} ${c.dato} **${o(l)}**, así que la MMU corta con **segmentation fault**${acceso ? ' sin mirar el permiso' : ''}.`
         : x.fault === 'permiso'
-          ? `El desplazamiento **${o(x.desp)}** entra en el largo **${o(l)}**, pero el segmento ${x.seg} es **${et}**: no permite ${verbo}, así que la MMU corta con **fault por permiso**.`
+          ? `El desplazamiento **${o(x.desp)}** entra en ${c.dato} **${o(l)}**, pero el segmento ${x.seg} es **${et}**: no permite ${verbo}, así que la MMU corta con **fault por permiso**.`
           : acceso
-            ? `Pasa los dos chequeos: ${o(x.desp)} < ${o(l)} y el segmento ${x.seg} es **${et}**, que permite ${verbo}. DF = ${d(x.fila.base)} + ${o(x.desp)} = **${d(x.df)}**.`
-            : `El desplazamiento ${o(x.desp)} es menor que el largo ${o(l)}: DF = ${d(x.fila.base)} + ${o(x.desp)} = **${d(x.df)}**.`
+            ? `Pasa los dos chequeos: ${o(x.desp)} ${c.ok} ${o(l)} y el segmento ${x.seg} es **${et}**, que permite ${verbo}. DF = ${d(x.fila.base)} + ${o(x.desp)} = **${d(x.df)}**.`
+            : `El desplazamiento ${o(x.desp)} entra en ${c.dato} ${o(l)}: DF = ${d(x.fila.base)} + ${o(x.desp)} = **${d(x.df)}**.`
     return {
       titulo: `${x.nombre} → ${resultado(x)}`,
       texto: [porque, x.texto].filter(Boolean).join(' '),

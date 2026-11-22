@@ -166,3 +166,33 @@ describe('recorridoTraduccionDirecta (ya cortada, decimal, sin protección)', ()
     ).toThrow(/dl/)
   })
 })
+
+describe('recorridoTraduccionDirecta con límite (última dirección válida, ≤)', () => {
+  const conLimite = (limite: number) =>
+    recorridoTraduccionDirecta({
+      ...ej04,
+      segmentos: [{ seg: 0, base: 0, limite, permisos: 'rw' }],
+      direcciones: [{ dl: 0x0beef }],
+    })
+
+  it('compara con ≤ y la tabla dice Límite', () => {
+    const html = renderRecorrido(conLimite(0xbeee))
+    expect(html).toContain('>Límite<')
+    expect(html).toContain('desplazamiento ≤ límite')
+    expect(html).toContain('BEEFh &gt; BEEEh → segmentation fault')
+    expect(conLimite(0xbeee).pasos![0].texto).toContain(
+      'el desplazamiento **BEEFh** supera el límite **BEEEh**',
+    )
+  })
+
+  it('el desplazamiento igual al límite es válido', () => {
+    expect(conLimite(0xbeef).pasos![0].titulo).toBe('0BEEFh → 0BEEFh')
+  })
+
+  it('un segmento con largo y límite, o sin ninguno, rompe el build', () => {
+    const con = (s: object) => () =>
+      recorridoTraduccionDirecta({ ...ej04, segmentos: [{ seg: 0, base: 0, ...s }] })
+    expect(con({ largo: 1, limite: 1 })).toThrow(/largo.*limite/)
+    expect(con({})).toThrow(/largo.*limite/)
+  })
+})
