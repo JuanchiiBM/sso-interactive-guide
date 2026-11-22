@@ -2,19 +2,21 @@
 /** Sidebar estático: temas del parcial con sus ejercicios. JS solo para el drawer mobile. */
 import {
   getCatalogoPorParcial,
+  getMetodologias,
   parcialUI,
   temaHref,
   ejercicioHref,
   rotuloEjercicio,
 } from '@lib/catalogo'
 import { clavesEjercicio } from '@lib/progreso'
+import { metodologiaHref } from '@lib/metodologia/validar'
 
 interface Props {
   activeId?: string
 }
 
 const { activeId } = Astro.props
-const porParcial = await getCatalogoPorParcial()
+const [porParcial, metodologias] = await Promise.all([getCatalogoPorParcial(), getMetodologias()])
 ---
 
 <div
@@ -61,7 +63,8 @@ const porParcial = await getCatalogoPorParcial()
         </p>
         {temas.map(({ tema, ejercicios }, i) => {
           const temaActivo = activeId === tema.id
-          const abierto = temaActivo || ejercicios.some((e) => e.id === activeId)
+          const metodoActivo = activeId === `metodologia/${tema.id}`
+          const abierto = temaActivo || metodoActivo || ejercicios.some((e) => e.id === activeId)
           return (
             <details class="group mb-0.5" open={abierto}>
               <summary class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer list-none text-sm text-fg-soft hover:bg-hover hover:text-fg [&::-webkit-details-marker]:hidden">
@@ -92,6 +95,20 @@ const porParcial = await getCatalogoPorParcial()
                     Teoría
                   </a>
                 </li>
+                {metodologias.has(tema.id) && (
+                  <li>
+                    <a
+                      href={metodologiaHref(tema.id)}
+                      class:list={[
+                        'block px-2 py-1 rounded text-[13px]',
+                        metodoActivo ? 'text-accent bg-accent-soft' : 'text-muted hover:text-fg',
+                      ]}
+                      aria-current={metodoActivo ? 'page' : undefined}
+                    >
+                      Metodología
+                    </a>
+                  </li>
+                )}
                 {ejercicios.map((e) => (
                   <li>
                     <a
