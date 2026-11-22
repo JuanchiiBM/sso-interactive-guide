@@ -19,7 +19,7 @@ teoria:
 
 ### Receta
 
-1. **Formato:** offset = log₂(tamaño de página); segmento = log₂(cantidad de segmentos); página = lo que sobra.
+1. **Formato:** 2<sup>offset</sup> = tamaño de página; 2<sup>segmento</sup> = cantidad de segmentos; página = lo que sobra.
 2. **Cortar:** pasá a binario solo el primer dígito. Los dígitos que son enteros del offset se copian.
 3. **Límite:** desplazamiento ≤ límite del segmento. Si se pasa: segmentation fault.
 4. **Permiso:** lectura mira R, escritura W, ejecución X.
@@ -30,7 +30,7 @@ teoria:
 
 |                           |                                                                                                         |
 | ------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `offset = log₂(página)`   | Con b bits se numeran 2<sup>b</sup> bytes: los de una página.                                           |
+| `2^offset = página`       | Con b bits se numeran 2<sup>b</sup> bytes: los de una página.                                           |
 | `1 dígito hexa = 4 bits`  | 16 = 2<sup>4</sup>. Por eso 12 bits de offset son 3 dígitos que se copian enteros.                      |
 | `desplazamiento ≤ límite` | Para la cátedra el límite es la última dirección válida. Si te dan el largo, es `<`.                    |
 | `frame × página + offset` | Los frames van uno atrás del otro y miden una página. Pegar bits es multiplicar por 2<sup>offset</sup>. |
