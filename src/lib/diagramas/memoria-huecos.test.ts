@@ -246,3 +246,17 @@ describe('simularHuecos: varios segmentos juntos', () => {
     expect(p.juntos?.map((b) => b.inicio)).toEqual([256, 316])
   })
 })
+
+describe('simularHuecos: marca', () => {
+  it('no cambia el estado y rompe si la DL no está en el bloque', () => {
+    const [, , p] = simularHuecos({
+      ...ej37,
+      operaciones: [...ej37.operaciones, { marca: 'P2', dl: 4096, titulo: 't', texto: 'x' }],
+    })
+    expect(p.despues).toEqual(p.antes)
+    const mal = (op: object) => () =>
+      simularHuecos({ ...ej37, operaciones: [{ titulo: 't', texto: 'x', ...op } as never] })
+    expect(mal({ marca: 'P2', dl: 4097 })).toThrow('fuera de P2')
+    expect(mal({ marca: 'P9', dl: 0 })).toThrow('P9')
+  })
+})

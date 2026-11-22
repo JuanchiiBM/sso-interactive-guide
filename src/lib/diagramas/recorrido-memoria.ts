@@ -83,6 +83,10 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     if (!p.op) return p.huecosAntes.map((h) => [`hueco ${rango(h)} ${tam(h.tam)}`, 'neutro'])
     if ('libera' in p.op)
       return p.liberados.map((b) => [`${b.nombre} libera ${rango(b)}`, 'neutro'])
+    if ('marca' in p.op)
+      return (p.op.chips ?? [])
+        .flatMap((c) => Object.entries(c) as [string, string][])
+        .map(([k, t]) => [t, k])
     if ('agranda' in p.op) {
       const { agranda, tam: t } = p.op
       const chips: [string, string][] = p.candidatos.map(({ hueco, estado }) => {
@@ -128,7 +132,9 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
 
   const yAntes = 14 + filasChips * (CHIP + 6) + 14
   const yDespues = yAntes + BARRA + 52
-  const yMarcas = yDespues + BARRA + 14
+  const marcaDe = (p: PasoMem) => (p.op && 'marca' in p.op ? p.op : undefined)
+  const conMarca = pasos.some(marcaDe)
+  const yMarcas = yDespues + BARRA + 14 + (conMarca ? 44 : 0)
   const yTabla = yMarcas + 26
 
   type Fila = [string[], string]
@@ -162,7 +168,13 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         ? `${dir(b.inicio)} (nuevo)`
         : dir(b.inicio)
     const t = c ? `${tamCol(b.tam)} ← ${tamCol(b.tam - c.tam)}` : tamCol(b.tam)
-    const clase = m ? 'rm-fila-mov' : c || esNuevo(p, b) ? 'rm-fila-nueva' : ''
+    const clase = m
+      ? 'rm-fila-mov'
+      : c || esNuevo(p, b)
+        ? 'rm-fila-nueva'
+        : marcaDe(p)?.marca === b.nombre
+          ? 'rm-fila-ok'
+          : ''
     return [[base, t], clase]
   }
   const hueco = (h: Hueco, etq: string): Fila => [
@@ -208,11 +220,14 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     return [...filas, ...huecos.map((h) => hueco(h, 'Hueco'))]
   }
   const alto = spec.tabla
-    ? yTabla + 40 + Math.max(...pasos.map((p) => filasDe(p).length)) * 20 + 8
+    ? yTabla +
+      40 +
+      Math.max(...pasos.map((p) => (marcaDe(p)?.completar ?? filasDe(p)).length)) * 20 +
+      8
     : yMarcas + 16
 
   const op = (p: PasoMem) => (p.op && 'agranda' in p.op ? p.op : undefined)
-  const barra = (bloques: BloqueMem[], y: number, p: PasoMem, antes: boolean) => {
+  const barra = (bloques: BloqueMem[], y: number, p: PasoMem, antes: boolean, marcado = '') => {
     const estadoHueco = (h: Hueco) => {
       if (!antes || !p.op || 'libera' in p.op) return ''
       const c = p.candidatos.find((x) => x.hueco.inicio === h.inicio)
@@ -258,7 +273,9 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
           ? ' rm-nuevo'
           : p.movidos.some((m) => m.nombre === b.nombre)
             ? ' rm-mov'
-            : ''
+            : b.nombre === marcado
+              ? ' rm-marcado'
+              : ''
       return parte(
         px(b.inicio),
         px(b.inicio + b.tam) - px(b.inicio),
@@ -306,9 +323,19 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       .join('')
 
   const tabla = (p: PasoMem) => {
-    if (!spec.tabla) return ''
-    const { titulo, columnas } = tablaDe
-    const col = columnas.length === 4 ? [X0, X0 + 90, X0 + 150, X0 + 330] : [X0, X0 + 80, X0 + 260]
+    const completar = marcaDe(p)?.completar
+    if (!spec.tabla && !completar) return ''
+    const { titulo, columnas } = completar
+      ? { titulo: 'Lo que había que completar', columnas: ['Campo', 'Valor'] }
+      : tablaDe
+    const filas: Fila[] = completar
+      ? completar.map(([campo, valor, ok]) => [[campo, String(valor)], ok ? 'rm-fila-ok' : ''])
+      : filasDe(p)
+    const col = completar
+      ? [X0, X0 + 220]
+      : columnas.length === 4
+        ? [X0, X0 + 90, X0 + 150, X0 + 330]
+        : [X0, X0 + 80, X0 + 260]
     const fila = (i: number, [celdas, clase]: Fila) =>
       `<g class="rm-fila ${clase}">${celdas.map((c, j) => texto(col[j] + 8, yTabla + 40 + i * 20, c, { clase: 'rm-izq' })).join('')}</g>`
     return (
@@ -317,9 +344,31 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
         .map((t, j) => texto(col[j] + 8, yTabla + 20, t, { clase: 'rm-izq rm-enc' }))
         .join('') +
       `<line class="rm-eje" x1="${X0}" y1="${yTabla + 29}" x2="${X0 + (columnas.length === 4 ? 480 : 440)}" y2="${yTabla + 29}"/>` +
-      filasDe(p)
-        .map((f, i) => fila(i, f))
-        .join('')
+      filas.map((f, i) => fila(i, f)).join('')
+    )
+  }
+
+  const ancla = (x: number) => (x > X0 + W - 120 ? 'rm-der' : x < X0 + 120 ? 'rm-izq' : '')
+  const pin = (b: BloqueMem, m: NonNullable<ReturnType<typeof marcaDe>>) => {
+    const x = px(b.inicio + m.dl)
+    const [x0, x1] = [px(b.inicio), px(b.inicio + b.tam)]
+    const y = yDespues + BARRA + 8
+    const etq = (xx: number, t: string, clase: string) =>
+      `<line class="rm-regla${clase ? ' rm-regla-sel' : ''}" x1="${xx}" y1="${y}" x2="${xx}" y2="${y + 10}"/>` +
+      texto(xx, y + 20, t, { clase: `rm-regla-etq ${clase} ${ancla(xx)}` })
+    const fin = x1 - x < 75 ? tamCol(b.tam) : tam(b.tam)
+    return (
+      `<line class="rm-pin" x1="${x}" y1="${yDespues - 16}" x2="${x}" y2="${yDespues + BARRA}"/>` +
+      texto(x, yDespues - 24, m.df ?? `DF ${dir(b.inicio + m.dl)}`, {
+        clase: `rm-pin-etq ${ancla(x)}`,
+      }) +
+      `<line class="rm-regla" x1="${x0}" y1="${y + 5}" x2="${x1}" y2="${y + 5}"/>` +
+      etq(x0, 'DL 0', '') +
+      etq(x, m.dlRotulo ?? `DL ${dir(m.dl)}`, 'rm-regla-dl') +
+      (m.dl < b.tam ? etq(x1, fin, '') : '') +
+      texto(x0, y + 36, `Direcciones lógicas de ${m.marca}${m.regla ? ` ${m.regla}` : ''}`, {
+        clase: 'rm-izq rm-regla-tit',
+      })
     )
   }
 
@@ -339,6 +388,19 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
     const antes = p.op ? rot(yAntes - 8, 'Antes') + barra(p.antes, yAntes, p, true) : ''
     const despues =
       rot(yDespues - 8, p.op ? 'Después' : 'Memoria') + barra(p.despues, yDespues, p, false)
+    const m = marcaDe(p)
+    if (m) {
+      // la barra es la del paso anterior (con lo que mostraba), más la DF y la regla de DL
+      const prev = pasos[i - 1]
+      const marca =
+        rot(yDespues - 8, m.rotulo ?? `Memoria${sufijo}`) +
+        barra(prev.despues, yDespues, prev, false, m.marca) +
+        pin(
+          p.despues.find((b) => b.nombre === m.marca)!,
+          m,
+        )
+      return grupo(`paso-${i}`, chips + marca + tabla(p), { oculto: true })
+    }
     return grupo(`paso-${i}`, chips + antes + flechas(p) + despues + tabla(p), { oculto: true })
   }
 
@@ -413,6 +475,7 @@ export function recorridoMemoria(spec: SpecRecorridoMemoria): Recorrido {
       }
     }
     if ('segmentos' in p.op) return pasoJuntos(p, p.op)
+    if ('marca' in p.op) return { titulo: p.op.titulo, texto: p.op.texto }
     const titulo = `${p.op.carga} (${tam(p.op.tam)})`
     const nuevo = p.nuevo!
     const sirven = p.candidatos.filter((c) => c.estado !== 'no-entra')

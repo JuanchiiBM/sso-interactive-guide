@@ -27,6 +27,21 @@ export type OpMem =
     }
   | { libera: string; texto?: string }
   | {
+      /** Paso sin cambios: marca la DF de una DL del bloque (línea arriba, regla de DL abajo). */
+      marca: string
+      dl: number
+      titulo: string
+      texto: string
+      df?: string
+      dlRotulo?: string
+      /** Se agrega al título de la regla ("Direcciones lógicas de P0 …"). */
+      regla?: string
+      rotulo?: string
+      chips?: Partial<Record<'ok' | 'mal' | 'aviso' | 'neutro', string>>[]
+      /** Filas [campo, valor, 'ok'?] de "Lo que había que completar" (en vez de la tabla). */
+      completar?: string[][]
+    }
+  | {
       /** El bloque crece al final; si atrás no alcanza, compacta (como `carga`). */
       agranda: string
       tam: number
@@ -140,6 +155,14 @@ export function simularHuecos(spec: SpecMemoria): PasoMem[] {
       if (!liberados.length) throw new Error(`memoria: no hay nada que liberar de ${op.libera}`)
       bloques = antes.filter((b) => !liberados.includes(b))
       pasos.push({ op, antes, despues: bloques, huecosAntes, ...vacio, liberados })
+      continue
+    }
+    if ('marca' in op) {
+      const b = antes.find((x) => x.nombre === op.marca)
+      if (!b) throw new Error(`memoria: no existe ${op.marca} para marcar`)
+      if (op.dl < 0 || op.dl > b.tam)
+        throw new Error(`memoria: la DL ${op.dl} está fuera de ${op.marca}`)
+      pasos.push({ op, antes, despues: antes, huecosAntes, ...vacio })
       continue
     }
     if ('agranda' in op) {

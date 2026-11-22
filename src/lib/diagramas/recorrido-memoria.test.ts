@@ -329,3 +329,88 @@ describe('recorridoMemoria: varios segmentos juntos', () => {
     expect(html.match(/rm-p\d rm-nuevo/g)?.length).toBe(2)
   })
 })
+
+describe('recorridoMemoria: marca', () => {
+  const r37 = recorridoMemoria({
+    titulo: 'P2 crece',
+    unidad: 'KiB',
+    tabla: 'particiones',
+    total: 16384,
+    algoritmo: 'primer',
+    inicial: [
+      { nombre: 'P1', inicio: 0, tam: 8192 },
+      { nombre: 'P2', inicio: 9216, tam: 4096 },
+      { nombre: 'P3', inicio: 14336, tam: 2048 },
+    ],
+    operaciones: [
+      { agranda: 'P2', tam: 1538, etiqueta: 'lo leído', compactar: [{ mover: 'P2', a: 8192 }] },
+      {
+        marca: 'P2',
+        dl: 4096,
+        df: 'DF 12288 KiB = 12.582.912',
+        titulo: 'dónde empieza lo leído',
+        texto: 'Lo leído va **al final**.',
+        chips: [{ neutro: 'DL 4096 KiB (fin del P2 original)' }, { ok: 'DF = 8192 + 4096' }],
+        completar: [
+          ['Nueva base de P2', '8192 KiB'],
+          ['DF del primer byte leído', '12582912 bytes', 'ok'],
+        ],
+      },
+    ],
+  })
+  const html = renderRecorrido(r37)
+  const marca = html.slice(html.indexOf('data-el="paso-2"'))
+
+  it('título y texto del autor; chips del autor', () => {
+    expect(r37.pasos![2]).toMatchObject({
+      titulo: 'dónde empieza lo leído',
+      texto: 'Lo leído va **al final**.',
+    })
+    expect(marca).toContain('rm-chip-neutro')
+    expect(marca).toContain('>DL 4096 KiB (fin del P2 original)<')
+    expect(marca).toContain('>DF = 8192 + 4096<')
+  })
+
+  it('barra del paso anterior, línea de la DF y regla de DL bajo el proceso', () => {
+    expect(marca).not.toContain('>Antes<')
+    expect(marca).toContain('>Memoria (KiB)<')
+    expect(marca).toContain('>+1538 KiB<')
+    expect(marca).toContain('rm-pin')
+    expect(marca).toContain('>DF 12288 KiB = 12.582.912<')
+    expect(marca).toContain('>Direcciones lógicas de P2<')
+    expect(marca).toMatch(/>DL 0<[^]*>DL 4096<[^]*>5634</)
+  })
+
+  it('con `completar`, la tabla de lo que había que completar', () => {
+    expect(marca).toContain('>Lo que había que completar<')
+    expect(marca).toMatch(/rm-fila-ok[^>]*>[^]*?>DF del primer byte leído</)
+  })
+
+  it('sin `completar`, la tabla normal con el bloque marcado en verde', () => {
+    const h = renderRecorrido(
+      recorridoMemoria({
+        titulo: 'Condiciones',
+        unidad: 'MiB',
+        tabla: 'particiones',
+        total: 1024,
+        algoritmo: 'primer',
+        inicial: [{ nombre: 'P0', inicio: 0, tam: 500 }],
+        operaciones: [
+          {
+            marca: 'P0',
+            dl: 256,
+            dlRotulo: 'DL 0FFFFFFFh',
+            regla: '(base 0: DL = DF)',
+            titulo: 'condición 1',
+            texto: 'x',
+          },
+        ],
+      }),
+    )
+    expect(h).toContain('rm-marcado')
+    expect(h).toContain('>Direcciones lógicas de P0 (base 0: DL = DF)<')
+    expect(h).toContain('>DL 0FFFFFFFh<')
+    expect(h).toContain('>DF 256<')
+    expect(h).toMatch(/rm-fila-ok[^>]*>[^]*?>P0</)
+  })
+})
