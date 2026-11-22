@@ -1227,6 +1227,23 @@ rect.t3p-ref {
   fill: var(--surface-3);
   stroke: var(--line-strong);
 }
+.tr-bit-pag rect {
+  fill: color-mix(in srgb, var(--p5) 12%, var(--surface));
+  stroke: var(--p5);
+  stroke-width: 1.4;
+}
+.diagrama .tr-val-pag {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  fill: var(--p5);
+}
+.diagrama .tr-acento {
+  fill: var(--accent);
+  font-weight: 600;
+}
+.tr-tabla-no {
+  opacity: 0.55;
+}
 .diagrama .tr-bit text {
   font-size: 14px;
 }

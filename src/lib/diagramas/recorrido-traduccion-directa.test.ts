@@ -196,3 +196,165 @@ describe('recorridoTraduccionDirecta con límite (última dirección válida, �
     expect(con({})).toThrow(/largo.*limite/)
   })
 })
+
+const fotograma = (html: string, k: number) =>
+  html.split(`data-el="paso-${k}"`)[1].split('data-el="paso-')[0]
+
+// Memoria Real ej-06: segmentación paginada en hexa, sin límite ni tipo de acceso
+const ej06: SpecTraduccionDirecta = {
+  sentido: 'directo',
+  titulo: 'Segmentación paginada de P1',
+  bitsSegmento: 2,
+  bitsPagina: 6,
+  bitsOffset: 8,
+  segmentos: [
+    { seg: 0, nombre: 'Code', permisos: 'RX', paginas: { 0: 3, 1: 18, 2: 7 } },
+    { seg: 1, nombre: 'Data', permisos: 'RW', paginas: { 0: 11, 1: 17 } },
+    { seg: 2, nombre: 'Stack', permisos: 'RW', paginas: { 0: 9 } },
+    { seg: 3, nombre: 'Heap', permisos: 'RW', paginas: { 0: 10, 1: 21, 2: 24 } },
+  ],
+  direcciones: [{ dl: 0x02ab }, { dl: 0xc110 }, { dl: 0x8013 }, { dl: 0x01fa }],
+}
+
+describe('recorridoTraduccionDirecta paginada en hexa (ej-06)', () => {
+  const r6 = recorridoTraduccionDirecta(ej06)
+  const html6 = renderRecorrido(r6)
+
+  it('DF = frame | offset para cada dirección', () => {
+    expect(r6.pasos!.map((p) => p.titulo)).toEqual([
+      '02ABh → 07ABh',
+      'C110h → 1510h',
+      '8013h → 0913h',
+      '01FAh → 12FAh',
+    ])
+  })
+
+  it('1. corta en segmento | página | offset', () => {
+    const f = fotograma(html6, 1)
+    expect(f).toContain('1. Cortar C110h: 2 bits de segmento | 6 de página | 8 de offset')
+    expect(f.match(/tr-bit tr-bit-seg"/g)).toHaveLength(2)
+    expect(f.match(/tr-bit tr-bit-pag"/g)).toHaveLength(6)
+    expect(f.match(/tr-bit tr-bit-off"/g)).toHaveLength(8)
+    expect(f).toMatch(/segmento <tspan[^>]*>3 \(Heap\)<\/tspan>/)
+    expect(f).toMatch(/página <tspan[^>]*>1<\/tspan>/)
+  })
+
+  it('2. sin límite ni acceso no hay tabla de segmentos: va la de páginas con permisos', () => {
+    const f = fotograma(html6, 1)
+    expect(f).not.toContain('Buscar la fila')
+    expect(f).toContain('2. Tabla de páginas del segmento 3 (Heap)')
+    expect(f).toContain('>Permisos<')
+    expect(f).toMatch(/class="rm-izq tr-acento"[^>]*>21</)
+  })
+
+  it('3. chequeos: la página tiene frame y la DF se arma pegando', () => {
+    const f = fotograma(html6, 1)
+    expect(f).toContain('3. Chequeos de la MMU, en orden')
+    expect(f).toContain('página 1 → frame 21 = 15h')
+    expect(f).toContain('15h | 10h = 1510h')
+    expect(r6.pasos![1].texto).toBe(
+      'La página **1** del segmento 3 (Heap) está en el frame **21 = 15h**. Las páginas son de 256 B, así que el offset son los dos últimos dígitos hexa y la DF se arma pegando frame y offset: **1510h**.',
+    )
+  })
+
+  it('una página sin frame da Fault (página)', () => {
+    const r = recorridoTraduccionDirecta({ ...ej06, direcciones: [{ dl: 0x8100 }] })
+    expect(r.pasos![0].titulo).toBe('8100h → Fault (página)')
+    expect(renderRecorrido(r)).toContain('la página 1 no tiene frame → fault')
+  })
+
+  it('datos inconsistentes rompen el build', () => {
+    const { bitsPagina: _, ...sinBits } = ej06
+    expect(() => recorridoTraduccionDirecta(sinBits)).toThrow(/bitsPagina/)
+    expect(() =>
+      recorridoTraduccionDirecta({ ...ej06, segmentos: [{ seg: 0, paginas: { 64: 1 } }] }),
+    ).toThrow(/6 bits/)
+    expect(() =>
+      recorridoTraduccionDirecta({ ...ej06, segmentos: [{ seg: 0, permisos: 'RX' }] }),
+    ).toThrow(/paginas/)
+  })
+})
+
+// Memoria Real ej-09: segmentación paginada en decimal, con límite y permiso de ejecución
+const ej09: SpecTraduccionDirecta = {
+  sentido: 'directo',
+  titulo: 'Referencias para ejecución',
+  bitsSegmento: 3,
+  bitsPagina: 7,
+  bitsOffset: 10,
+  unidad: 'decimal',
+  acceso: 'ejecucion',
+  segmentos: [
+    { seg: 0, limite: 15483, permisos: 'RW-', paginas: { 3: 12, 4: 5, 5: 7, 6: 4, 7: 43, 8: 11 } },
+    {
+      seg: 1,
+      limite: 10295,
+      permisos: 'RWX',
+      paginas: { 0: 22, 1: 21, 2: 42, 3: 10, 4: 9, 5: 33 },
+    },
+    {
+      seg: 2,
+      limite: 20480,
+      permisos: 'R-X',
+      paginas: { 7: 31, 8: 35, 9: 2, 10: 0, 11: 6, 12: 23 },
+    },
+    {
+      seg: 3,
+      limite: 12285,
+      permisos: 'R-X',
+      paginas: { 4: 45, 5: 41, 6: 39, 7: 18, 8: 19, 9: 24 },
+    },
+  ],
+  direcciones: [{ dl: 135145 }, { dl: 405707 }, { dl: 270340 }, { dl: 6032 }],
+}
+
+describe('recorridoTraduccionDirecta paginada en decimal (ej-09)', () => {
+  const r9 = recorridoTraduccionDirecta(ej09)
+  const html9 = renderRecorrido(r9)
+
+  it('resultados de las cuatro referencias', () => {
+    expect(r9.pasos!.map((p) => p.titulo)).toEqual([
+      '135145 → 11241',
+      '405707 → Fault (límite)',
+      '270340 → 35844',
+      '6032 → Fault (permiso)',
+    ])
+  })
+
+  it('1. corta dividiendo', () => {
+    const f = fotograma(html9, 0)
+    expect(f).toContain(
+      '1. Cortar 135145 dividiendo: cada segmento abarca 2^17 = 131072 y cada página 1024',
+    )
+    expect(f).toMatch(/135145 = <tspan[^>]*>1<\/tspan> × 131072 \+ <tspan[^>]*>4073<\/tspan>/)
+    expect(f).toMatch(/4073 = <tspan[^>]*>3<\/tspan> × 1024 \+ <tspan[^>]*>1001<\/tspan>/)
+    expect(f).not.toContain('tr-bit')
+  })
+
+  it('2. y 3. las dos tablas; 4. los cuatro chequeos', () => {
+    const f = fotograma(html9, 0)
+    expect(f).toContain('2. Buscar la fila del segmento 1')
+    expect(f).toContain('>Límite<')
+    expect(f).toContain('3. Tabla de páginas del segmento 1')
+    expect(f).toContain('4. Chequeos de la MMU, en orden')
+    expect(f).toContain('4073 ≤ 10295')
+    expect(f).toContain('RWX permite ejecutar')
+    expect(f).toContain('página 3 → frame 10')
+    expect(f).toContain('10 × 1024 + 1001 = 11241')
+    expect(r9.pasos![0].texto).toBe(
+      'Pasa el límite (**4073 ≤ 10295**) y el segmento 1 es **RWX**, que permite ejecutar. La página **3** del segmento 1 está en el frame **10**: DF = 10 × 1024 + 1001 = **11241**.',
+    )
+  })
+
+  it('con fault de límite, la tabla de páginas no se mira', () => {
+    const f = fotograma(html9, 1)
+    expect(f).toContain('12491 &gt; 12285 → segmentation fault')
+    expect(f).toContain('tr-tabla-no')
+    expect(f.match(/no se llega/g)).toHaveLength(2)
+  })
+
+  it('con fault de permiso, dice por qué', () => {
+    expect(fotograma(html9, 3)).toContain('ejecutar en un segmento RW- → fault por permiso')
+    expect(r9.pasos![3].texto).toContain('el segmento 0 es **RW-**: no permite ejecutar')
+  })
+})
