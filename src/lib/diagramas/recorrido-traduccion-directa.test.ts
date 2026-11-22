@@ -107,8 +107,6 @@ describe('recorridoTraduccionDirecta (DL → DF con límite y permiso)', () => {
       recorridoTraduccionDirecta({ ...ej04, ...d })
     expect(con({ direcciones: [{ dl: 0x40000 }] })).toThrow(/18 bits/)
     expect(con({ segmentos: ej04.segmentos.slice(1) })).toThrow(/segmento 0/)
-    expect(con({ segmentos: [{ seg: 0, base: 0, largo: 1, permisos: 'rz' }] })).toThrow(
-      /permisos/,
-    )
+    expect(con({ segmentos: [{ seg: 0, base: 0, largo: 1, permisos: 'rz' }] })).toThrow(/permisos/)
   })
 })

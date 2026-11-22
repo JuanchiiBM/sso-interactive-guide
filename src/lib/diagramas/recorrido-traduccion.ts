@@ -12,6 +12,10 @@ export interface SpecTraduccion {
   direcciones: { dl: number; df: number; tam: number; texto?: string }[]
 }
 
+export const bits = (n: number, k: number) => n.toString(2).padStart(k, '0')
+// agrupa de a 4 desde la derecha, como se escribe en la pizarra
+export const nibbles = (b: string) => b.replace(/\B(?=(\d{4})+$)/g, ' ')
+
 const X0 = 20
 const W = 720
 const BARRA = 44
@@ -20,9 +24,6 @@ export function recorridoTraduccion(spec: SpecTraduccion): Recorrido {
   const hx = (n: number) => `${n.toString(16).toUpperCase().padStart(4, '0')}h`
   const kib = (n: number) => (n % 1024 === 0 ? `${n / 1024} KiB` : `${n} B`)
   const px = (v: number) => X0 + (v / spec.total) * W
-  const bits = (n: number, k: number) => n.toString(2).padStart(k, '0')
-  // agrupa de a 4 desde la derecha, como se escribe en la pizarra
-  const nibbles = (b: string) => b.replace(/\B(?=(\d{4})+$)/g, ' ')
 
   const segs = spec.direcciones.map((d) => {
     const seg = d.dl >> spec.bitsOffset
