@@ -52,7 +52,8 @@ export function recorridoDeducir(spec: SpecDeducir): Recorrido {
   const pag = (p: string | undefined, n: number) => (p ? `${p}${n}` : String(n))
   const nombre = (p: string | undefined, n: number) => (p ? `${p}${n}` : `la ${n}`)
   const marcoDe = (f: number) => spec.marcos.find((m) => m.frame === f)!
-  const deMarco = (m: MarcoDeducir) => nombre(m.proceso, m.pagina)
+  const deMarco = (m: MarcoDeducir) =>
+    varios && m.proceso ? `${rotuloProceso(m.proceso)}${m.pagina}` : nombre(m.proceso, m.pagina)
 
   // paso 1: decodificar
   const etapas: Etapa[] = varios
@@ -329,7 +330,7 @@ function trazaClock(spec: SpecDeducir, inicio: number): string {
       p = (p + 1) % n
     }
     const f = marcos[p].frame
-    partes.push(bajados.length ? `baja U de ${rangos(bajados)} y saca F${f}` : `saca F${f} (U = 0)`)
+    partes.push(bajados.length ? `baja U de ${rangos(bajados)} y saca F${f}` : `saca F${f} (U = 0)`)
     Object.assign(marcos[p], { id: `${r.proceso}${pagina}`, u: true })
     p = (p + 1) % n
   }

@@ -59,17 +59,17 @@ function tablaCeldas(y: number, cols: string[], filas: Celda[][]) {
       cols.map((t) => ({ t })),
       true,
     ) + filas.map((f, i) => celdas(y + FILA * (i + 1), f)).join('')
-  return { svg, h: FILA * (filas.length + 1) }
+  return { svg, h: FILA * (filas.length + 1), w: anchos.reduce((s, a) => s + a, 0) }
 }
 
-function tarjetas(ts: Tarjeta[], y0: number) {
-  const w = (W - 2 * X0 - 10) / 2
+function tarjetas(ts: Tarjeta[], y0: number, ancho: number) {
+  const w = (ancho - 10) / 2
   let y = y0
   let svg = ''
   for (let i = 0; i < ts.length; i += 2) {
     const par = ts
       .slice(i, i + 2)
-      .map((t) => ({ t, lineas: renglones(`${t.titulo} ${t.texto}`, 54) }))
+      .map((t) => ({ t, lineas: renglones(`${t.titulo} ${t.texto}`, Math.floor((w - 20) / 6.4)) }))
     const h = 16 + Math.max(...par.map((p) => p.lineas.length)) * 17
     par.forEach(({ t, lineas }, k) => {
       const x = X0 + k * (w + 10)
@@ -102,10 +102,10 @@ export function dibujoComparar(
   const tc = tablaCeldas(y, t.cols, t.filas)
   svg += tc.svg
   y += tc.h + 16
-  const c = tarjetas(ts, y)
+  const c = tarjetas(ts, y, Math.max(W - 2 * X0, tc.w))
   svg += c.svg
   y += c.alto + 8
   const [rotulo, ...resto] = respuesta.split(': ')
   svg += `<text class="rm-izq ded-resp" x="${X0}" y="${y + 6}">${esc(rotulo)}: <tspan class="ded-tit">${esc(resto.join(': '))}</tspan></text>`
-  return { svg, alto: y + 20, ancho: W }
+  return { svg, alto: y + 20, ancho: Math.max(W, tc.w + 2 * X0) }
 }

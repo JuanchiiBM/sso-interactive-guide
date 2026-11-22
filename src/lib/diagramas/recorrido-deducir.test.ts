@@ -58,5 +58,6 @@ describe('recorridoDeducir', () => {
       'Acierta las dos primeras, pero en la 3.ª saca PC2 (TS 95, frame 7), no el frame 5.',
     )
     expect(textos).toContain('Respuesta: Clock, con el puntero arrancando en el frame 4.')
+    expect(textos).toContain('busca (0,0) y PB1 lo es: la elige antes que PB3 (0,1).')
   })
 })

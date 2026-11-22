@@ -21,5 +21,10 @@ export function renderDeducir(codigo: string): string {
   for (const a of spec.algoritmos as string[])
     if (!ALGS.includes(a))
       throw new Error(`Bloque deducir: algoritmo "${a}" (van ${ALGS.join(', ')})`)
-  return renderRecorrido(recorridoDeducir(spec as unknown as SpecDeducir))
+  const r = recorridoDeducir(spec as unknown as SpecDeducir)
+  const html = renderRecorrido(r)
+  // tabla ancha: en pantalla chica scrollea en vez de achicarse (como el inodo)
+  return r.ancho > 760
+    ? html.replace('class="diagrama recorrido"', 'class="diagrama recorrido in-ancho"')
+    : html
 }
