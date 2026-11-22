@@ -27,3 +27,27 @@ describe('bloque ```memoria', () => {
     expect(() => bloqueSVG('memoria', yaml.replace('libera: A', 'libera: Z'))).toThrow(/Z/)
   })
 })
+
+describe('bloque ```traduccion', () => {
+  const yamlT = `
+titulo: Tabla de A
+total: 0x10000
+bitsSegmento: 2
+bitsOffset: 14
+proceso: A
+direcciones:
+  - { dl: 0x51FA, df: 0xE1FA, tam: 0x3000 }
+  - { dl: 0x0A98, df: 0x9A98, tam: 0x2000 }
+`
+  it('lee el YAML y dibuja el recorrido', () => {
+    const html = bloqueSVG('traduccion', yamlT)!
+    expect(html).toContain('data-recorrido')
+    expect(html).toContain('DF E1FAh')
+  })
+
+  it('un campo faltante rompe el build', () => {
+    expect(() => bloqueSVG('traduccion', yamlT.replace(/bitsOffset:.*\n/, ''))).toThrow(
+      /bitsOffset/,
+    )
+  })
+})
