@@ -112,5 +112,6 @@ describe('recorridoLocks (ej-09)', () => {
       "Como el cerrojo es **sugerido**, el SO no lo controla: la lectura **pasa** y `var` queda en `'A'`.",
     )
     expect(renderRecorrido(s)).toContain('>Cerrojo de f (sugerido)<')
+    expect(renderRecorrido(s)).toContain('read(f, var)  ✓ sin lock')
   })
 })

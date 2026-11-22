@@ -30,7 +30,7 @@ export function recorridoLocks(spec: SpecLocks): Recorrido {
   const n = spec.procesos.length
   const colW = (ANCHO - 2 * X0 - (n - 1) * GAP) / n
   const maxLineas = Math.max(...spec.procesos.map((p) => p.codigo.length))
-  const altoCol = CAB + 10 + maxLineas * LIN
+  const altoCol = CAB + 18 + maxLineas * LIN
   const yCajas = 10 + altoCol + 12
   const altoCaja = 26 + Math.max(3, impresiones.length) * ALTO_CAJA_LIN
   const yTabla = yCajas + altoCaja + 24
@@ -42,7 +42,7 @@ export function recorridoLocks(spec: SpecLocks): Recorrido {
     for (const { linea: k, evento: e } of t.lineas) {
       if (e.tipo === 'imprime') notas[i][t.p].set(k, e.valor)
       if (e.tipo === 'falla') notas[i][t.p].set(k, '✗ sin lock')
-      if (e.tipo === 'pasa') notas[i][t.p].set(k, 'sin lock, pasa')
+      if (e.tipo === 'pasa') notas[i][t.p].set(k, '✓ sin lock')
     }
   })
 
