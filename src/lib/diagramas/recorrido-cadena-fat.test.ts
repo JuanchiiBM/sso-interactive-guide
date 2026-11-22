@@ -111,3 +111,72 @@ describe('recorridoCadenaFat hasta un byte (ej-24 c)', () => {
     )
   })
 })
+
+describe('recorridoCadenaFat sin byte: la cadena completa', () => {
+  const a = recorridoCadenaFat({ titulo: 'a)', tabla, inicio: 5, bloque: 8192 })
+  const h = renderRecorrido(a)
+  const fr = (k: number) => h.split(`data-el="paso-${k}"`)[1].split('data-el="paso-')[0]
+
+  it('un paso por bloque, el último con EOF', () => {
+    expect(a.pasos!.map((p) => p.titulo)).toEqual([
+      'Bloque 5 (lógico 0): seguir',
+      'FAT[5] = 10 (lógico 1): seguir',
+      'FAT[10] = 6 (lógico 2): seguir',
+      'FAT[6] = 8 (lógico 3): seguir',
+      'FAT[3] = Fin de Archivo: fin',
+    ])
+    expect(a.pasos![4].texto).toContain('**FAT[3] = Fin de Archivo**: es el último')
+  })
+
+  it('sin marca de byte; la cuenta sigue FAT[N] hasta fin con lo asignado', () => {
+    expect(h).not.toContain('fat-marca')
+    expect(fr(0)).toContain('lógico 0: bloque 5 · FAT[5] = 10 → seguir')
+    expect(fr(4)).toContain('lógico 4: bloque 3 · FAT[3] = Fin de Archivo → fin')
+    expect(fr(4)).toContain('5 bloques × 8192 B = 40 KiB asignados')
+    expect(fr(2).match(/fat-caja (fat-\w+)/g)![2]).toBe('fat-caja fat-actual')
+  })
+
+  it('completa los bloques en orden, uno por paso', () => {
+    expect(fr(1)).toMatch(/fat-comp fat-comp-ok"><text[^>]*>2\.º bloque<\/text><text[^>]*>10</)
+    expect(fr(1)).toContain('— (paso 3)')
+    expect(fr(4)).toMatch(/>5\.º bloque<\/text><text[^>]*>3</)
+  })
+
+  it('lógicos desde 1 (ej-46)', () => {
+    const t46 = {
+      27: 5,
+      28: 'EOF',
+      29: 16,
+      30: 40,
+      31: 32,
+      32: 33,
+      33: 36,
+      34: 37,
+      35: 'EOF',
+      36: 28,
+      37: 35,
+    }
+    const r46 = recorridoCadenaFat({
+      titulo: 'ej-46',
+      tabla: t46,
+      inicio: 31,
+      bloque: 4096,
+      desde: 1,
+    })
+    expect(r46.pasos![2].titulo).toBe('FAT[32] = 33 (lógico 3): seguir')
+    expect(r46.pasos![4].texto).toContain('5 bloques × 4096 B = 20 KiB asignados')
+  })
+
+  it('completar: fat muestra las entradas de la tabla (ej-41)', () => {
+    const r41 = recorridoCadenaFat({
+      titulo: 'ej-41',
+      tabla: { 4: 6, 6: 8, 8: 10, 10: 'FIN' },
+      inicio: 4,
+      bloque: 2048,
+      completar: 'fat',
+    })
+    const f = renderRecorrido(r41).split('data-el="paso-3"')[1]
+    expect(f).toMatch(/>FAT\[4\]<\/text><text[^>]*>6</)
+    expect(f).toMatch(/fat-comp fat-comp-ok"><text[^>]*>FAT\[10\]<\/text><text[^>]*>FIN</)
+  })
+})
